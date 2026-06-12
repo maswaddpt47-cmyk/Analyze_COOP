@@ -4,8 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>COOP — Dashboard Activité Conum</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- Libs locales (mêmes versions que le CDN) ; fallback CDN si les fichiers ne sont pas à côté du HTML -->
+<script src="chart.umd.min.js"></script>
+<script>if(typeof Chart==='undefined')document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/Chart.js\/4.4.1\/chart.umd.min.js"><\/script>');</script>
+<script src="xlsx.full.min.js"></script>
+<script>if(typeof XLSX==='undefined')document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/xlsx\/0.18.5\/xlsx.full.min.js"><\/script>');</script>
 <style>
   :root{
     --bg:#0b1020;
@@ -187,6 +190,20 @@
     display:none;
   }
   .data-banner.show{display:block;}
+
+  /* ===== IMPRESSION (bilan d'activité) ===== */
+  @media print{
+    :root{ --bg:#ffffff; --panel:#ffffff; --panel2:#f5f7fb; --border:#c9d2e6; --text:#111827; --muted:#4b5563; }
+    body{ background:#fff; color:#111827; padding:0; }
+    .header{ position:static; border-bottom:1px solid #c9d2e6; }
+    .years, .import-btn, .tabs, .data-banner, .modal-overlay{ display:none !important; }
+    .pages{ display:block !important; }
+    .pages + .pages{ page-break-before:always; }
+    .card, .kpi{ break-inside:avoid; box-shadow:none !important; transform:none !important; }
+    .card:hover, .kpi:hover{ transform:none; box-shadow:none; }
+    .bar-fill{ transition:none; }
+    canvas{ max-height:240px; }
+  }
 </style>
 </head>
 <body>
@@ -242,19 +259,19 @@
     <div class="modal-actions">
       <label class="modal-btn" style="cursor:pointer;">Importer JSON<input type="file" accept=".json" id="jsonImportInput" style="display:none;"></label>
       <button class="modal-btn" id="jsonExportBtn">Exporter JSON</button>
-      <button class="modal-btn" id="resetDataBtn" title="Efface toutes les données importées et revient aux valeurs par défaut (2025).">↺ Réinitialiser</button>
+      <button class="modal-btn" id="resetDataBtn" title="Efface toutes les données importées (sauvegarde locale comprise).">↺ Réinitialiser</button>
       <button class="modal-btn" id="closeImportModal">Fermer</button>
     </div>
   </div>
 </div>
 
-<div class="tabs">
-  <div class="tab active" data-page="global">Vue globale</div>
-  <div class="tab" data-page="evolution">Évolution</div>
-  <div class="tab" data-page="thematiques">Thématiques</div>
-  <div class="tab" data-page="beneficiaires">Bénéficiaires</div>
-  <div class="tab" data-page="lieux">Lieux & canaux</div>
-  <div class="tab" data-page="ateliers">Ateliers</div>
+<div class="tabs" role="tablist" aria-label="Sections du tableau de bord">
+  <div class="tab active" role="tab" tabindex="0" aria-selected="true" data-page="global">Vue globale</div>
+  <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="evolution">Évolution</div>
+  <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="thematiques">Thématiques</div>
+  <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="beneficiaires">Bénéficiaires</div>
+  <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="lieux">Lieux & canaux</div>
+  <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="ateliers">Ateliers</div>
 </div>
 
 <div class="data-banner" id="dataBanner"></div>
@@ -268,18 +285,18 @@
   </div>
   <div class="kpi k2">
     <div class="kpi-label">Individuels / Ateliers</div>
-    <div class="kpi-value" id="kpi-types">964 / 120</div>
-    <div class="kpi-sub" id="kpi-types-sub">993 participants · 1084 activités <span style="opacity:.6">(cumul 24-26)</span></div>
+    <div class="kpi-value" id="kpi-types">—</div>
+    <div class="kpi-sub" id="kpi-types-sub">période sélectionnée</div>
   </div>
   <div class="kpi k3">
     <div class="kpi-label">Bénéficiaires</div>
-    <div class="kpi-value" id="kpi-benef">1128</div>
-    <div class="kpi-sub" id="kpi-benef-sub">654 suivis · 474 anonymes <span style="opacity:.6">(cumul 24-26)</span></div>
+    <div class="kpi-value" id="kpi-benef">—</div>
+    <div class="kpi-sub" id="kpi-benef-sub">période sélectionnée</div>
   </div>
   <div class="kpi k4">
     <div class="kpi-label">Thématique dominante</div>
-    <div class="kpi-value" id="kpi-theme" style="font-size:22px;">Aide démarches admin.</div>
-    <div class="kpi-sub" id="kpi-theme-sub">847 accompagnements · 19,6 % <span style="opacity:.6">(cumul 24-26)</span></div>
+    <div class="kpi-value" id="kpi-theme" style="font-size:22px;">—</div>
+    <div class="kpi-sub" id="kpi-theme-sub">période sélectionnée</div>
   </div>
   <div class="kpi k5">
     <div class="kpi-label">Moyenne mensuelle</div>
@@ -622,8 +639,19 @@ function makeOrUpdateAtelHBar(canvasId, labels, values, colors){
   return ch;
 }
 
+// Clé de comparaison tolérante pour les couleurs : sans espaces, sans casse.
+// Ex : "30min à 1 h" et "30 min à 1 h" donnent la même clé.
+function colorKey(label){
+  return norm(label).toLowerCase().replace(/\s/g,'');
+}
+const colorIndex = {};
+Object.keys(colorMaps).forEach(cat=>{
+  colorIndex[cat] = {};
+  Object.keys(colorMaps[cat]).forEach(k=>{ colorIndex[cat][colorKey(k)] = colorMaps[cat][k]; });
+});
+
 function colorFor(category, label, i){
-  return (colorMaps[category] && colorMaps[category][label]) || palette[i % palette.length];
+  return (colorIndex[category] && colorIndex[category][colorKey(label)]) || palette[i % palette.length];
 }
 
 function renderAggregates(ds, periodLabel){
@@ -634,7 +662,8 @@ function renderAggregates(ds, periodLabel){
   document.getElementById('kpi-types').textContent = `${t.individuelsVal} / ${t.ateliersVal}`;
   document.getElementById('kpi-types-sub').textContent = `${t.participants} participants · ${t.activites} activités (${periodLabel})`;
   document.getElementById('kpi-benef').textContent = t.beneficiaires.toLocaleString('fr-FR');
-  document.getElementById('kpi-benef-sub').textContent = `${t.suivis} suivis · ${t.anonymes} anonymes (${periodLabel})`;
+  const dedupNote = periodLabel.startsWith('cumul') ? ' · non dédoublonné' : '';
+  document.getElementById('kpi-benef-sub').textContent = `${t.suivis} suivis · ${t.anonymes} anonymes (${periodLabel}${dedupNote})`;
 
   const topTheme = ds.themMed.length ? [...ds.themMed].sort((a,b)=>b.val-a.val)[0] : {label:'—', val:0, pct:0};
   document.getElementById('kpi-theme').textContent = topTheme.label;
@@ -866,7 +895,7 @@ function buildYearOverlayChart(){
     interaction:{ mode:'index', intersect:false, axis:'x' },
     scales:{
       x:{grid:{display:false}},
-      y:{ stacked:true, grid:{color:'#1a2444'}, beginAtZero:true }
+      y:{ grid:{color:'#1a2444'}, beginAtZero:true }
     },
     elements:{ line:{ borderWidth:2 } }
   }
@@ -917,6 +946,7 @@ function rebuildMonthlyAndEvolution(){
   updateKPIs(year);
   buildMonthlyChart(year);
   buildEvolutionChart(year);
+  highlightYearCompare(year);
 }
 
 function highlightYearCompare(year){
@@ -930,6 +960,17 @@ function highlightYearCompare(year){
 
 
 // ===== IMPORT / PARSING xlsx EXPORTS =====
+
+// Normalise un libellé d'export : apostrophes typographiques → droites,
+// espaces insécables → espaces, espaces multiples réduits, trim.
+// Évite que le parsing casse si La Coop change une apostrophe ou un espace.
+function norm(s){
+  return String(s==null?'':s)
+    .replace(/[\u2018\u2019\u02BC]/g, "'")
+    .replace(/\u00a0/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 function parsePct(v){
   if(v==null) return 0;
@@ -959,19 +1000,22 @@ const SECTION_ORDER = [
   "Commune de résidence des bénéficiaires"
 ];
 
+const SECTION_ORDER_N = SECTION_ORDER.map(norm);
+
 function rowsBetween(rows, header){
-  const idx = rows.findIndex(r => (r[0]||'').toString().trim() === header);
+  const h = norm(header);
+  const idx = rows.findIndex(r => norm(r[0]) === h);
   if(idx === -1) return [];
   // find next non-empty header from SECTION_ORDER after idx
   let endIdx = rows.length;
   for(let j=idx+1;j<rows.length;j++){
-    const label = (rows[j][0]||'').toString().trim();
-    if(SECTION_ORDER.includes(label)){ endIdx = j; break; }
+    const label = norm(rows[j][0]);
+    if(SECTION_ORDER_N.includes(label)){ endIdx = j; break; }
   }
   const out = [];
   for(let j=idx+1;j<endIdx;j++){
     const r = rows[j];
-    const label = (r[0]||'').toString().trim();
+    const label = norm(r[0]);
     if(!label) continue;
     if(typeof r[1] !== 'number' && isNaN(parseFloat(r[1]))) continue;
     out.push({ label, val: parseNum(r[1]), pct: parsePct(r[2]) });
@@ -980,7 +1024,8 @@ function rowsBetween(rows, header){
 }
 
 function getValue(rows, label){
-  const r = rows.find(r => (r[0]||'').toString().trim() === label);
+  const l = norm(label);
+  const r = rows.find(r => norm(r[0]) === l);
   return r ? parseNum(r[1]) : 0;
 }
 
@@ -997,8 +1042,8 @@ function parseWorkbookToDataset(wb){
     participants: getValue(rows, 'Nombre total de participants aux ateliers'),
     activites: getValue(rows, 'Nombre total d’activités')
   };
-  const indivRow = rows.find(r => (r[0]||'').toString().trim() === 'Accompagnements individuels');
-  const atelRow = rows.find(r => (r[0]||'').toString().trim() === 'Ateliers collectifs');
+  const indivRow = rows.find(r => norm(r[0]) === 'Accompagnements individuels');
+  const atelRow = rows.find(r => norm(r[0]) === 'Ateliers collectifs');
   totals.individuelsVal = indivRow ? parseNum(indivRow[1]) : 0;
   totals.individuelsPct = indivRow ? parsePct(indivRow[2]) : 0;
   totals.ateliersVal = atelRow ? parseNum(atelRow[1]) : 0;
@@ -1009,11 +1054,11 @@ function parseWorkbookToDataset(wb){
     { label:'Atelier collectif', val: totals.ateliersVal, pct: totals.ateliersPct }
   ];
 
-  const nomRow = rows.find(r => (r[0]||'').toString().trim() === 'Nom');
-  const prenomRow = rows.find(r => (r[0]||'').toString().trim() === 'Prénom');
+  const nomRow = rows.find(r => norm(r[0]) === 'Nom');
+  const prenomRow = rows.find(r => norm(r[0]) === 'Prénom');
   const agentName = [prenomRow && prenomRow[1], nomRow && nomRow[1]].filter(Boolean).join(' ');
 
-  const monthRow = rows.find(r => (r[0]||'').toString().trim() === 'Accompagnements sur les 12 derniers mois');
+  const monthRow = rows.find(r => norm(r[0]) === 'Accompagnements sur les 12 derniers mois');
   const monthRowIdx = monthRow ? rows.indexOf(monthRow) : -1;
   const monthValuesRow = monthRowIdx>=0 ? rows[monthRowIdx+1] : null;
   let monthlyData = { labels:[], values:[] };
@@ -1096,13 +1141,17 @@ function setBanner(text){
 
 function applyYearAggregates(year){
   if(year === 'all'){
-    const loaded = Object.values(yearData);
-    if(loaded.length === 3){
-      renderAggregates(sumDatasets(loaded), 'cumul 2024-2026 importé');
-      setBanner('');
+    const loadedYears = Object.keys(yearData).sort();
+    const loaded = loadedYears.map(y=>yearData[y]);
+    if(loaded.length >= 1){
+      renderAggregates(sumDatasets(loaded), 'cumul ' + loadedYears.join('+'));
+      const missing = ['2024','2025','2026'].filter(y=>!yearData[y]);
+      setBanner(missing.length
+        ? `Cumul partiel (${loadedYears.join(', ')}) — importe ${missing.join(', ')} pour le cumul complet. NB : les bénéficiaires cumulés ne sont pas dédoublonnés entre années.`
+        : '');
     } else {
       renderAggregates(defaultDataset, 'cumul 24-26');
-      setBanner('Données agrégées par défaut — importe les 3 exports annuels pour un cumul recalculé.');
+      setBanner('Aucune donnée — importe les exports annuels via "Importer données".');
     }
     return;
   }
@@ -1191,7 +1240,7 @@ document.getElementById('jsonImportInput').addEventListener('change', (e)=>{
 });
 
 document.getElementById('resetDataBtn').addEventListener('click', ()=>{
-  if(!confirm('Effacer toutes les données importées et revenir aux valeurs par défaut (2025) ?')) return;
+  if(!confirm('Effacer toutes les données importées ? Le tableau de bord sera vide jusqu\'au prochain import.')) return;
   localStorage.removeItem(STORAGE_KEY);
   location.reload();
 });
@@ -1210,13 +1259,18 @@ document.querySelectorAll('.year-btn').forEach(btn=>{
 });
 
 document.querySelectorAll('.tab').forEach(tab=>{
-  tab.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  function activateTab(){
+    document.querySelectorAll('.tab').forEach(t=>{ t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
     document.querySelectorAll('.pages').forEach(p=>p.classList.remove('active'));
     tab.classList.add('active');
+    tab.setAttribute('aria-selected','true');
     document.getElementById('page-'+tab.dataset.page).classList.add('active');
     document.getElementById('globalKpis').style.display = (tab.dataset.page === 'ateliers') ? 'none' : '';
     document.getElementById('dataBanner').style.display = (tab.dataset.page === 'ateliers') ? 'none' : '';
+  }
+  tab.addEventListener('click', activateTab);
+  tab.addEventListener('keydown', (e)=>{
+    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); activateTab(); }
   });
 });
 
@@ -1248,6 +1302,20 @@ function loadYearDataFromStorage(){
     console.error('Erreur lecture localStorage', err);
   }
 }
+
+// ===== IMPRESSION : rendre visibles + redimensionner tous les charts =====
+let printPrevActive = null;
+window.addEventListener('beforeprint', ()=>{
+  printPrevActive = document.querySelector('.pages.active');
+  document.querySelectorAll('.pages').forEach(p=>p.classList.add('active'));
+  document.getElementById('globalKpis').style.display = '';
+  Object.values(chartRegistry).forEach(c=>{ try{ c.resize(); }catch(e){} });
+  [chartMonthly, chartEvolutionFull, chartYearOverlay, chartYearCompare].forEach(c=>{ if(c){ try{ c.resize(); }catch(e){} } });
+});
+window.addEventListener('afterprint', ()=>{
+  document.querySelectorAll('.pages').forEach(p=>p.classList.remove('active'));
+  if(printPrevActive) printPrevActive.classList.add('active');
+});
 
 // init
 loadYearDataFromStorage();
