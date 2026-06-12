@@ -62,6 +62,10 @@
   .tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--border);
     padding-bottom:0;flex-wrap:wrap;
     position:sticky;top:62px;z-index:39;background:var(--bg);padding-top:10px;}
+  @media (max-width:700px){
+    .header{position:relative;}
+    .tabs{position:sticky;top:0;z-index:39;}
+  }
   .tab{
     padding:10px 16px;color:var(--muted);font-weight:600;font-size:14px;cursor:pointer;
     border-bottom:2px solid transparent;
@@ -126,7 +130,8 @@
   .pages.active{display:block;}
 
   canvas{max-width:100%;transition:transform .3s ease;}
-  .chart-wrap{overflow:visible;}
+  .chart-wrap{overflow:visible;position:relative;height:260px;}
+  .chart-wrap canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important;}
   .chart-wrap:hover canvas{transform:scale(1.03);}
 
   .legend-list{display:flex;flex-direction:column;gap:6px;font-size:13px;}
@@ -190,7 +195,7 @@
   <div class="badge">CD47</div>
   <div>
     <div class="title">COOP — Dashboard Activité Conum</div>
-    <div class="subtitle">Michel Aswad · Conseiller Numérique · Lot-et-Garonne</div>
+    <div class="subtitle" id="agentSubtitle">Conseiller Numérique · Lot-et-Garonne</div>
   </div>
   <div class="spacer"></div>
   <div class="years">
@@ -237,6 +242,7 @@
     <div class="modal-actions">
       <label class="modal-btn" style="cursor:pointer;">Importer JSON<input type="file" accept=".json" id="jsonImportInput" style="display:none;"></label>
       <button class="modal-btn" id="jsonExportBtn">Exporter JSON</button>
+      <button class="modal-btn" id="resetDataBtn" title="Efface toutes les données importées et revient aux valeurs par défaut (2025).">↺ Réinitialiser</button>
       <button class="modal-btn" id="closeImportModal">Fermer</button>
     </div>
   </div>
@@ -248,12 +254,13 @@
   <div class="tab" data-page="thematiques">Thématiques</div>
   <div class="tab" data-page="beneficiaires">Bénéficiaires</div>
   <div class="tab" data-page="lieux">Lieux & canaux</div>
+  <div class="tab" data-page="ateliers">Ateliers</div>
 </div>
 
 <div class="data-banner" id="dataBanner"></div>
 
 <!-- KPI cards (always visible, recalculated) -->
-<div class="kpis">
+<div class="kpis" id="globalKpis">
   <div class="kpi">
     <div class="kpi-label">Accompagnements</div>
     <div class="kpi-value" id="kpi-total">—</div>
@@ -399,130 +406,75 @@
   </div>
 </div>
 
+<!-- PAGE: ATELIERS -->
+<div class="pages" id="page-ateliers">
+  <div class="kpis">
+    <div class="kpi" title="Nombre de séances collectives réalisées sur la période, et leur poids par rapport au total de tes accompagnements (individuel + collectif).">
+      <div class="kpi-label">Ateliers collectifs</div>
+      <div class="kpi-value" id="kpi-atel-nb">—</div>
+      <div class="kpi-sub" id="kpi-atel-nb-sub">part du total accompagnements</div>
+    </div>
+    <div class="kpi k2" title="Somme des présences cumulées sur tous les ateliers de la période (une même personne venue 3 fois compte 3 fois).">
+      <div class="kpi-label">Participants ateliers</div>
+      <div class="kpi-value" id="kpi-atel-part">—</div>
+      <div class="kpi-sub" id="kpi-atel-part-sub">total cumulé</div>
+    </div>
+    <div class="kpi k3" title="Participants ateliers ÷ nombre d'ateliers. Indique le taux de remplissage moyen d'une séance : plus c'est élevé, plus tes ateliers attirent de monde.">
+      <div class="kpi-label">Moy. participants / atelier</div>
+      <div class="kpi-value" id="kpi-atel-ratio">—</div>
+      <div class="kpi-sub" id="kpi-atel-ratio-sub">indicateur de remplissage</div>
+    </div>
+    <div class="kpi k4" title="Nombre de séances individuelles qu'il aurait fallu pour toucher les mêmes personnes une par une. C'est le 'gain d'échelle' apporté par le format collectif.">
+      <div class="kpi-label">Équiv. séances individuelles</div>
+      <div class="kpi-value" id="kpi-atel-equiv">—</div>
+      <div class="kpi-sub" id="kpi-atel-equiv-sub">vs 51 séances réalisées</div>
+    </div>
+  </div>
+
+  <div class="card" id="atelInsightCard" style="margin-bottom:16px;" title="Synthèse calculée automatiquement à partir des chiffres ci-dessus, pour t'aider à rédiger ton bilan d'activité.">
+    <div class="card-title purple"><span class="dot"></span>Lecture rapide</div>
+    <div id="atelInsightText" style="font-size:14px;line-height:1.6;color:var(--text);"></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card" title="Poids de l'atelier collectif (51) face à l'accompagnement individuel (422) dans ton activité totale 2025. Sert à visualiser la place du collectif dans ta pratique.">
+      <div class="card-title purple"><span class="dot"></span>Ateliers vs accompagnements individuels</div>
+      <div class="chart-wrap"><canvas id="chartAtelTypes" height="200"></canvas></div>
+    </div>
+    <div class="card" title="Nombre de séances d'atelier collectif réalisées chaque année (2024/2025/2026). Importe les exports xlsx de chaque année pour remplir ce graphique.">
+      <div class="card-title green"><span class="dot"></span>Nb d'ateliers par année</div>
+      <div class="chart-wrap"><canvas id="chartAtelYears" height="200"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card" title="Somme des présences cumulées en atelier collectif, par année. À comparer au nombre d'ateliers pour juger de l'évolution de la fréquentation.">
+      <div class="card-title orange"><span class="dot"></span>Participants aux ateliers par année</div>
+      <div class="chart-wrap"><canvas id="chartAtelPartYears" height="200"></canvas></div>
+    </div>
+    <div class="card" title="Participants ÷ nombre d'ateliers, par année. Un ratio en hausse = des ateliers de plus en plus fréquentés ; en baisse = peut-être trop de séances pour le même public.">
+      <div class="card-title"><span class="dot"></span>Ratio participants / atelier par année</div>
+      <div id="atelRatioBars"></div>
+      <div class="kpi-sub" style="margin-top:10px;">Plus le ratio est élevé, plus les ateliers attirent de monde. Compare-le par année pour ajuster les créneaux et lieux en 2026.</div>
+    </div>
+  </div>
+
+  <div class="card" title="Part des ateliers collectifs dans l'ensemble de tes accompagnements (indiv + collectif), année par année. Permet de voir si la place du collectif augmente dans ta pratique.">
+    <div class="card-title green"><span class="dot"></span>Poids des ateliers dans l'activité globale (%)</div>
+    <div id="atelShareBars"></div>
+  </div>
+</div>
+
 <div class="footer-note">Données issues de l'export La Coop de la médiation numérique — export du 12/06/2026 · Période couverte : 01/2024 → 06/2026</div>
 
 <script>
 // ===== DATA =====
-const monthly = {
+let monthly = {
   labels: ['01/24','02/24','03/24','04/24','05/24','06/24','07/24','08/24','09/24','10/24','11/24','12/24',
            '01/25','02/25','03/25','04/25','05/25','06/25','07/25','08/25','09/25','10/25','11/25','12/25',
            '01/26','02/26','03/26','04/26','05/26','06/26'],
-  values: [24,32,51,35,24,65,51,13,52,64,49,67, 79,100,116,106,41,77,47,43,52,67,60,62, 75,117,132,110,81,65]
+  values: Array(30).fill(0)
 };
-
-const themMed = [
-  {label:"Aide aux démarches administratives", val:847, pct:19.6},
-  {label:"Culture numérique", val:733, pct:16.9},
-  {label:"Prendre en main du matériel", val:610, pct:14.1},
-  {label:"Navigation sur internet", val:458, pct:10.6},
-  {label:"Gérer ses contenus numériques", val:405, pct:9.3},
-  {label:"Prévention en sécurité numérique", val:413, pct:9.5},
-  {label:"Santé", val:194, pct:4.5},
-  {label:"Réseaux sociaux communication", val:175, pct:4.0},
-  {label:"E-mail", val:140, pct:3.2},
-  {label:"Diagnostic numérique", val:115, pct:2.7},
-  {label:"Scolarité et numérique", val:78, pct:1.8},
-  {label:"Créer avec le numérique", val:51, pct:1.2},
-  {label:"Maintenance de matériel", val:31, pct:0.7},
-  {label:"Parentalité", val:26, pct:0.6},
-  {label:"Insertion professionnelle", val:21, pct:0.5},
-  {label:"Banque et achats en ligne", val:15, pct:0.3},
-  {label:"Bureautique", val:13, pct:0.3},
-  {label:"Accompagner un professionnel", val:7, pct:0.2},
-  {label:"Intelligence artificielle (IA)", val:0, pct:0}
-];
-
-const themAdmin = [
-  {label:"Logement", val:279, pct:36.8},
-  {label:"Social - Santé", val:201, pct:26.5},
-  {label:"Papiers - Élections - Citoyenneté", val:90, pct:11.9},
-  {label:"Argent - Impôts", val:75, pct:9.9},
-  {label:"Travail - Formation - Entreprise", val:46, pct:6.1},
-  {label:"Transports - Mobilité", val:41, pct:5.4},
-  {label:"Famille - Scolarité", val:17, pct:2.2},
-  {label:"Loisirs - Sports - Culture", val:6, pct:0.8},
-  {label:"Étrangers - Europe", val:2, pct:0.3},
-  {label:"Justice", val:1, pct:0.1},
-  {label:"Associations", val:0, pct:0}
-];
-
-const materiel = [
-  {label:"Ordinateur", val:847, pct:77.4, color:"#3b82f6"},
-  {label:"Téléphone", val:246, pct:22.5, color:"#10b981"},
-  {label:"Tablette", val:1, pct:0.1, color:"#f59e0b"},
-  {label:"Autre", val:0, pct:0, color:"#a855f7"},
-  {label:"Pas de matériel", val:0, pct:0, color:"#ec4899"}
-];
-
-const canaux = [
-  {label:"Lieu d'activité", val:1001, pct:51.2, color:"#3b82f6"},
-  {label:"Autre lieu", val:856, pct:43.7, color:"#10b981"},
-  {label:"À distance", val:92, pct:4.7, color:"#f59e0b"},
-  {label:"À domicile", val:8, pct:0.4, color:"#a855f7"}
-];
-
-const durees = [
-  {label:"Moins de 30 min", val:32, pct:1.6, color:"#3b82f6"},
-  {label:"30 min à 1 h", val:282, pct:14.4, color:"#10b981"},
-  {label:"1 h à 2 h", val:1449, pct:74.0, color:"#f59e0b"},
-  {label:"2 h et plus", val:194, pct:9.9, color:"#a855f7"}
-];
-
-const lieux = [
-  {label:"CMS Fumel", val:407, pct:40.7},
-  {label:"CMS Marmande", val:316, pct:31.6},
-  {label:"Département de Lot-et-Garonne", val:154, pct:15.4},
-  {label:"CMS Saint Pardoux Isaac", val:46, pct:4.6},
-  {label:"CMS Villeneuve-sur-Lot", val:45, pct:4.5},
-  {label:"CMS Agen Montanou", val:19, pct:1.9},
-  {label:"Centre Social de Castillonnès", val:7, pct:0.7},
-  {label:"CMS Tonneins", val:3, pct:0.3},
-  {label:"CMS Nérac", val:2, pct:0.2},
-  {label:"CMS Agen Louis Vivent", val:2, pct:0.2}
-];
-
-const genre = [
-  {label:"Féminin", val:411, pct:36.4, color:"#ec4899"},
-  {label:"Masculin", val:260, pct:23.1, color:"#3b82f6"},
-  {label:"Non communiqué", val:457, pct:40.5, color:"#475569"}
-];
-
-const age = [
-  {label:"40 - 59 ans", val:404, pct:35.8},
-  {label:"12 - 17 ans", val:184, pct:16.3},
-  {label:"60 - 69 ans", val:176, pct:15.6},
-  {label:"25 - 39 ans", val:148, pct:13.1},
-  {label:"70 ans et plus", val:132, pct:11.7},
-  {label:"Moins de 12 ans", val:33, pct:2.9},
-  {label:"18 - 24 ans", val:39, pct:3.5},
-  {label:"Non communiqué", val:12, pct:1.1}
-];
-
-const statut = [
-  {label:"Sans emploi", val:272, pct:24.1, color:"#ef4444"},
-  {label:"Non communiqué ou hétérogène", val:317, pct:28.1, color:"#475569"},
-  {label:"Scolarisé", val:216, pct:19.1, color:"#3b82f6"},
-  {label:"Retraité", val:213, pct:18.9, color:"#10b981"},
-  {label:"En emploi", val:110, pct:9.8, color:"#f59e0b"}
-];
-
-const communes = [
-  {label:"Fumel (47500)", val:249, pct:22.1},
-  {label:"Marmande (47200)", val:95, pct:8.4},
-  {label:"Monsempron-Libos (47500)", val:56, pct:5.0},
-  {label:"Montayral (47500)", val:29, pct:2.6},
-  {label:"Villeneuve-sur-Lot (47300)", val:29, pct:2.6},
-  {label:"Miramont-de-Guyenne (47800)", val:17, pct:1.5},
-  {label:"Saint-Vite (47500)", val:17, pct:1.5},
-  {label:"Agen (47000)", val:9, pct:0.8},
-  {label:"Condezaygues (47500)", val:9, pct:0.8},
-  {label:"Sainte-Bazeille (47180)", val:9, pct:0.8}
-];
-
-const types = [
-  {label:"Accompagnement individuel", val:964, pct:88.9, color:"#3b82f6"},
-  {label:"Atelier collectif", val:120, pct:11.1, color:"#a855f7"}
-];
 
 const palette = ["#3b82f6","#10b981","#f59e0b","#a855f7","#ec4899","#06b6d4","#ef4444","#eab308",
                   "#22c55e","#6366f1","#f97316","#14b8a6","#d946ef","#84cc16","#0ea5e9","#f43f5e",
@@ -539,17 +491,22 @@ const colorMaps = {
 
 const defaultDataset = {
   totals: {
-    accompagnements: 1957, beneficiaires: 1128, nouveaux: 914, suivis: 654, anonymes: 474,
-    individuelsVal: 964, individuelsPct: 88.9, ateliersVal: 120, ateliersPct: 11.1,
-    participants: 993, activites: 1084
+    accompagnements: 0, beneficiaires: 0, nouveaux: 0, suivis: 0, anonymes: 0,
+    individuelsVal: 0, individuelsPct: 0, ateliersVal: 0, ateliersPct: 0,
+    participants: 0, activites: 0
   },
-  themMed, themAdmin, materiel, canaux, durees, lieux, genre, age, statut, communes, types
+  themMed: [], themAdmin: [], materiel: [], canaux: [], durees: [], lieux: [], genre: [], age: [], statut: [], communes: [],
+  types: [
+    { label:'Accompagnement individuel', val: 0, pct: 0 },
+    { label:'Atelier collectif', val: 0, pct: 0 }
+  ]
 };
 
 const sourceLabels = { all: 'cumul 24-26' };
 
 Chart.defaults.color = '#8b95b8';
 Chart.defaults.borderColor = '#243154';
+Chart.defaults.maintainAspectRatio = false;
 Chart.defaults.font.family = "-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 Chart.defaults.animation = {
   duration: 900,
@@ -617,11 +574,61 @@ function makeOrUpdateHBar(canvasId, labels, values, color){
   return ch;
 }
 
+const valueLabelPlugin = {
+  id:'valueLabel',
+  afterDatasetsDraw(chart){
+    const {ctx} = chart;
+    chart.data.datasets.forEach((ds,di)=>{
+      const meta = chart.getDatasetMeta(di);
+      meta.data.forEach((bar,i)=>{
+        const v = ds.data[i];
+        if(v===null||v===undefined) return;
+        ctx.save();
+        ctx.fillStyle = '#e8ecf7';
+        ctx.font = '600 13px system-ui';
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'left';
+        ctx.fillText(typeof v==='number' ? v.toLocaleString('fr-FR') : v, bar.x + 10, bar.y);
+        ctx.restore();
+      });
+    });
+  }
+};
+
+function makeOrUpdateAtelHBar(canvasId, labels, values, colors){
+  if(chartRegistry[canvasId]) chartRegistry[canvasId].destroy();
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  const grads = colors.map(c=>{
+    const g = ctx.createLinearGradient(0,0,400,0);
+    g.addColorStop(0, hexToRgba(c,0.35));
+    g.addColorStop(1, c);
+    return g;
+  });
+  const ch = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[{ data: values, backgroundColor: grads, borderRadius:10, borderSkipped:false, barThickness:28 }] },
+    options:{
+      indexAxis:'y',
+      plugins:{ legend:{display:false} },
+      layout:{ padding:{ right:50 } },
+      scales:{
+        x:{ grid:{color:'#1a2444', drawBorder:false}, ticks:{color:'#7d8aad'} },
+        y:{ grid:{display:false}, ticks:{color:'#cfd6ee', font:{weight:'600', size:14}} }
+      }
+    },
+    plugins:[valueLabelPlugin]
+  });
+  chartRegistry[canvasId] = ch;
+  return ch;
+}
+
 function colorFor(category, label, i){
   return (colorMaps[category] && colorMaps[category][label]) || palette[i % palette.length];
 }
 
 function renderAggregates(ds, periodLabel){
+  document.getElementById('agentSubtitle').textContent =
+    (ds.agentName ? ds.agentName + ' · ' : '') + 'Conseiller Numérique · Lot-et-Garonne';
   // KPI cards
   const t = ds.totals;
   document.getElementById('kpi-types').textContent = `${t.individuelsVal} / ${t.ateliersVal}`;
@@ -629,7 +636,7 @@ function renderAggregates(ds, periodLabel){
   document.getElementById('kpi-benef').textContent = t.beneficiaires.toLocaleString('fr-FR');
   document.getElementById('kpi-benef-sub').textContent = `${t.suivis} suivis · ${t.anonymes} anonymes (${periodLabel})`;
 
-  const topTheme = [...ds.themMed].sort((a,b)=>b.val-a.val)[0];
+  const topTheme = ds.themMed.length ? [...ds.themMed].sort((a,b)=>b.val-a.val)[0] : {label:'—', val:0, pct:0};
   document.getElementById('kpi-theme').textContent = topTheme.label;
   document.getElementById('kpi-theme-sub').textContent = `${topTheme.val} accompagnements · ${topTheme.pct}% (${periodLabel})`;
 
@@ -660,6 +667,65 @@ function renderAggregates(ds, periodLabel){
   renderBars('canaux', canauxC);
   renderBars('materiel', materielC);
   renderBars('communes', ds.communes);
+
+  // ===== ONGLET ATELIERS =====
+  document.getElementById('kpi-atel-nb').textContent = t.ateliersVal.toLocaleString('fr-FR');
+  document.getElementById('kpi-atel-nb-sub').textContent = `${t.ateliersPct}% du total (${periodLabel})`;
+  document.getElementById('kpi-atel-part').textContent = t.participants.toLocaleString('fr-FR');
+  document.getElementById('kpi-atel-part-sub').textContent = `sur ${periodLabel}`;
+  const ratio = t.ateliersVal ? (t.participants / t.ateliersVal) : 0;
+  document.getElementById('kpi-atel-ratio').textContent = ratio.toFixed(1);
+  document.getElementById('kpi-atel-ratio-sub').textContent = `${t.participants} participants / ${t.ateliersVal} ateliers`;
+
+  document.getElementById('kpi-atel-equiv').textContent = t.participants.toLocaleString('fr-FR');
+  document.getElementById('kpi-atel-equiv-sub').textContent = `vs ${t.ateliersVal} séances réalisées`;
+
+  const sharePct = (t.individuelsVal + t.ateliersVal) ? Math.round((t.ateliersVal/(t.individuelsVal+t.ateliersVal))*1000)/10 : 0;
+  document.getElementById('atelInsightText').innerHTML = `
+    Sur ${periodLabel}, <b>${t.ateliersVal} ateliers</b> ont rassemblé <b>${t.participants} participants</b>
+    (${ratio.toFixed(1)} en moyenne par séance), soit <b>${sharePct}%</b> de ton activité totale
+    (${t.individuelsVal} accompagnements individuels par ailleurs).<br>
+    En individuel, toucher ces ${t.participants} personnes aurait nécessité ${t.participants} séances :
+    le format atelier t'a donc fait <b>économiser environ ${(t.participants - t.ateliersVal).toLocaleString('fr-FR')} séances</b>,
+    un argument à valoriser dans ton bilan d'activité.
+  `;
+
+
+  const atelTypesC = ds.types.map((x,i)=>({...x, color: x.color || colorFor('types', x.label, i)}));
+  makeOrUpdateDoughnut('chartAtelTypes', atelTypesC.map(x=>x.label), atelTypesC.map(x=>x.val), atelTypesC.map(x=>x.color));
+
+  buildAtelYearCharts();
+}
+
+const yearData = {}; // {2024: dataset, 2025: dataset, 2026: dataset}
+
+// ===== ONGLET ATELIERS : comparaison par année =====
+const atelYearColors = { '2024':'#3b82f6', '2025':'#f59e0b', '2026':'#a855f7' };
+function buildAtelYearCharts(){
+  const years = ['2024','2025','2026'];
+  const ateliersVals = years.map(y => yearData[y] ? yearData[y].totals.ateliersVal : null);
+  const participantsVals = years.map(y => yearData[y] ? yearData[y].totals.participants : null);
+  const ratios = years.map((y,i) => (yearData[y] && ateliersVals[i]) ? +(participantsVals[i]/ateliersVals[i]).toFixed(1) : null);
+  const colors = years.map(y => atelYearColors[y]);
+
+  makeOrUpdateAtelHBar('chartAtelYears', years, ateliersVals.map(v=>v??0), colors);
+  makeOrUpdateAtelHBar('chartAtelPartYears', years, participantsVals.map(v=>v??0), colors);
+
+  const ratioBars = years.map((y,i) => ({
+    label: y,
+    val: ratios[i] ?? 0,
+    pct: ratios[i] ? Math.min(100, ratios[i]*10) : 0,
+    color: atelYearColors[y]
+  }));
+  renderBars('atelRatioBars', ratioBars);
+
+  const shareBars = years.map(y => {
+    const d = yearData[y];
+    const tot = d ? (d.totals.individuelsVal + d.totals.ateliersVal) : 0;
+    const pct = (d && tot) ? Math.round((d.totals.ateliersVal/tot)*1000)/10 : 0;
+    return { label: y, val: pct, pct: pct, color: atelYearColors[y] };
+  });
+  renderBars('atelShareBars', shareBars.map(b=>({...b, val: b.val+'%'})));
 }
 
 renderAggregates(defaultDataset, 'cumul 24-26');
@@ -687,6 +753,11 @@ function buildMonthlyChart(year){
   const data = getFilteredMonthly(year);
   const ctx = document.getElementById('chartMonthly').getContext('2d');
   if(chartMonthly) chartMonthly.destroy();
+  const baseColors = { '2024':'#3b82f6', '2025':'#f59e0b', '2026':'#a855f7' };
+  const colors = data.labels.map(l=>{
+    const y = '20'+l.split('/')[1];
+    return baseColors[y] || '#a855f7';
+  });
   chartMonthly = new Chart(ctx, {
     type:'bar',
     data:{
@@ -694,7 +765,7 @@ function buildMonthlyChart(year){
       datasets:[{
         label:'Accompagnements',
         data: data.values,
-        backgroundColor: '#a855f7',
+        backgroundColor: colors,
         borderRadius: 4,
         maxBarThickness: 28
       }]
@@ -755,34 +826,57 @@ const monthNames = {'01':'Jan','02':'Fév','03':'Mar','04':'Avr','05':'Mai','06'
 
 // ===== CALENDAR YEAR-OVER-YEAR COMPARISON =====
 const monthOrder = ['01','02','03','04','05','06','07','08','09','10','11','12'];
-const yearSeries = { '2024':[], '2025':[], '2026':[] };
-monthOrder.forEach(m=>{
-  ['2024','2025','2026'].forEach(y=>{
-    const idx = monthly.labels.indexOf(m+'/'+y.slice(2));
-    yearSeries[y].push(idx>=0 ? monthly.values[idx] : null);
-  });
-});
 
 const yearCompareColors = { '2024':'#3b82f6', '2025':'#f59e0b', '2026':'#a855f7' };
 
-const chartYearOverlay = new Chart(document.getElementById('chartYearOverlay').getContext('2d'), {
+function hexToRgba(hex, alpha){
+  const h = hex.replace('#','');
+  const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+let chartYearOverlay, chartYearCompare;
+let yearSeries = { '2024':[], '2025':[], '2026':[] };
+
+function recomputeYearSeries(){
+  yearSeries = { '2024':[], '2025':[], '2026':[] };
+  monthOrder.forEach(m=>{
+    ['2024','2025','2026'].forEach(y=>{
+      const idx = monthly.labels.indexOf(m+'/'+y.slice(2));
+      yearSeries[y].push(idx>=0 ? monthly.values[idx] : null);
+    });
+  });
+}
+recomputeYearSeries();
+
+function buildYearOverlayChart(){
+  if(chartYearOverlay) chartYearOverlay.destroy();
+  chartYearOverlay = new Chart(document.getElementById('chartYearOverlay').getContext('2d'), {
   type:'line',
   data:{
     labels: monthOrder.map(m=>monthNames[m]),
     datasets:[
-      { label:'2024', data: yearSeries['2024'], borderColor:yearCompareColors['2024'], backgroundColor:'transparent', tension:.3, pointRadius:3, spanGaps:true },
-      { label:'2025', data: yearSeries['2025'], borderColor:yearCompareColors['2025'], backgroundColor:'transparent', tension:.3, pointRadius:3, spanGaps:true },
-      { label:'2026', data: yearSeries['2026'], borderColor:yearCompareColors['2026'], backgroundColor:'transparent', tension:.3, pointRadius:3, spanGaps:true }
+      { label:'2024', data: yearSeries['2024'], borderColor:yearCompareColors['2024'], backgroundColor:hexToRgba(yearCompareColors['2024'],0.35), fill:true, tension:.35, pointRadius:3, pointBackgroundColor:yearCompareColors['2024'], spanGaps:true },
+      { label:'2025', data: yearSeries['2025'], borderColor:yearCompareColors['2025'], backgroundColor:hexToRgba(yearCompareColors['2025'],0.35), fill:true, tension:.35, pointRadius:3, pointBackgroundColor:yearCompareColors['2025'], spanGaps:true },
+      { label:'2026', data: yearSeries['2026'], borderColor:yearCompareColors['2026'], backgroundColor:hexToRgba(yearCompareColors['2026'],0.35), fill:true, tension:.35, pointRadius:3, pointBackgroundColor:yearCompareColors['2026'], spanGaps:true }
     ]
   },
   options:{
     plugins:{ legend:{ position:'top', labels:{boxWidth:12} } },
     interaction:{ mode:'index', intersect:false, axis:'x' },
-    scales:{ x:{grid:{display:false}}, y:{grid:{color:'#1a2444'}, beginAtZero:true} }
+    scales:{
+      x:{grid:{display:false}},
+      y:{ stacked:true, grid:{color:'#1a2444'}, beginAtZero:true }
+    },
+    elements:{ line:{ borderWidth:2 } }
   }
-});
+  });
+}
+buildYearOverlayChart();
 
-const chartYearCompare = new Chart(document.getElementById('chartYearCompare').getContext('2d'), {
+function buildYearCompareChart(){
+  if(chartYearCompare) chartYearCompare.destroy();
+  chartYearCompare = new Chart(document.getElementById('chartYearCompare').getContext('2d'), {
   type:'bar',
   data:{
     labels: monthOrder.map(m=>monthNames[m]),
@@ -796,7 +890,34 @@ const chartYearCompare = new Chart(document.getElementById('chartYearCompare').g
     plugins:{ legend:{ position:'top', labels:{boxWidth:12} } },
     scales:{ x:{grid:{display:false}}, y:{grid:{color:'#1a2444'}, beginAtZero:true} }
   }
-});
+  });
+}
+buildYearCompareChart();
+
+function rebuildMonthlyAndEvolution(){
+  // Reconstruit le tableau global monthly à partir des données importées par année
+  monthly.values = monthly.labels.map(lbl => {
+    const y = '20'+lbl.split('/')[1];
+    const d = yearData[y];
+    if(!d || !d.monthly) return 0;
+    const idx = d.monthly.labels.indexOf(lbl);
+    return idx>=0 ? d.monthly.values[idx] : 0;
+  });
+
+  recomputeYearSeries();
+  buildYearOverlayChart();
+  buildYearCompareChart();
+
+  document.getElementById('tot2024').textContent = sumYear('2024').toLocaleString('fr-FR');
+  document.getElementById('tot2025').textContent = sumYear('2025').toLocaleString('fr-FR');
+  document.getElementById('tot2026').textContent = sumYear('2026').toLocaleString('fr-FR');
+
+  const activeBtn = document.querySelector('.year-btn.active');
+  const year = activeBtn ? activeBtn.dataset.year : 'all';
+  updateKPIs(year);
+  buildMonthlyChart(year);
+  buildEvolutionChart(year);
+}
 
 function highlightYearCompare(year){
   chartYearCompare.data.datasets.forEach(ds=>{
@@ -809,7 +930,6 @@ function highlightYearCompare(year){
 
 
 // ===== IMPORT / PARSING xlsx EXPORTS =====
-const yearData = {}; // {2024: dataset, 2025: dataset, 2026: dataset}
 
 function parsePct(v){
   if(v==null) return 0;
@@ -889,9 +1009,27 @@ function parseWorkbookToDataset(wb){
     { label:'Atelier collectif', val: totals.ateliersVal, pct: totals.ateliersPct }
   ];
 
+  const nomRow = rows.find(r => (r[0]||'').toString().trim() === 'Nom');
+  const prenomRow = rows.find(r => (r[0]||'').toString().trim() === 'Prénom');
+  const agentName = [prenomRow && prenomRow[1], nomRow && nomRow[1]].filter(Boolean).join(' ');
+
+  const monthRow = rows.find(r => (r[0]||'').toString().trim() === 'Accompagnements sur les 12 derniers mois');
+  const monthRowIdx = monthRow ? rows.indexOf(monthRow) : -1;
+  const monthValuesRow = monthRowIdx>=0 ? rows[monthRowIdx+1] : null;
+  let monthlyData = { labels:[], values:[] };
+  if(monthRow && monthValuesRow){
+    for(let i=1;i<monthRow.length;i++){
+      if(monthRow[i]==null) continue;
+      monthlyData.labels.push(monthRow[i].toString().trim());
+      monthlyData.values.push(parseNum(monthValuesRow[i]));
+    }
+  }
+
   return {
     totals,
     types,
+    agentName,
+    monthly: monthlyData,
     themMed: rowsBetween(rows, 'Thématiques Médiation numérique'),
     themAdmin: rowsBetween(rows, 'Thématiques Démarches administratives'),
     materiel: rowsBetween(rows, 'Matériel utilisés'),
@@ -934,6 +1072,7 @@ function sumDatasets(list){
 
   return {
     totals: t,
+    agentName: list[0] && list[0].agentName,
     types: mergeArraysSum(list.map(d=>d.types)),
     themMed: mergeArraysSum(list.map(d=>d.themMed)),
     themAdmin: mergeArraysSum(list.map(d=>d.themAdmin)),
@@ -996,10 +1135,12 @@ document.querySelectorAll('.import-row input[type=file]').forEach(input=>{
         const wb = XLSX.read(evt.target.result, { type:'array' });
         const ds = parseWorkbookToDataset(wb);
         yearData[year] = ds;
+        saveYearDataToStorage();
         statusEl.textContent = `✓ ${file.name} — ${ds.totals.accompagnements} accompagnements`;
         statusEl.className = 'import-status ok';
         const activeBtn = document.querySelector('.year-btn.active');
         applyYearAggregates(activeBtn.dataset.year);
+        rebuildMonthlyAndEvolution();
       } catch(err){
         statusEl.textContent = 'Erreur de lecture : format inattendu';
         statusEl.className = 'import-status err';
@@ -1031,6 +1172,7 @@ document.getElementById('jsonImportInput').addEventListener('change', (e)=>{
       const data = JSON.parse(evt.target.result);
       Object.keys(data).forEach(year=>{
         yearData[year] = data[year];
+        saveYearDataToStorage();
         const statusEl = document.getElementById('status-'+year);
         if(statusEl){
           statusEl.textContent = `✓ Importé via JSON — ${data[year].totals.accompagnements} accompagnements`;
@@ -1039,12 +1181,19 @@ document.getElementById('jsonImportInput').addEventListener('change', (e)=>{
       });
       const activeBtn = document.querySelector('.year-btn.active');
       applyYearAggregates(activeBtn.dataset.year);
+      rebuildMonthlyAndEvolution();
     } catch(err){
       alert('Fichier JSON invalide.');
       console.error(err);
     }
   };
   reader.readAsText(file);
+});
+
+document.getElementById('resetDataBtn').addEventListener('click', ()=>{
+  if(!confirm('Effacer toutes les données importées et revenir aux valeurs par défaut (2025) ?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
 });
 
 document.querySelectorAll('.year-btn').forEach(btn=>{
@@ -1066,12 +1215,45 @@ document.querySelectorAll('.tab').forEach(tab=>{
     document.querySelectorAll('.pages').forEach(p=>p.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById('page-'+tab.dataset.page).classList.add('active');
+    document.getElementById('globalKpis').style.display = (tab.dataset.page === 'ateliers') ? 'none' : '';
+    document.getElementById('dataBanner').style.display = (tab.dataset.page === 'ateliers') ? 'none' : '';
   });
 });
 
+// ===== PERSISTANCE LOCALSTORAGE =====
+const STORAGE_KEY = 'coopDashboard_yearData';
+
+function saveYearDataToStorage(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(yearData));
+  } catch(err){
+    console.error('Erreur sauvegarde localStorage', err);
+  }
+}
+
+function loadYearDataFromStorage(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    Object.keys(data).forEach(y => { yearData[y] = data[y]; });
+    Object.keys(yearData).forEach(y=>{
+      const statusEl = document.getElementById('status-'+y);
+      if(statusEl && yearData[y]){
+        statusEl.textContent = `✓ Données ${y} chargées (sauvegardées localement)`;
+        statusEl.className = 'import-status ok';
+      }
+    });
+  } catch(err){
+    console.error('Erreur lecture localStorage', err);
+  }
+}
+
 // init
-updateKPIs('all');
-buildMonthlyChart('all');
+loadYearDataFromStorage();
+applyYearAggregates('all');
+if(Object.keys(yearData).length){ rebuildMonthlyAndEvolution(); }
+else { updateKPIs('all'); buildMonthlyChart('all'); }
 </script>
 </body>
 </html>
