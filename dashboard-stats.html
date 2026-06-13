@@ -111,7 +111,6 @@
   .kpi.k5{border-top-color:var(--pink);}
   .kpi.k6{border-top-color:var(--cyan);}
   .spark-wrap{margin-top:10px;height:36px;position:relative;overflow:hidden;opacity:.85;}
-  .spark-wrap canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important;}
   .bar-row{margin-bottom:10px;cursor:default;}
   .bar-row:hover .bar-fill{
     filter:brightness(1.35);
@@ -136,10 +135,10 @@
   .pages{display:none;}
   .pages.active{display:block;}
 
-  canvas{max-width:100%;transition:transform .3s ease;}
   .chart-wrap{overflow:visible;position:relative;height:260px;}
-  .chart-wrap canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important;}
-  .chart-wrap:hover canvas{transform:scale(1.03);}
+  .chart-wrap>div{height:100%;width:100%;}
+  .chart-wrap:hover .apexcharts-canvas svg{transform:scale(1.015);transition:transform .3s ease;}
+  .spark-wrap>div{height:100%;width:100%;}
 
   .legend-list{display:flex;flex-direction:column;gap:6px;font-size:13px;}
   .legend-list .item{display:flex;align-items:center;gap:8px;}
@@ -234,7 +233,6 @@
     .card, .kpi{ break-inside:avoid; box-shadow:none !important; transform:none !important; }
     .card:hover, .kpi:hover{ transform:none; box-shadow:none; }
     .bar-fill{ transition:none; }
-    canvas{ max-height:240px; }
   }
 </style>
 </head>
@@ -314,7 +312,7 @@
     <div class="kpi-label">Accompagnements</div>
     <div class="kpi-value" id="kpi-total">—</div>
     <div class="kpi-sub" id="kpi-total-sub">période sélectionnée</div>
-    <div class="spark-wrap"><canvas id="spark-total"></canvas></div>
+    <div class="spark-wrap"><div id="spark-total"></div></div>
   </div>
   <div class="kpi k2">
     <div class="kpi-label">Individuels / Ateliers</div>
@@ -335,7 +333,7 @@
     <div class="kpi-label">Moyenne mensuelle</div>
     <div class="kpi-value" id="kpi-avg">—</div>
     <div class="kpi-sub" id="kpi-avg-sub">sur la période</div>
-    <div class="spark-wrap"><canvas id="spark-avg"></canvas></div>
+    <div class="spark-wrap"><div id="spark-avg"></div></div>
   </div>
   <div class="kpi k6" title="Ratio nouveaux bénéficiaires sur total accompagnés (hors anonymes). Mesure l'attraction vs la fidélisation.">
     <div class="kpi-label">Nouveaux bénéf.</div>
@@ -350,11 +348,11 @@
   <div class="grid2">
     <div class="card">
       <div class="card-title"><span class="dot"></span>Accompagnements par mois</div>
-      <div class="chart-wrap"><canvas id="chartMonthly" height="110"></canvas></div>
+      <div class="chart-wrap"><div id="chartMonthly"></div></div>
     </div>
     <div class="card">
       <div class="card-title green"><span class="dot"></span>Répartition par type</div>
-      <div class="chart-wrap"><canvas id="chartTypes" height="160"></canvas></div>
+      <div class="chart-wrap"><div id="chartTypes"></div></div>
     </div>
   </div>
   <div class="grid3">
@@ -377,16 +375,16 @@
 <div class="pages" id="page-evolution">
   <div class="card" style="margin-bottom:16px;">
     <div class="card-title"><span class="dot"></span>Évolution mensuelle (2024 — 2026)</div>
-    <div class="chart-wrap"><canvas id="chartEvolutionFull" height="90"></canvas></div>
+    <div class="chart-wrap"><div id="chartEvolutionFull"></div></div>
   </div>
   <div class="card" style="margin-bottom:16px;">
     <div class="card-title purple"><span class="dot"></span>Superposition des années (courbes Jan → Déc)</div>
-    <div class="chart-wrap"><canvas id="chartYearOverlay" height="90"></canvas></div>
+    <div class="chart-wrap"><div id="chartYearOverlay"></div></div>
   </div>
 
   <div class="card" style="margin-bottom:16px;">
     <div class="card-title"><span class="dot"></span>Comparaison calendaire par mois (2024 vs 2025 vs 2026)</div>
-    <div class="chart-wrap"><canvas id="chartYearCompare" height="90"></canvas></div>
+    <div class="chart-wrap"><div id="chartYearCompare"></div></div>
   </div>
 
   <!-- Totaux annuels avec delta YoY -->
@@ -439,11 +437,11 @@
   <div class="grid2">
     <div class="card">
       <div class="card-title"><span class="dot"></span>Médiation numérique</div>
-      <div class="chart-wrap"><canvas id="chartThemMed" height="220"></canvas></div>
+      <div class="chart-wrap"><div id="chartThemMed"></div></div>
     </div>
     <div class="card">
       <div class="card-title orange"><span class="dot"></span>Démarches administratives</div>
-      <div class="chart-wrap"><canvas id="chartThemAdmin" height="220"></canvas></div>
+      <div class="chart-wrap"><div id="chartThemAdmin"></div></div>
     </div>
   </div>
   <div class="card" style="margin-bottom:16px;">
@@ -453,7 +451,7 @@
   <!-- Évolution thématiques par année -->
   <div class="card" style="margin-bottom:16px;">
     <div class="card-title cyan"><span class="dot"></span>Top thématiques — évolution par année</div>
-    <div class="chart-wrap" style="height:300px;"><canvas id="chartThemYear" height="130"></canvas></div>
+    <div class="chart-wrap" style="height:300px;"><div id="chartThemYear"></div></div>
   </div>
   <!-- Thème en plus forte croissance -->
   <div id="themGrowthBox" class="insight-box green" style="display:none;"></div>
@@ -466,15 +464,15 @@
   <div class="grid3">
     <div class="card">
       <div class="card-title"><span class="dot"></span>Genres</div>
-      <div class="chart-wrap"><canvas id="chartGenre" height="200"></canvas></div>
+      <div class="chart-wrap"><div id="chartGenre"></div></div>
     </div>
     <div class="card">
       <div class="card-title purple"><span class="dot"></span>Tranches d'âge</div>
-      <div class="chart-wrap"><canvas id="chartAge" height="200"></canvas></div>
+      <div class="chart-wrap"><div id="chartAge"></div></div>
     </div>
     <div class="card">
       <div class="card-title orange"><span class="dot"></span>Statuts</div>
-      <div class="chart-wrap"><canvas id="chartStatut" height="200"></canvas></div>
+      <div class="chart-wrap"><div id="chartStatut"></div></div>
     </div>
   </div>
   <div class="card">
@@ -488,17 +486,17 @@
   <div class="grid2">
     <div class="card">
       <div class="card-title"><span class="dot"></span>Accompagnements par lieu</div>
-      <div class="chart-wrap"><canvas id="chartLieux" height="220"></canvas></div>
+      <div class="chart-wrap"><div id="chartLieux"></div></div>
     </div>
     <div class="card">
       <div class="card-title green"><span class="dot"></span>Canaux d'activité</div>
-      <div class="chart-wrap"><canvas id="chartCanaux" height="220"></canvas></div>
+      <div class="chart-wrap"><div id="chartCanaux"></div></div>
     </div>
   </div>
   <!-- Lieux par année -->
   <div class="card" style="margin-bottom:16px;">
     <div class="card-title orange"><span class="dot"></span>Durée des activités — répartition</div>
-    <div class="chart-wrap" style="height:200px;"><canvas id="chartDureesYear" height="90"></canvas></div>
+    <div class="chart-wrap" style="height:200px;"><div id="chartDureesYear"></div></div>
   </div>
 </div>
 
@@ -509,13 +507,13 @@
       <div class="kpi-label">Ateliers collectifs</div>
       <div class="kpi-value" id="kpi-atel-nb">—</div>
       <div class="kpi-sub" id="kpi-atel-nb-sub">part du total accompagnements</div>
-      <div class="spark-wrap"><canvas id="spark-atel-nb"></canvas></div>
+      <div class="spark-wrap"><div id="spark-atel-nb"></div></div>
     </div>
     <div class="kpi k2" title="Somme des présences cumulées sur tous les ateliers de la période (une même personne venue 3 fois compte 3 fois).">
       <div class="kpi-label">Participants ateliers</div>
       <div class="kpi-value" id="kpi-atel-part">—</div>
       <div class="kpi-sub" id="kpi-atel-part-sub">total cumulé</div>
-      <div class="spark-wrap"><canvas id="spark-atel-part"></canvas></div>
+      <div class="spark-wrap"><div id="spark-atel-part"></div></div>
     </div>
     <div class="kpi k3" title="Participants ateliers ÷ nombre d'ateliers. Indique le taux de remplissage moyen d'une séance.">
       <div class="kpi-label">Moy. participants / atelier</div>
@@ -542,18 +540,18 @@
   <div class="grid2">
     <div class="card" title="Poids de l'atelier collectif face à l'accompagnement individuel.">
       <div class="card-title purple"><span class="dot"></span>Ateliers vs accompagnements individuels</div>
-      <div class="chart-wrap"><canvas id="chartAtelTypes" height="200"></canvas></div>
+      <div class="chart-wrap"><div id="chartAtelTypes"></div></div>
     </div>
     <div class="card" title="Nombre de séances d'atelier collectif réalisées chaque année.">
       <div class="card-title green"><span class="dot"></span>Nb d'ateliers par année</div>
-      <div class="chart-wrap"><canvas id="chartAtelYears" height="200"></canvas></div>
+      <div class="chart-wrap"><div id="chartAtelYears"></div></div>
     </div>
   </div>
 
   <div class="grid2">
     <div class="card" title="Somme des présences cumulées en atelier collectif, par année.">
       <div class="card-title orange"><span class="dot"></span>Participants aux ateliers par année</div>
-      <div class="chart-wrap"><canvas id="chartAtelPartYears" height="200"></canvas></div>
+      <div class="chart-wrap"><div id="chartAtelPartYears"></div></div>
     </div>
     <div class="card" title="Participants ÷ nombre d'ateliers, par année.">
       <div class="card-title"><span class="dot"></span>Ratio participants / atelier par année</div>
@@ -607,76 +605,58 @@ const defaultDataset = {
 
 const sourceLabels = { all: 'cumul 24-26' };
 
-Chart.defaults.color = '#8b95b8';
-Chart.defaults.borderColor = '#243154';
-Chart.defaults.maintainAspectRatio = false;
-Chart.defaults.font.family = "-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-Chart.defaults.animation = { duration: 900, easing: 'easeOutQuart' };
-Chart.defaults.animations.colors = { type:'color', duration: 900 };
-Chart.defaults.animations.tension = { duration: 900, easing: 'easeOutQuart', from: 0.4, to: 0.3 };
-Chart.defaults.transitions.active.animation.duration = 300;
-Chart.defaults.plugins.tooltip.padding = 10;
-Chart.defaults.plugins.tooltip.cornerRadius = 8;
-Chart.defaults.elements.point.hoverRadius = 7;
-Chart.defaults.elements.point.radius = 3;
-
-// ===== SPOTLIGHT PLUGIN (option B) =====
-// Effet : sur hover, dim toutes les barres/arcs non survolés → focus sur l'élément actif.
-// Désactivable par chart via options.plugins.spotlight = { enabled:false }
-const spotlightPlugin = {
-  id: 'spotlight',
-  afterDraw(chart, _args, opts) {
-    if (opts && opts.enabled === false) return;
-    const type = chart.config.type;
-    if (type !== 'bar' && type !== 'doughnut' && type !== 'pie') return;
-    const active = chart._active;
-    if (!active || !active.length) return;
-    const activeIdx = active[0].index;
-    const { ctx } = chart;
-    const dim = 'rgba(11,16,32,0.72)'; // --bg + opacité
-
-    chart.data.datasets.forEach((_, di) => {
-      const meta = chart.getDatasetMeta(di);
-      if (!meta.visible) return;
-      meta.data.forEach((el, i) => {
-        if (i === activeIdx) return;
-        ctx.save();
-        ctx.fillStyle = dim;
-        try {
-          if (type === 'doughnut' || type === 'pie') {
-            const p = el.getProps(['startAngle','endAngle','innerRadius','outerRadius','x','y'], true);
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.outerRadius, p.startAngle, p.endAngle);
-            ctx.arc(p.x, p.y, p.innerRadius, p.endAngle, p.startAngle, true);
-            ctx.closePath();
-            ctx.fill();
-          } else {
-            const p = el.getProps(['x','y','base','width','height'], true);
-            if (chart.options.indexAxis === 'y') {
-              // Barre horizontale
-              ctx.fillRect(
-                Math.min(p.x, p.base),
-                p.y - Math.abs(p.height) / 2,
-                Math.abs(p.x - p.base),
-                Math.abs(p.height)
-              );
-            } else {
-              // Barre verticale
-              ctx.fillRect(
-                p.x - Math.abs(p.width) / 2,
-                Math.min(p.y, p.base),
-                Math.abs(p.width),
-                Math.abs(p.y - p.base)
-              );
-            }
-          }
-        } catch(e) {}
-        ctx.restore();
-      });
-    });
-  }
+// ===== APEXCHARTS — CONFIGURATION GLOBALE =====
+const apexBase = {
+  chartCfg: {
+    background: 'transparent',
+    toolbar: { show: false },
+    fontFamily: "-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
+    animations: { enabled: true, speed: 700, easing: 'easeOutQuart' }
+  },
+  grid: { borderColor: '#1a2444', strokeDashArray: 4 },
+  tooltip: { theme: 'dark' }
 };
-Chart.register(spotlightPlugin);
+
+// ===== SPOTLIGHT (option B) =====
+// dim les éléments non-survolés via manipulation directe des éléments SVG
+// Pas de chart.update() → zéro flickering
+const spotlightOn = (ctx, idx, selectors) => {
+  selectors.forEach(sel => {
+    ctx.el.querySelectorAll(sel).forEach((el, i) => {
+      el.style.opacity = i === idx ? '1' : '0.15';
+      el.style.transition = 'opacity .12s';
+    });
+  });
+};
+const spotlightOff = ctx => {
+  ctx.el.querySelectorAll('.apexcharts-bar-area, .apexcharts-pie-area').forEach(el => {
+    el.style.opacity = '1';
+  });
+};
+const spotlightHandlers = {
+  dataPointMouseEnter(event, ctx, config) {
+    spotlightOn(ctx, config.dataPointIndex, ['.apexcharts-bar-area', '.apexcharts-pie-area']);
+  },
+  dataPointMouseLeave(event, ctx) { spotlightOff(ctx); }
+};
+
+// ===== REGISTRY ApexCharts =====
+const apexRegistry = {};
+function apexDestroy(id) {
+  if (apexRegistry[id]) {
+    try { apexRegistry[id].destroy(); } catch(e) {}
+    delete apexRegistry[id];
+  }
+}
+function apexMake(id, opts) {
+  apexDestroy(id);
+  const el = document.getElementById(id);
+  if (!el) return null;
+  const ch = new ApexCharts(el, opts);
+  ch.render();
+  apexRegistry[id] = ch;
+  return ch;
+}
 
 // ===== HELPERS =====
 function renderBars(containerId, data){
@@ -696,81 +676,76 @@ function renderBars(containerId, data){
   });
 }
 
-const chartRegistry = {};
-function makeOrUpdateDoughnut(canvasId, labels, values, colors){
-  if(chartRegistry[canvasId]) chartRegistry[canvasId].destroy();
-  const ch = new Chart(document.getElementById(canvasId).getContext('2d'), {
-    type:'doughnut',
-    data:{ labels, datasets:[{ data: values, backgroundColor: colors, borderColor:'#121a32', borderWidth:2 }] },
-    options:{
-      plugins:{ legend:{ position:'right', labels:{ boxWidth:12, font:{size:11} } } },
-      cutout:'60%'
-    }
-  });
-  chartRegistry[canvasId] = ch;
-  return ch;
-}
-function makeOrUpdateHBar(canvasId, labels, values, color){
-  if(chartRegistry[canvasId]) chartRegistry[canvasId].destroy();
-  const ch = new Chart(document.getElementById(canvasId).getContext('2d'), {
-    type:'bar',
-    data:{ labels, datasets:[{ data: values, backgroundColor: color, borderRadius:4 }] },
-    options:{
-      indexAxis:'y',
-      plugins:{legend:{display:false}},
-      scales:{ x:{grid:{color:'#1a2444'}}, y:{grid:{display:false}} }
-    }
-  });
-  chartRegistry[canvasId] = ch;
-  return ch;
+function hexToRgba(hex, alpha){
+  const h = hex.replace('#','');
+  const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
 }
 
-const valueLabelPlugin = {
-  id:'valueLabel',
-  afterDatasetsDraw(chart){
-    const {ctx} = chart;
-    chart.data.datasets.forEach((ds,di)=>{
-      const meta = chart.getDatasetMeta(di);
-      meta.data.forEach((bar,i)=>{
-        const v = ds.data[i];
-        if(v===null||v===undefined) return;
-        ctx.save();
-        ctx.fillStyle = '#e8ecf7';
-        ctx.font = '600 13px system-ui';
-        ctx.textBaseline = 'middle';
-        ctx.textAlign = 'left';
-        ctx.fillText(typeof v==='number' ? v.toLocaleString('fr-FR') : v, bar.x + 10, bar.y);
-        ctx.restore();
-      });
-    });
-  }
-};
-
-function makeOrUpdateAtelHBar(canvasId, labels, values, colors){
-  if(chartRegistry[canvasId]) chartRegistry[canvasId].destroy();
-  const ctx = document.getElementById(canvasId).getContext('2d');
-  const grads = colors.map(c=>{
-    const g = ctx.createLinearGradient(0,0,400,0);
-    g.addColorStop(0, hexToRgba(c,0.35));
-    g.addColorStop(1, c);
-    return g;
-  });
-  const ch = new Chart(ctx, {
-    type:'bar',
-    data:{ labels, datasets:[{ data: values, backgroundColor: grads, borderRadius:10, borderSkipped:false, barThickness:28 }] },
-    options:{
-      indexAxis:'y',
-      plugins:{ legend:{display:false} },
-      layout:{ padding:{ right:50 } },
-      scales:{
-        x:{ grid:{color:'#1a2444', drawBorder:false}, ticks:{color:'#7d8aad'} },
-        y:{ grid:{display:false}, ticks:{color:'#cfd6ee', font:{weight:'600', size:14}} }
-      }
+// ===== DONUT =====
+function makeOrUpdateDoughnut(id, labels, values, colors) {
+  return apexMake(id, {
+    chart: { ...apexBase.chartCfg, type: 'donut', height: 260, events: spotlightHandlers },
+    theme: { mode: 'dark' },
+    series: values,
+    labels: labels,
+    colors: colors,
+    dataLabels: { enabled: false },
+    legend: {
+      position: 'right', fontSize: '11px',
+      labels: { colors: '#8b95b8' },
+      markers: { size: 6, offsetX: -2 }
     },
-    plugins:[valueLabelPlugin]
+    plotOptions: { pie: { donut: { size: '62%' }, expandOnClick: false } },
+    stroke: { colors: ['#121a32'], width: 2 },
+    states: { hover: { filter: { type: 'none' } }, active: { filter: { type: 'none' } } },
+    grid: apexBase.grid,
+    tooltip: { theme: 'dark', y: { formatter: v => v.toLocaleString('fr-FR') } }
   });
-  chartRegistry[canvasId] = ch;
-  return ch;
+}
+
+// ===== HORIZONTAL BAR simple =====
+function makeOrUpdateHBar(id, labels, values, color) {
+  return apexMake(id, {
+    chart: { ...apexBase.chartCfg, type: 'bar', height: 260, events: spotlightHandlers },
+    theme: { mode: 'dark' },
+    series: [{ data: values }],
+    colors: [color],
+    plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '60%' } },
+    dataLabels: { enabled: false },
+    legend: { show: false },
+    grid: apexBase.grid,
+    xaxis: { categories: labels, labels: { style: { colors: '#8b95b8', fontSize: '11px' } }, axisBorder: { show: false }, axisTicks: { show: false } },
+    yaxis: { labels: { style: { colors: '#8b95b8', fontSize: '11px' } } },
+    states: { hover: { filter: { type: 'none' } }, active: { filter: { type: 'none' } } },
+    tooltip: { theme: 'dark', y: { formatter: v => v.toLocaleString('fr-FR') } }
+  });
+}
+
+// ===== HORIZONTAL BAR ateliers (gradient + valeurs) =====
+function makeOrUpdateAtelHBar(id, labels, values, colors) {
+  return apexMake(id, {
+    chart: { ...apexBase.chartCfg, type: 'bar', height: 200, events: spotlightHandlers },
+    theme: { mode: 'dark' },
+    series: [{
+      data: values.map((v, i) => ({ x: labels[i], y: v, fillColor: colors[i] }))
+    }],
+    plotOptions: {
+      bar: { horizontal: true, borderRadius: 8, barHeight: '55%', distributed: true,
+             dataLabels: { position: 'top' } }
+    },
+    dataLabels: {
+      enabled: true, textAnchor: 'start', offsetX: 8,
+      formatter: v => v > 0 ? v.toLocaleString('fr-FR') : '',
+      style: { fontSize: '13px', fontWeight: '600', colors: ['#e8ecf7'] }
+    },
+    legend: { show: false },
+    grid: apexBase.grid,
+    xaxis: { labels: { style: { colors: '#7d8aad', fontSize: '11px' } }, axisBorder: { show: false } },
+    yaxis: { labels: { style: { colors: '#cfd6ee', fontSize: '14px', fontWeight: '600' } } },
+    states: { hover: { filter: { type: 'none' } }, active: { filter: { type: 'none' } } },
+    tooltip: { theme: 'dark', y: { formatter: v => v.toLocaleString('fr-FR') } }
+  });
 }
 
 function colorKey(label){
@@ -781,22 +756,22 @@ Object.keys(colorMaps).forEach(cat=>{
   colorIndex[cat] = {};
   Object.keys(colorMaps[cat]).forEach(k=>{ colorIndex[cat][colorKey(k)] = colorMaps[cat][k]; });
 });
+
 function colorFor(category, label, i){
   return (colorIndex[category] && colorIndex[category][colorKey(label)]) || palette[i % palette.length];
 }
 
-// ===== GROWTH BADGE HTML =====
+// ===== GROWTH BADGE =====
 function growthBadge(pct){
-  if(pct === null) return '';
   const sign = pct >= 0 ? '+' : '';
-  const cls = pct > 2 ? 'up' : pct < -2 ? 'down' : 'flat';
-  return `<span class="growth-badge ${cls}">${sign}${pct.toFixed(1)}%</span>`;
+  const cls = pct >= 0 ? 'color:var(--green)' : 'color:var(--red)';
+  return `<span style="${cls};font-size:12px;font-weight:700;margin-left:6px;">${sign}${pct.toFixed(1)}%</span>`;
 }
 
+// ===== RENDER AGGREGATES =====
 function renderAggregates(ds, periodLabel){
   document.getElementById('agentSubtitle').textContent =
     (ds.agentName ? ds.agentName + ' · ' : '') + 'Conseiller Numérique · Lot-et-Garonne';
-
   const t = ds.totals;
   document.getElementById('kpi-types').textContent = `${t.individuelsVal} / ${t.ateliersVal}`;
   document.getElementById('kpi-types-sub').textContent = `${t.participants} participants · ${t.activites} activités (${periodLabel})`;
@@ -804,60 +779,23 @@ function renderAggregates(ds, periodLabel){
   const dedupNote = periodLabel.startsWith('cumul') ? ' · non dédoublonné' : '';
   document.getElementById('kpi-benef-sub').textContent = `${t.suivis} suivis · ${t.anonymes} anonymes (${periodLabel}${dedupNote})`;
 
-  // Fidélisation KPI
-  const identified = t.nouveaux + t.suivis;
-  if(identified > 0){
-    const newPct = Math.round((t.nouveaux / identified) * 100);
-    document.getElementById('kpi-retention').textContent = newPct + '%';
-    document.getElementById('kpi-retention-sub').textContent = `${t.nouveaux} nouveaux · ${t.suivis} suivis (identifiés)`;
-  } else {
-    document.getElementById('kpi-retention').textContent = '—';
-    document.getElementById('kpi-retention-sub').textContent = 'nouveaux vs suivis';
-  }
-
   const topTheme = ds.themMed.length ? [...ds.themMed].sort((a,b)=>b.val-a.val)[0] : {label:'—', val:0, pct:0};
   document.getElementById('kpi-theme').textContent = topTheme.label;
   document.getElementById('kpi-theme-sub').textContent = `${topTheme.val} accompagnements · ${topTheme.pct}% (${periodLabel})`;
 
-  // Global insight box
-  const insightBox = document.getElementById('globalInsightBox');
-  if(t.accompagnements > 0){
-    const sharePct = (t.individuelsVal + t.ateliersVal) ?
-      Math.round((t.ateliersVal/(t.individuelsVal+t.ateliersVal))*1000)/10 : 0;
-    insightBox.innerHTML = `Sur <b>${periodLabel}</b>, <b>${t.accompagnements.toLocaleString('fr-FR')} accompagnements</b> ont été réalisés —
-      dont <b>${t.individuelsVal} individuels</b> et <b>${t.ateliersVal} ateliers</b> (${sharePct}% collectif).
-      Thème dominant : <b>${topTheme.label}</b> (${topTheme.pct}% des accompagnements).`;
-    insightBox.style.display = '';
-  } else {
-    insightBox.style.display = 'none';
-  }
-
-  // Beneficiaires insight
-  const benefBox = document.getElementById('benefInsightBox');
-  if(identified > 0){
-    const retainPct = Math.round((t.suivis / identified) * 100);
-    benefBox.innerHTML = `<b>${t.nouveaux} nouveaux bénéficiaires</b> ont été accompagnés pour la première fois (${100-retainPct}% des identifiés),
-      et <b>${t.suivis} bénéficiaires connus</b> sont revenus (${retainPct}%).
-      ${retainPct > 40 ? 'Le taux de retour est <b>élevé</b> — signe d\'un suivi de qualité.' : 'La majorité du public est <b>nouveau</b> — fort pouvoir d\'attraction du service.'}`;
-    benefBox.style.display = '';
-  } else {
-    benefBox.style.display = 'none';
-  }
-
-  // Charts
   const types = ds.types.map((tt,i)=>({...tt, color: tt.color || colorFor('types', tt.label, i)}));
   makeOrUpdateDoughnut('chartTypes', types.map(x=>x.label), types.map(x=>x.val), types.map(x=>x.color));
 
   const themMedNZ = ds.themMed.filter(x=>x.val>0);
   const themAdminNZ = ds.themAdmin.filter(x=>x.val>0);
-  makeOrUpdateDoughnut('chartThemMed', themMedNZ.map(x=>x.label), themMedNZ.map(x=>x.val), palette);
-  makeOrUpdateDoughnut('chartThemAdmin', themAdminNZ.map(x=>x.label), themAdminNZ.map(x=>x.val), palette);
+  makeOrUpdateDoughnut('chartThemMed', themMedNZ.map(x=>x.label), themMedNZ.map(x=>x.val), palette.slice(0, themMedNZ.length));
+  makeOrUpdateDoughnut('chartThemAdmin', themAdminNZ.map(x=>x.label), themAdminNZ.map(x=>x.val), palette.slice(0, themAdminNZ.length));
   renderBars('themMedBars', ds.themMed.map((x,i)=>({...x, color: palette[i%palette.length]})));
 
   const genreC = ds.genre.map((x,i)=>({...x, color: x.color || colorFor('genre', x.label, i)}));
   const statutC = ds.statut.map((x,i)=>({...x, color: x.color || colorFor('statut', x.label, i)}));
   makeOrUpdateDoughnut('chartGenre', genreC.map(x=>x.label), genreC.map(x=>x.val), genreC.map(x=>x.color));
-  makeOrUpdateDoughnut('chartAge', ds.age.map(x=>x.label), ds.age.map(x=>x.val), palette);
+  makeOrUpdateDoughnut('chartAge', ds.age.map(x=>x.label), ds.age.map(x=>x.val), palette.slice(0, ds.age.length));
   makeOrUpdateDoughnut('chartStatut', statutC.map(x=>x.label), statutC.map(x=>x.val), statutC.map(x=>x.color));
 
   makeOrUpdateHBar('chartLieux', ds.lieux.map(x=>x.label), ds.lieux.map(x=>x.val), '#3b82f6');
@@ -872,10 +810,7 @@ function renderAggregates(ds, periodLabel){
   renderBars('materiel', materielC);
   renderBars('communes', ds.communes);
 
-  // Durées chart (lieux tab)
-  buildDureesYearChart();
-
-  // ===== ATELIERS =====
+  // Ateliers
   document.getElementById('kpi-atel-nb').textContent = t.ateliersVal.toLocaleString('fr-FR');
   document.getElementById('kpi-atel-nb-sub').textContent = `${t.ateliersPct}% du total (${periodLabel})`;
   document.getElementById('kpi-atel-part').textContent = t.participants.toLocaleString('fr-FR');
@@ -883,31 +818,21 @@ function renderAggregates(ds, periodLabel){
   const ratio = t.ateliersVal ? (t.participants / t.ateliersVal) : 0;
   document.getElementById('kpi-atel-ratio').textContent = ratio.toFixed(1);
   document.getElementById('kpi-atel-ratio-sub').textContent = `${t.participants} participants / ${t.ateliersVal} ateliers`;
-
-  const seancesEco = Math.max(0, t.participants - t.ateliersVal);
-  document.getElementById('kpi-atel-equiv').textContent = seancesEco.toLocaleString('fr-FR');
-  document.getElementById('kpi-atel-equiv-sub').textContent = `${t.participants} participants − ${t.ateliersVal} ateliers`;
-
-  document.getElementById('kpi-atel-multiplier').textContent = ratio.toFixed(1) + '×';
-  document.getElementById('kpi-atel-multiplier-sub').textContent = `vs 1× pour une séance individuelle`;
+  document.getElementById('kpi-atel-equiv').textContent = t.participants.toLocaleString('fr-FR');
+  document.getElementById('kpi-atel-equiv-sub').textContent = `vs ${t.ateliersVal} séances réalisées`;
 
   const sharePct = (t.individuelsVal + t.ateliersVal) ? Math.round((t.ateliersVal/(t.individuelsVal+t.ateliersVal))*1000)/10 : 0;
-  const economyPct = t.participants ? Math.round((seancesEco / t.participants) * 100) : 0;
   document.getElementById('atelInsightText').innerHTML = `
     Sur ${periodLabel}, <b>${t.ateliersVal} ateliers</b> ont rassemblé <b>${t.participants} participants</b>
-    (${ratio.toFixed(1)} en moyenne par séance), soit <b>${sharePct}%</b> de l'activité totale
-    (${t.individuelsVal} accompagnements individuels par ailleurs).<br><br>
-    Grâce au format collectif, <b>${seancesEco.toLocaleString('fr-FR')} séances individuelles ont été économisées</b>
-    — soit <b>${economyPct}% d'économie</b> par rapport à un service 100% individuel.
-    Chaque atelier a touché en moyenne <b>${ratio.toFixed(1)} personnes simultanément</b>,
-    un multiplicateur d'impact à valoriser dans tout bilan d'activité.
+    (${ratio.toFixed(1)} en moyenne par séance), soit <b>${sharePct}%</b> de ton activité totale
+    (${t.individuelsVal} accompagnements individuels par ailleurs).<br>
+    En individuel, toucher ces ${t.participants} personnes aurait nécessité ${t.participants} séances :
+    le format atelier t'a fait <b>économiser environ ${(t.participants - t.ateliersVal).toLocaleString('fr-FR')} séances</b>.
   `;
 
   const atelTypesC = ds.types.map((x,i)=>({...x, color: x.color || colorFor('types', x.label, i)}));
   makeOrUpdateDoughnut('chartAtelTypes', atelTypesC.map(x=>x.label), atelTypesC.map(x=>x.val), atelTypesC.map(x=>x.color));
-
   buildAtelYearCharts();
-  buildThemYearChart();
 }
 
 const yearData = {};
@@ -916,122 +841,99 @@ const yearData = {};
 const atelYearColors = { '2024':'#3b82f6', '2025':'#f59e0b', '2026':'#a855f7' };
 function buildAtelYearCharts(){
   const years = ['2024','2025','2026'];
-  const ateliersVals = years.map(y => yearData[y] ? yearData[y].totals.ateliersVal : null);
-  const participantsVals = years.map(y => yearData[y] ? yearData[y].totals.participants : null);
-  const ratios = years.map((y,i) => (yearData[y] && ateliersVals[i]) ? +(participantsVals[i]/ateliersVals[i]).toFixed(1) : null);
+  const ateliersVals  = years.map(y => yearData[y] ? yearData[y].totals.ateliersVal : 0);
+  const participantsVals = years.map(y => yearData[y] ? yearData[y].totals.participants : 0);
+  const ratios = years.map((y,i) => (yearData[y] && ateliersVals[i]) ? +(participantsVals[i]/ateliersVals[i]).toFixed(1) : 0);
   const colors = years.map(y => atelYearColors[y]);
 
-  makeOrUpdateAtelHBar('chartAtelYears', years, ateliersVals.map(v=>v??0), colors);
-  makeOrUpdateAtelHBar('chartAtelPartYears', years, participantsVals.map(v=>v??0), colors);
+  makeOrUpdateAtelHBar('chartAtelYears', years, ateliersVals, colors);
+  makeOrUpdateAtelHBar('chartAtelPartYears', years, participantsVals, colors);
 
-  // Sparklines ateliers : trend 2024→2025→2026 (barres, 3 points)
-  renderSpark('spark-atel-nb', ateliersVals.map(v=>v??0), '#10b981');
-  renderSpark('spark-atel-part', participantsVals.map(v=>v??0), '#a855f7');
-
-  const ratioBars = years.map((y,i) => ({
-    label: y,
-    val: ratios[i] ?? 0,
-    pct: ratios[i] ? Math.min(100, ratios[i]*10) : 0,
-    color: atelYearColors[y]
-  }));
+  const ratioBars = years.map((y,i)=>({ label:y, val:ratios[i], pct:ratios[i]?Math.min(100,ratios[i]*10):0, color:atelYearColors[y] }));
   renderBars('atelRatioBars', ratioBars);
 
   const shareBars = years.map(y => {
     const d = yearData[y];
     const tot = d ? (d.totals.individuelsVal + d.totals.ateliersVal) : 0;
     const pct = (d && tot) ? Math.round((d.totals.ateliersVal/tot)*1000)/10 : 0;
-    return { label: y, val: pct, pct: pct, color: atelYearColors[y] };
+    return { label:y, val:pct+'%', pct, color:atelYearColors[y] };
   });
-  renderBars('atelShareBars', shareBars.map(b=>({...b, val: b.val+'%'})));
+  renderBars('atelShareBars', shareBars);
+
+  // Sparklines ateliers
+  renderSpark('spark-atel-nb', ateliersVals, '#10b981');
+  renderSpark('spark-atel-part', participantsVals, '#a855f7');
 }
 
 // ===== THÉMATIQUES PAR ANNÉE =====
 function buildThemYearChart(){
   const years = ['2024','2025','2026'].filter(y => yearData[y]);
-  if(years.length < 2){ if(chartRegistry['chartThemYear']) chartRegistry['chartThemYear'].destroy(); return; }
-
-  // Gather top 6 themes from the most recent loaded year
+  if(years.length < 2){ apexDestroy('chartThemYear'); return; }
   const lastYear = years[years.length-1];
   const topThemes = [...(yearData[lastYear].themMed||[])].sort((a,b)=>b.val-a.val).slice(0,6).map(x=>x.label);
-
   const yearColors = { '2024':'#3b82f6', '2025':'#f59e0b', '2026':'#a855f7' };
-  const datasets = years.map(y => {
-    const data = topThemes.map(th => {
-      const found = (yearData[y].themMed||[]).find(x=>x.label===th);
-      return found ? found.val : 0;
-    });
-    return {
-      label: y,
-      data,
-      backgroundColor: hexToRgba(yearColors[y], 0.8),
-      borderColor: yearColors[y],
-      borderWidth: 1,
-      borderRadius: 4,
-      maxBarThickness: 30
-    };
+  const series = years.map(y => ({
+    name: y,
+    data: topThemes.map(th => { const f = (yearData[y].themMed||[]).find(x=>x.label===th); return f ? f.val : 0; })
+  }));
+  apexMake('chartThemYear', {
+    chart: { ...apexBase.chartCfg, type: 'bar', height: 300 },
+    theme: { mode: 'dark' },
+    series,
+    xaxis: { categories: topThemes, labels: { rotate: -30, style: { colors: '#8b95b8', fontSize: '11px' } }, axisBorder:{show:false} },
+    yaxis: { labels: { style: { colors: '#8b95b8' } } },
+    colors: years.map(y => yearColors[y]),
+    plotOptions: { bar: { borderRadius: 3, columnWidth: '70%', dataLabels:{position:'top'} } },
+    dataLabels: { enabled: false },
+    legend: { position:'top', labels:{ colors:'#8b95b8' } },
+    grid: apexBase.grid,
+    tooltip: { theme:'dark', shared:true, intersect:false }
   });
-
-  if(chartRegistry['chartThemYear']) chartRegistry['chartThemYear'].destroy();
-  chartRegistry['chartThemYear'] = new Chart(document.getElementById('chartThemYear').getContext('2d'), {
-    type:'bar',
-    data:{ labels: topThemes, datasets },
-    options:{
-      plugins:{ legend:{ position:'top', labels:{boxWidth:12} } },
-      scales:{
-        x:{ grid:{display:false}, ticks:{maxRotation:30} },
-        y:{ grid:{color:'#1a2444'}, beginAtZero:true }
-      }
-    }
-  });
-
-  // Insight: thème en plus forte croissance
+  // Insight thème en plus forte croissance
   const growthBox = document.getElementById('themGrowthBox');
   if(years.includes('2024') && years.includes('2025')){
     let bestTheme = null, bestGrowth = -Infinity;
     topThemes.forEach(th => {
       const v24 = (yearData['2024'].themMed||[]).find(x=>x.label===th)?.val || 0;
       const v25 = (yearData['2025'].themMed||[]).find(x=>x.label===th)?.val || 0;
-      if(v24 > 0){
-        const g = (v25-v24)/v24*100;
-        if(g > bestGrowth){ bestGrowth = g; bestTheme = {label:th, v24, v25, g}; }
-      }
+      if(v24 > 0){ const g=(v25-v24)/v24*100; if(g>bestGrowth){ bestGrowth=g; bestTheme={label:th,v24,v25,g}; } }
     });
     if(bestTheme){
       const sign = bestTheme.g >= 0 ? '+' : '';
-      growthBox.innerHTML = `📈 Thème en plus forte croissance (2024→2025) : <b>${bestTheme.label}</b> —
-        ${bestTheme.v24} → ${bestTheme.v25} accompagnements (<b>${sign}${bestTheme.g.toFixed(0)}%</b>).`;
+      growthBox.innerHTML = `📈 Thème en plus forte croissance (2024→2025) : <b>${bestTheme.label}</b> — ${bestTheme.v24} → ${bestTheme.v25} (<b>${sign}${bestTheme.g.toFixed(0)}%</b>).`;
       growthBox.style.display = '';
     }
-  } else {
-    growthBox.style.display = 'none';
-  }
+  } else { growthBox.style.display = 'none'; }
 }
 
-// ===== DURÉES PAR ANNÉE (lieux tab) =====
+// ===== DURÉES PAR ANNÉE =====
 function buildDureesYearChart(){
   const years = ['2024','2025','2026'].filter(y => yearData[y]);
-  if(years.length < 1){ if(chartRegistry['chartDureesYear']) chartRegistry['chartDureesYear'].destroy(); return; }
+  if(!years.length){ apexDestroy('chartDureesYear'); return; }
   const dureesLabels = ['Moins de 30 min','30 min à 1 h','1 h à 2 h','2 h et plus'];
   const yearColors = { '2024':'#3b82f6', '2025':'#f59e0b', '2026':'#a855f7' };
-  const datasets = years.map(y => {
-    const data = dureesLabels.map(dl => {
-      const found = (yearData[y].durees||[]).find(x => norm(x.label).toLowerCase().replace(/\s/g,'') === norm(dl).toLowerCase().replace(/\s/g,''));
-      return found ? found.val : 0;
-    });
-    return { label:y, data, backgroundColor: hexToRgba(yearColors[y],0.8), borderRadius:4, maxBarThickness:26 };
-  });
-  if(chartRegistry['chartDureesYear']) chartRegistry['chartDureesYear'].destroy();
-  chartRegistry['chartDureesYear'] = new Chart(document.getElementById('chartDureesYear').getContext('2d'), {
-    type:'bar',
-    data:{ labels: dureesLabels, datasets },
-    options:{
-      plugins:{ legend:{ position:'top', labels:{boxWidth:12} } },
-      scales:{ x:{grid:{display:false}}, y:{grid:{color:'#1a2444'}, beginAtZero:true} }
-    }
+  const series = years.map(y => ({
+    name: y,
+    data: dureesLabels.map(dl => {
+      const f = (yearData[y].durees||[]).find(x => norm(x.label).toLowerCase().replace(/\s/g,'') === norm(dl).toLowerCase().replace(/\s/g,''));
+      return f ? f.val : 0;
+    })
+  }));
+  apexMake('chartDureesYear', {
+    chart: { ...apexBase.chartCfg, type: 'bar', height: 200 },
+    theme: { mode: 'dark' },
+    series,
+    xaxis: { categories: dureesLabels, labels: { style: { colors:'#8b95b8', fontSize:'11px' } }, axisBorder:{show:false} },
+    yaxis: { labels: { style: { colors:'#8b95b8' } } },
+    colors: years.map(y => yearColors[y]),
+    plotOptions: { bar: { borderRadius: 3, columnWidth:'70%' } },
+    dataLabels: { enabled: false },
+    legend: { position:'top', labels:{ colors:'#8b95b8' } },
+    grid: apexBase.grid,
+    tooltip: { theme:'dark', shared:true, intersect:false }
   });
 }
 
-renderAggregates(defaultDataset, 'cumul 24-26');
 function monthYear(label){ return '20'+label.split('/')[1]; }
 
 function getFilteredMonthly(year){
@@ -1040,60 +942,36 @@ function getFilteredMonthly(year){
   return { labels: idx.map(i=>monthly.labels[i]), values: idx.map(i=>monthly.values[i]) };
 }
 
-let chartMonthly, chartEvolutionFull;
-
-// ===== SPARKLINES =====
-const sparkRegistry = {};
-function renderSpark(canvasId, values, color){
-  const canvas = document.getElementById(canvasId);
-  if(!canvas) return;
+// ===== SPARKLINES (ApexCharts sparkline mode) =====
+const apexSparkRegistry = {};
+function renderSpark(divId, values, color){
+  const el = document.getElementById(divId);
+  if(!el) return;
   const data = values.filter(v => v > 0);
   if(!data.length) return;
-  if(sparkRegistry[canvasId]) sparkRegistry[canvasId].destroy();
-  sparkRegistry[canvasId] = new Chart(canvas.getContext('2d'), {
-    type:'line',
-    data:{
-      labels: data.map((_,i)=>i),
-      datasets:[{
-        data,
-        borderColor: color,
-        borderWidth: 1.5,
-        backgroundColor: color.replace(')',',0.15)').replace('rgb','rgba'),
-        fill: true,
-        tension: 0.4,
-        pointRadius: 0,
-        pointHoverRadius: 0
-      }]
-    },
-    options:{
-      animation:{ duration:600, easing:'easeOutQuart' },
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{enabled:false}, spotlight:{enabled:false} },
-      scales:{
-        x:{display:false},
-        y:{display:false, beginAtZero:true}
-      },
-      elements:{ line:{borderCapStyle:'round'} }
-    }
+  if(apexSparkRegistry[divId]){ try{ apexSparkRegistry[divId].destroy(); }catch(e){} }
+  const chart = new ApexCharts(el, {
+    chart: { type:'area', sparkline:{ enabled:true }, height:36, animations:{ enabled:false } },
+    series: [{ data }],
+    stroke: { curve:'smooth', width:2 },
+    fill: { type:'gradient', gradient:{ opacityFrom:0.4, opacityTo:0, stops:[0,100] } },
+    colors: [color],
+    tooltip: { enabled: false }
   });
+  chart.render();
+  apexSparkRegistry[divId] = chart;
 }
 
 function updateKPIs(year){
   const data = getFilteredMonthly(year);
   const total = data.values.reduce((a,b)=>a+b,0);
   const nonZero = data.values.filter(v=>v>0);
-
   document.getElementById('kpi-total').textContent = total.toLocaleString('fr-FR');
   document.getElementById('kpi-total-sub').textContent = year==='all' ? 'période 01/2024 → 06/2026' : `année ${year}`;
-
   const avg = nonZero.length ? (total / nonZero.length).toFixed(1) : '0';
   document.getElementById('kpi-avg').textContent = avg;
   document.getElementById('kpi-avg-sub').textContent = `${nonZero.length} mois (données)`;
-
-  // Sparklines : courbe cumulative pour total, valeurs brutes pour moyenne
   renderSpark('spark-total', data.values, '#3b82f6');
-  // Moyenne glissante 3 mois pour le sparkline "Moyenne mensuelle"
   const mavg = data.values.map((_,i,arr)=>{
     const sl = arr.slice(Math.max(0,i-2), i+1).filter(v=>v>0);
     return sl.length ? +(sl.reduce((a,b)=>a+b)/sl.length).toFixed(1) : 0;
@@ -1101,90 +979,76 @@ function updateKPIs(year){
   renderSpark('spark-avg', mavg, '#ec4899');
 }
 
+// ===== GRAPHE MENSUEL =====
 function buildMonthlyChart(year){
   const data = getFilteredMonthly(year);
-  const ctx = document.getElementById('chartMonthly').getContext('2d');
-  if(chartMonthly) chartMonthly.destroy();
-  const baseColors = { '2024':'#3b82f6', '2025':'#f59e0b', '2026':'#a855f7' };
-
-  // Find min/max indexes for annotation
   const nonZeroVals = data.values.filter(v=>v>0);
   const maxVal = nonZeroVals.length ? Math.max(...nonZeroVals) : 0;
   const minVal = nonZeroVals.length ? Math.min(...nonZeroVals) : 0;
-
-  const colors = data.values.map((v,i) => {
-    if(v === 0) return 'rgba(139,149,184,0.2)';
-    if(v === maxVal) return '#06b6d4'; // cyan for best month
-    if(v === minVal) return '#ef4444'; // red for worst month
+  const baseColors = { '2024':'#3b82f6', '2025':'#f59e0b', '2026':'#a855f7' };
+  const fillColors = data.values.map((v,i) => {
+    if(v===0) return 'rgba(139,149,184,0.15)';
+    if(v===maxVal) return '#06b6d4';
+    if(v===minVal) return '#ef4444';
     const y = '20'+data.labels[i].split('/')[1];
     return baseColors[y] || '#a855f7';
   });
-
-  chartMonthly = new Chart(ctx, {
-    type:'bar',
-    data:{
-      labels: data.labels,
-      datasets:[{
-        label:'Accompagnements',
-        data: data.values,
-        backgroundColor: colors,
-        borderRadius: 4,
-        maxBarThickness: 28
-      }]
+  apexMake('chartMonthly', {
+    chart: { ...apexBase.chartCfg, type:'bar', height:260, events: spotlightHandlers },
+    theme: { mode:'dark' },
+    series: [{
+      data: data.values.map((v,i) => ({ x: data.labels[i], y: v, fillColor: fillColors[i] }))
+    }],
+    plotOptions: { bar: { distributed:true, borderRadius:4, columnWidth:'70%' } },
+    dataLabels: { enabled: false },
+    legend: { show: false },
+    grid: apexBase.grid,
+    xaxis: {
+      type: 'category',
+      labels: { rotate:-45, style:{ colors: data.labels.map(()=>'#8b95b8'), fontSize:'11px' } },
+      axisBorder:{ show:false }, axisTicks:{ show:false }
     },
-    options:{
-      plugins:{
-        legend:{display:false},
-        tooltip:{
-          callbacks:{
-            label: ctx => {
-              const v = ctx.parsed.y;
-              const suffix = v === maxVal ? ' 🏆 meilleur mois' : v === minVal && v > 0 ? ' ⚠ plus faible' : '';
-              return ` ${v} accompagnements${suffix}`;
-            }
-          }
-        }
-      },
-      scales:{
-        x:{grid:{display:false}},
-        y:{grid:{color:'#1a2444'}, beginAtZero:true}
-      }
+    yaxis: { labels: { style: { colors:['#8b95b8'] } } },
+    states: { hover:{ filter:{ type:'none' } }, active:{ filter:{ type:'none' } } },
+    tooltip: {
+      theme:'dark',
+      y: { formatter(v, {dataPointIndex}){
+        const suf = v===maxVal ? ' 🏆 meilleur mois' : (v===minVal&&v>0) ? ' ⚠ plus faible' : '';
+        return `${v} accompagnements${suf}`;
+      }}
     }
   });
 }
 
+// ===== ÉVOLUTION =====
 function buildEvolutionChart(year){
   const data = getFilteredMonthly(year);
-  const ctx = document.getElementById('chartEvolutionFull').getContext('2d');
-  if(chartEvolutionFull) chartEvolutionFull.destroy();
-  chartEvolutionFull = new Chart(ctx, {
-    type:'line',
-    data:{
-      labels: data.labels,
-      datasets:[{
-        label:'Accompagnements / mois',
-        data: data.values,
-        borderColor:'#a855f7',
-        backgroundColor:'rgba(168,85,247,0.15)',
-        fill:true,
-        tension:.3,
-        pointRadius:3,
-        pointBackgroundColor:'#a855f7'
-      }]
+  apexMake('chartEvolutionFull', {
+    chart: { ...apexBase.chartCfg, type:'area', height:260 },
+    theme: { mode:'dark' },
+    series: [{ name:'Accompagnements / mois', data: data.values }],
+    xaxis: {
+      categories: data.labels,
+      labels: { rotate:-45, style:{ colors:'#8b95b8', fontSize:'11px' } },
+      axisBorder:{show:false}, axisTicks:{show:false}
     },
-    options:{
-      plugins:{legend:{display:false}},
-      interaction:{ mode:'index', intersect:false, axis:'x' },
-      scales:{ x:{grid:{display:false}}, y:{grid:{color:'#1a2444'}, beginAtZero:true} }
-    }
+    yaxis: { labels:{ style:{ colors:['#8b95b8'] } } },
+    colors: ['#a855f7'],
+    fill: { type:'gradient', gradient:{ shadeIntensity:1, opacityFrom:0.35, opacityTo:0.05, stops:[0,100] } },
+    stroke: { curve:'smooth', width:2 },
+    markers: { size:3, colors:['#a855f7'], strokeWidth:0 },
+    dataLabels: { enabled: false },
+    legend: { show: false },
+    grid: apexBase.grid,
+    tooltip: { theme:'dark', shared:true, intersect:false }
   });
 }
 buildEvolutionChart('all');
 
+// ===== TOTAUX ET CARTES ÉVOLUTION =====
 function sumYear(y){
   return monthly.labels.reduce((acc,l,i)=> monthYear(l)===y ? acc+monthly.values[i] : acc, 0);
 }
-
 function sumH1(y){
   return monthly.labels.reduce((acc,l,i)=>{
     const [mm] = l.split('/');
@@ -1192,77 +1056,43 @@ function sumH1(y){
     return (yy===y && parseInt(mm)<=6) ? acc+monthly.values[i] : acc;
   }, 0);
 }
-
 function updateEvolutionCards(){
-  const y24 = sumYear('2024'), y25 = sumYear('2025'), y26 = sumYear('2026');
+  const y24=sumYear('2024'), y25=sumYear('2025'), y26=sumYear('2026');
   document.getElementById('tot2024').textContent = y24.toLocaleString('fr-FR');
   document.getElementById('tot2025').textContent = y25.toLocaleString('fr-FR');
   document.getElementById('tot2026').textContent = y26.toLocaleString('fr-FR');
-
-  // YoY deltas
   document.getElementById('delta2024').textContent = 'Année de référence';
-  if(y24 > 0 && y25 > 0){
-    const d = ((y25-y24)/y24*100);
-    document.getElementById('delta2025').innerHTML = `vs 2024 ${growthBadge(d)}`;
-  }
-  if(y25 > 0 && y26 > 0){
-    const h1_25 = sumH1('2025'), h1_26 = sumH1('2026');
-    const d = h1_25 ? ((h1_26-h1_25)/h1_25*100) : null;
-    document.getElementById('delta2026').innerHTML = `vs H1 2025 ${d !== null ? growthBadge(d) : ''}`;
-  }
-
-  // Projection 2026
-  const h1_26 = sumH1('2026');
+  if(y24>0&&y25>0){ document.getElementById('delta2025').innerHTML = `vs 2024 ${growthBadge((y25-y24)/y24*100)}`; }
   const monthsLoaded = monthly.labels.filter(l=>'20'+l.split('/')[1]==='2026' && monthly.values[monthly.labels.indexOf(l)]>0).length;
-  if(monthsLoaded > 0){
-    const proj = Math.round(h1_26 / monthsLoaded * 12);
+  if(y25>0&&y26>0){
+    const h1_25=sumH1('2025'), h1_26=sumH1('2026');
+    const d = h1_25 ? (h1_26-h1_25)/h1_25*100 : null;
+    document.getElementById('delta2026').innerHTML = `vs H1 2025 ${d!==null?growthBadge(d):''}`;
+  }
+  const h1_26=sumH1('2026');
+  if(monthsLoaded>0){
+    const proj=Math.round(h1_26/monthsLoaded*12);
     document.getElementById('proj2026').textContent = proj.toLocaleString('fr-FR');
     document.getElementById('proj2026-sub').textContent = `basé sur ${monthsLoaded} mois renseignés en 2026`;
   }
-
-  // H1 growths
-  const h1_24 = sumH1('2024'), h1_25 = sumH1('2025');
-  const h1_26b = sumH1('2026');
-
-  if(h1_24 > 0){
-    const g25 = ((h1_25-h1_24)/h1_24*100);
-    document.getElementById('growthH1_2025').innerHTML = (g25>=0?'+':'')+g25.toFixed(1)+'%' + growthBadge(g25);
-    document.getElementById('growthH1_2025-sub').textContent = `${h1_24} → ${h1_25} (jan–juin)`;
-  }
-  if(h1_25 > 0){
-    const g26 = ((h1_26b-h1_25)/h1_25*100);
-    document.getElementById('growthH1_2026').innerHTML = (g26>=0?'+':'')+g26.toFixed(1)+'%' + growthBadge(g26);
-    document.getElementById('growthH1_2026-sub').textContent = `${h1_25} → ${h1_26b} (jan–juin)`;
-  }
-
-  // Evolution insight box
-  const ebox = document.getElementById('evolutionInsightBox');
-  if(y24 > 0 && y25 > 0){
-    const g = ((y25-y24)/y24*100);
-    const h1_25b = sumH1('2025'), h1_26c = sumH1('2026');
-    const projLine = (h1_25b > 0 && monthsLoaded > 0) ?
-      ` La projection 2026 à ce rythme est de <b>~${Math.round(h1_26c/monthsLoaded*12).toLocaleString('fr-FR')} accompagnements</b>.` : '';
-    ebox.innerHTML = `L'activité a progressé de <b>${g.toFixed(0)}%</b> entre 2024 (${y24}) et 2025 (${y25}).${projLine}`;
-    ebox.style.display = '';
-  } else {
-    ebox.style.display = 'none';
-  }
+  const h1_24=sumH1('2024'), h1_25=sumH1('2025');
+  if(h1_24>0){ const g=(h1_25-h1_24)/h1_24*100; document.getElementById('growthH1_2025').innerHTML=(g>=0?'+':'')+g.toFixed(1)+'%'+growthBadge(g); document.getElementById('growthH1_2025-sub').textContent=`${h1_24} → ${h1_25} (jan–juin)`; }
+  if(h1_25>0){ const g=(h1_26-h1_25)/h1_25*100; document.getElementById('growthH1_2026').innerHTML=(g>=0?'+':'')+g.toFixed(1)+'%'+growthBadge(g); document.getElementById('growthH1_2026-sub').textContent=`${h1_25} → ${h1_26} (jan–juin)`; }
+  const ebox=document.getElementById('evolutionInsightBox');
+  if(y24>0&&y25>0){
+    const g=((y25-y24)/y24*100);
+    const projLine=(h1_25>0&&monthsLoaded>0)?` La projection 2026 à ce rythme est de <b>~${Math.round(h1_26/monthsLoaded*12).toLocaleString('fr-FR')} accompagnements</b>.`:'';
+    ebox.innerHTML=`L'activité a progressé de <b>${g.toFixed(0)}%</b> entre 2024 (${y24}) et 2025 (${y25}).${projLine}`;
+    ebox.style.display='';
+  } else { ebox.style.display='none'; }
 }
 updateEvolutionCards();
 
-// ===== CALENDAR YEAR-OVER-YEAR =====
+// ===== COMPARAISON PAR ANNÉE =====
 const monthNames = {'01':'Jan','02':'Fév','03':'Mar','04':'Avr','05':'Mai','06':'Juin',
                      '07':'Juil','08':'Août','09':'Sep','10':'Oct','11':'Nov','12':'Déc'};
 const monthOrder = ['01','02','03','04','05','06','07','08','09','10','11','12'];
 const yearCompareColors = { '2024':'#3b82f6', '2025':'#f59e0b', '2026':'#a855f7' };
-
-function hexToRgba(hex, alpha){
-  const h = hex.replace('#','');
-  const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
-
-let chartYearOverlay, chartYearCompare;
 let yearSeries = { '2024':[], '2025':[], '2026':[] };
 
 function recomputeYearSeries(){
@@ -1277,43 +1107,53 @@ function recomputeYearSeries(){
 recomputeYearSeries();
 
 function buildYearOverlayChart(){
-  if(chartYearOverlay) chartYearOverlay.destroy();
-  chartYearOverlay = new Chart(document.getElementById('chartYearOverlay').getContext('2d'), {
-    type:'line',
-    data:{
-      labels: monthOrder.map(m=>monthNames[m]),
-      datasets:[
-        { label:'2024', data: yearSeries['2024'], borderColor:yearCompareColors['2024'], backgroundColor:hexToRgba(yearCompareColors['2024'],0.35), fill:true, tension:.35, pointRadius:3, pointBackgroundColor:yearCompareColors['2024'], spanGaps:true },
-        { label:'2025', data: yearSeries['2025'], borderColor:yearCompareColors['2025'], backgroundColor:hexToRgba(yearCompareColors['2025'],0.35), fill:true, tension:.35, pointRadius:3, pointBackgroundColor:yearCompareColors['2025'], spanGaps:true },
-        { label:'2026', data: yearSeries['2026'], borderColor:yearCompareColors['2026'], backgroundColor:hexToRgba(yearCompareColors['2026'],0.35), fill:true, tension:.35, pointRadius:3, pointBackgroundColor:yearCompareColors['2026'], spanGaps:true }
-      ]
+  apexMake('chartYearOverlay', {
+    chart: { ...apexBase.chartCfg, type:'area', height:260 },
+    theme: { mode:'dark' },
+    series: [
+      { name:'2024', data: yearSeries['2024'] },
+      { name:'2025', data: yearSeries['2025'] },
+      { name:'2026', data: yearSeries['2026'] }
+    ],
+    xaxis: {
+      categories: monthOrder.map(m=>monthNames[m]),
+      labels: { style:{ colors:'#8b95b8', fontSize:'11px' } },
+      axisBorder:{show:false}
     },
-    options:{
-      plugins:{ legend:{ position:'top', labels:{boxWidth:12} } },
-      interaction:{ mode:'index', intersect:false, axis:'x' },
-      scales:{ x:{grid:{display:false}}, y:{ grid:{color:'#1a2444'}, beginAtZero:true } },
-      elements:{ line:{ borderWidth:2 } }
-    }
+    yaxis: { labels:{ style:{ colors:['#8b95b8'] } } },
+    colors: [yearCompareColors['2024'], yearCompareColors['2025'], yearCompareColors['2026']],
+    fill: { type:'gradient', gradient:{ shadeIntensity:0.5, opacityFrom:0.3, opacityTo:0.03, stops:[0,100] } },
+    stroke: { curve:'smooth', width:2 },
+    markers: { size:3, strokeWidth:0 },
+    dataLabels: { enabled:false },
+    legend: { position:'top', labels:{ colors:'#8b95b8' } },
+    grid: apexBase.grid,
+    tooltip: { theme:'dark', shared:true, intersect:false }
   });
 }
 buildYearOverlayChart();
 
 function buildYearCompareChart(){
-  if(chartYearCompare) chartYearCompare.destroy();
-  chartYearCompare = new Chart(document.getElementById('chartYearCompare').getContext('2d'), {
-    type:'bar',
-    data:{
-      labels: monthOrder.map(m=>monthNames[m]),
-      datasets:[
-        { label:'2024', data: yearSeries['2024'], backgroundColor:yearCompareColors['2024'], borderRadius:4, maxBarThickness:22 },
-        { label:'2025', data: yearSeries['2025'], backgroundColor:yearCompareColors['2025'], borderRadius:4, maxBarThickness:22 },
-        { label:'2026', data: yearSeries['2026'], backgroundColor:yearCompareColors['2026'], borderRadius:4, maxBarThickness:22 }
-      ]
+  apexMake('chartYearCompare', {
+    chart: { ...apexBase.chartCfg, type:'bar', height:260 },
+    theme: { mode:'dark' },
+    series: [
+      { name:'2024', data: yearSeries['2024'].map(v=>v??0) },
+      { name:'2025', data: yearSeries['2025'].map(v=>v??0) },
+      { name:'2026', data: yearSeries['2026'].map(v=>v??0) }
+    ],
+    xaxis: {
+      categories: monthOrder.map(m=>monthNames[m]),
+      labels: { style:{ colors:'#8b95b8', fontSize:'11px' } },
+      axisBorder:{show:false}
     },
-    options:{
-      plugins:{ legend:{ position:'top', labels:{boxWidth:12} } },
-      scales:{ x:{grid:{display:false}}, y:{grid:{color:'#1a2444'}, beginAtZero:true} }
-    }
+    yaxis: { labels:{ style:{ colors:['#8b95b8'] } } },
+    colors: [yearCompareColors['2024'], yearCompareColors['2025'], yearCompareColors['2026']],
+    plotOptions: { bar:{ borderRadius:3, columnWidth:'80%' } },
+    dataLabels: { enabled:false },
+    legend: { position:'top', labels:{ colors:'#8b95b8' } },
+    grid: apexBase.grid,
+    tooltip: { theme:'dark', shared:true, intersect:false }
   });
 }
 buildYearCompareChart();
@@ -1326,12 +1166,10 @@ function rebuildMonthlyAndEvolution(){
     const idx = d.monthly.labels.indexOf(lbl);
     return idx>=0 ? d.monthly.values[idx] : 0;
   });
-
   recomputeYearSeries();
   buildYearOverlayChart();
   buildYearCompareChart();
   updateEvolutionCards();
-
   const activeBtn = document.querySelector('.year-btn.active');
   const year = activeBtn ? activeBtn.dataset.year : 'all';
   updateKPIs(year);
@@ -1343,12 +1181,25 @@ function rebuildMonthlyAndEvolution(){
 }
 
 function highlightYearCompare(year){
-  chartYearCompare.data.datasets.forEach(ds=>{
-    const isSelected = (year==='all') || (ds.label===year);
-    ds.backgroundColor = isSelected ? yearCompareColors[ds.label] : '#2a3454';
-  });
-  chartYearCompare.update();
+  if(!apexRegistry['chartYearCompare']) return;
+  const allYears = ['2024','2025','2026'];
+  const newColors = allYears.map(y => (year==='all'||y===year) ? yearCompareColors[y] : '#2a3454');
+  apexRegistry['chartYearCompare'].updateOptions({ colors: newColors }, false, false);
 }
+
+// ===== IMPRESSION =====
+let printPrevActive = null;
+window.addEventListener('beforeprint', ()=>{
+  printPrevActive = document.querySelector('.pages.active');
+  document.querySelectorAll('.pages').forEach(p=>p.classList.add('active'));
+  document.getElementById('globalKpis').style.display = '';
+  setTimeout(()=> window.dispatchEvent(new Event('resize')), 100);
+});
+window.addEventListener('afterprint', ()=>{
+  document.querySelectorAll('.pages').forEach(p=>p.classList.remove('active'));
+  if(printPrevActive) printPrevActive.classList.add('active');
+});
+
 
 // ===== IMPORT / PARSING xlsx EXPORTS =====
 function norm(s){
@@ -1681,19 +1532,7 @@ function loadYearDataFromStorage(){
   } catch(err){ console.error('Erreur lecture localStorage', err); }
 }
 
-// ===== IMPRESSION =====
-let printPrevActive = null;
-window.addEventListener('beforeprint', ()=>{
-  printPrevActive = document.querySelector('.pages.active');
-  document.querySelectorAll('.pages').forEach(p=>p.classList.add('active'));
-  document.getElementById('globalKpis').style.display = '';
-  Object.values(chartRegistry).forEach(c=>{ try{ c.resize(); }catch(e){} });
-  [chartMonthly, chartEvolutionFull, chartYearOverlay, chartYearCompare].forEach(c=>{ if(c){ try{ c.resize(); }catch(e){} } });
-});
-window.addEventListener('afterprint', ()=>{
-  document.querySelectorAll('.pages').forEach(p=>p.classList.remove('active'));
-  if(printPrevActive) printPrevActive.classList.add('active');
-});
+// (impression gérée plus haut)
 
 // init
 loadYearDataFromStorage();
