@@ -616,6 +616,63 @@
   }
   .resume-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
 
+  /* ===== ANNOTATIONS ===== */
+  .annot-btn{
+    background:none;border:1px solid var(--border);color:var(--muted);
+    border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;cursor:pointer;
+    margin-left:auto;transition:.15s;
+  }
+  .annot-btn:hover{border-color:var(--orange);color:var(--orange);}
+  .annot-list{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
+  .annot-item{
+    display:flex;align-items:center;gap:8px;padding:7px 10px;
+    background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);
+    border-radius:8px;font-size:12px;
+  }
+  .annot-item .ai-month{font-weight:700;color:var(--orange);min-width:46px;}
+  .annot-item .ai-text{flex:1;color:var(--text);}
+  .annot-item .ai-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 2px;}
+  .annot-item .ai-del:hover{color:var(--red);}
+  .annot-modal{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:22px;width:100%;max-width:420px;}
+  .annot-modal h2{font-size:16px;margin-bottom:14px;}
+  .annot-modal select,.annot-modal input[type=text]{
+    width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+    border-radius:8px;padding:8px 12px;font-size:13px;margin-top:4px;margin-bottom:12px;
+  }
+
+  /* ===== BILAN ANNUEL ===== */
+  .bilan-page{font-size:14px;line-height:1.7;color:var(--text);}
+  .bilan-header{
+    background:linear-gradient(135deg,var(--panel) 0%,rgba(59,130,246,.15) 100%);
+    border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:16px;
+    border-left:4px solid var(--blue);
+  }
+  .bilan-header h1{font-size:22px;font-weight:800;margin-bottom:4px;}
+  .bilan-header .bh-sub{color:var(--muted);font-size:13px;}
+  .bilan-section{margin-bottom:20px;}
+  .bilan-section h2{
+    font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+    color:var(--blue);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);
+  }
+  .bilan-kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px;}
+  .bilan-kpi{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
+  .bilan-kpi .bk-val{font-size:24px;font-weight:800;color:var(--blue);}
+  .bilan-kpi .bk-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-top:2px;}
+  .bilan-narrative{
+    background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    padding:16px;font-size:13px;line-height:1.8;margin-bottom:12px;
+  }
+  .bilan-narrative b{color:var(--blue);}
+  .bilan-narrative .bn-highlight{color:var(--green);}
+  .bilan-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+
+  /* ===== RÉSUMÉ MENSUEL ===== */
+  .resume-mensuel-box{
+    background:var(--panel2);border:1px solid var(--border);border-radius:10px;
+    padding:16px;font-size:12px;line-height:1.9;color:var(--text);
+    font-family:monospace;white-space:pre-wrap;margin-top:12px;
+  }
+
   /* ===== SÉLECTEUR DE SLIDES ===== */
   .slide-picker-modal{
     background:var(--panel);border:1px solid var(--border);border-radius:14px;
@@ -698,6 +755,7 @@
       <div class="drawer-section-label">Export & Impression</div>
       <button class="drawer-item print-btn"><span class="di-icon">🖨</span><span class="di-label">Imprimer</span></button>
       <button class="drawer-item" id="openRapportBtn"><span class="di-icon">📄</span><span class="di-label">Rapport PDF</span></button>
+      <button class="drawer-item" id="exportPngBtn"><span class="di-icon">🖼</span><span class="di-label">Exporter en PNG</span></button>
       <button class="drawer-item" id="openPresBtn"><span class="di-icon">▶</span><span class="di-label">Présenter</span></button>
       <button class="drawer-item" onclick="location.href='conum-pptx.html'"><span class="di-icon">📑</span><span class="di-label">Générer PPTX</span></button>
     </div>
@@ -724,6 +782,21 @@
 <!-- TOAST -->
 <div class="toast" id="toastMsg"></div>
 
+<!-- ANNOTATION MODAL -->
+<div class="modal-overlay" id="annotModalOverlay">
+  <div class="annot-modal">
+    <h2>Ajouter une annotation</h2>
+    <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Mois</label>
+    <select id="annotMonth"></select>
+    <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Note</label>
+    <input type="text" id="annotText" placeholder="Ex: Lancement atelier cyber, Nouveau lieu…" maxlength="80">
+    <div class="modal-actions">
+      <button class="modal-btn primary" id="saveAnnotBtn">Ajouter</button>
+      <button class="modal-btn" id="closeAnnotBtn">Annuler</button>
+    </div>
+  </div>
+</div>
+
 <!-- QR CODE MODAL -->
 <div class="modal-overlay" id="qrModalOverlay">
   <div class="qr-modal">
@@ -738,7 +811,17 @@
   </div>
 </div>
 
-<!-- SÉLECTEUR DE SLIDES -->
+<!-- PNG EXPORT MODAL -->
+<div class="modal-overlay" id="pngModalOverlay">
+  <div class="modal" style="max-width:400px;">
+    <h2 style="margin-bottom:6px;">Exporter en PNG</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">Choisissez la section à capturer.</p>
+    <div id="pngSectionList" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="modal-btn" id="pngCloseBtn">Fermer</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="slidePickerOverlay">
   <div class="slide-picker-modal">
     <h2>Personnaliser la présentation</h2>
@@ -834,6 +917,7 @@
   <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="lieux">Lieux & canaux</div>
   <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="ateliers">Ateliers</div>
   <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="compare">⇄ Comparaison</div>
+  <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="bilan">📋 Bilan</div>
 </div>
 
 <div class="data-banner" id="dataBanner"></div>
@@ -879,8 +963,12 @@
   <div id="globalInsightBox" class="insight-box" style="display:none;"></div>
   <div class="grid2">
     <div class="card">
-      <div class="card-title"><span class="dot"></span>Accompagnements par mois</div>
+      <div class="card-title" style="display:flex;align-items:center;">
+        <span class="dot"></span>Accompagnements par mois
+        <button class="annot-btn" id="openAnnotModal">+ Annoter</button>
+      </div>
       <div class="chart-wrap"><div id="chartMonthly"><div class="empty-placeholder"><div class="ep-icon">📊</div>Importe des données pour afficher ce graphique</div></div></div>
+      <div class="annot-list" id="annotList"></div>
     </div>
     <div class="card">
       <div class="card-title green"><span class="dot"></span>Répartition par type</div>
@@ -1131,6 +1219,31 @@
         <button class="modal-btn primary" id="copyResumeBtn">📋 Copier</button>
         <button class="modal-btn" id="closeResumeBtn">Fermer</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: BILAN -->
+<div class="pages" id="page-bilan">
+  <div class="bilan-page">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
+      <label style="font-size:12px;color:var(--muted);">Année :</label>
+      <select id="bilanYear" style="background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px;">
+        <option value="all">Tout (cumul)</option>
+        <option value="2024">2024</option>
+        <option value="2025">2025</option>
+        <option value="2026">2026</option>
+      </select>
+      <button class="modal-btn primary" id="generateBilanBtn" style="padding:7px 16px;">Générer le bilan</button>
+      <button class="modal-btn" id="generateResumeBtn" style="padding:7px 16px;">📅 Résumé mensuel</button>
+    </div>
+    <div id="bilanContent"></div>
+    <div id="resumeMensuelContent" style="display:none;">
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+        <button class="modal-btn primary" id="copyResumeMensuelBtn">📋 Copier</button>
+        <button class="modal-btn" id="closeResumeMensuelBtn">Fermer</button>
+      </div>
+      <div class="resume-mensuel-box" id="resumeMensuelText"></div>
     </div>
   </div>
 </div>
@@ -3412,6 +3525,389 @@ window._renderAggregatesPatched = function(ds, periodLabel){
     setTimeout(()=> buildCommuneMap(ds && ds.communes), 100);
   };
 })();
+
+// ===== EXPORT PNG =====
+const PNG_SECTIONS = [
+  { id:'globalKpis',        label:'KPIs principaux' },
+  { id:'page-global',       label:'Vue globale (charts)' },
+  { id:'page-evolution',    label:'Évolution' },
+  { id:'page-thematiques',  label:'Thématiques' },
+  { id:'page-beneficiaires',label:'Bénéficiaires' },
+  { id:'page-lieux',        label:'Lieux & canaux' },
+  { id:'page-ateliers',     label:'Ateliers collectifs' },
+];
+
+async function captureSection(sectionId){
+  const el = document.getElementById(sectionId);
+  if(!el) throw new Error('Section introuvable');
+
+  // 1. Rendre la section visible
+  const wasHidden = el.classList.contains('pages') && !el.classList.contains('active');
+  if(wasHidden) el.classList.add('active');
+  if(sectionId === 'globalKpis') el.style.display = '';
+
+  // 2. Forcer le rendu des charts de cette section
+  const activeYear = (document.querySelector('.year-btn.active')||{}).dataset?.year || 'all';
+  if(sectionId === 'page-evolution'){ buildEvolutionChart(activeYear); buildYearOverlayChart(); buildYearCompareChart(); }
+  if(sectionId === 'page-thematiques'){ buildThemYearChart(); }
+  if(sectionId === 'page-lieux'){ buildDureesYearChart(); }
+  if(sectionId === 'page-ateliers'){ buildAtelYearCharts(); }
+  if(sectionId === 'page-global' || sectionId === 'globalKpis'){ buildMonthlyChart(activeYear); }
+
+  // 3. Attendre que les charts soient rendus
+  await new Promise(r => setTimeout(r, 600));
+
+  // 4. Trouver tous les containers de charts dans la section et les convertir en img
+  const replaced = [];
+  for(const [id, chart] of Object.entries(apexRegistry)){
+    const chartEl = document.getElementById(id);
+    if(!chartEl) continue;
+    // Vérifier si le chart est dans la section (par ID de section ou parent)
+    if(!el.contains(chartEl)) continue;
+    try {
+      const uri = await chart.dataURI({ scale: 2 });
+      if(!uri || !uri.imgURI) continue;
+      const img = document.createElement('img');
+      img.src = uri.imgURI;
+      img.style.cssText = 'width:100%;height:auto;display:block;border-radius:6px;';
+      chartEl.style.visibility = 'hidden';
+      chartEl.parentNode.insertBefore(img, chartEl);
+      replaced.push({ chartEl, img });
+    } catch(e) { console.warn('Chart skip:', id, e); }
+  }
+
+  await new Promise(r => setTimeout(r, 150));
+
+  const bgColor = document.body.classList.contains('light-mode') ? '#f0f2f7' : '#0b1020';
+
+  const canvas = await html2canvas(el, {
+    scale: 2,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: bgColor,
+    scrollX: 0,
+    scrollY: 0,
+    windowWidth: document.documentElement.scrollWidth,
+    ignoreElements: el => el.tagName === 'CANVAS' && el.classList.contains('leaflet-zoom-animated')
+  });
+
+  // 5. Restaurer
+  replaced.forEach(({ chartEl, img }) => {
+    chartEl.style.visibility = '';
+    img.remove();
+  });
+  if(wasHidden) el.classList.remove('active');
+
+  return canvas;
+}
+
+document.getElementById('exportPngBtn').addEventListener('click', () => {
+  const list = document.getElementById('pngSectionList');
+  list.innerHTML = PNG_SECTIONS.map(s => `
+    <button class="drawer-item" style="background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;" data-png="${s.id}">
+      <span class="di-icon">🖼</span>
+      <span class="di-label" style="flex:1;">${s.label}</span>
+      <span style="font-size:11px;color:var(--muted);">↓ PNG</span>
+    </button>`).join('');
+
+  list.querySelectorAll('[data-png]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const sectionId = btn.dataset.png;
+      const section = PNG_SECTIONS.find(s=>s.id===sectionId);
+      btn.querySelector('.di-label').textContent = '⏳ Capture…';
+      btn.disabled = true;
+      try {
+        const canvas = await captureSection(sectionId);
+        const link = document.createElement('a');
+        const date = new Date().toISOString().slice(0,10);
+        link.download = `conum-${section.label.replace(/[\s()&]/g,'-').replace(/-+/g,'-').toLowerCase()}-${date}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast(`✓ ${section.label} exporté en PNG`);
+      } catch(e) {
+        showToast('Erreur de capture', 'warn');
+        console.error(e);
+      }
+      btn.querySelector('.di-label').textContent = section.label;
+      btn.disabled = false;
+    });
+  });
+
+  document.getElementById('pngModalOverlay').classList.add('active');
+});
+
+document.getElementById('pngCloseBtn').addEventListener('click', () =>
+  document.getElementById('pngModalOverlay').classList.remove('active'));
+document.getElementById('pngModalOverlay').addEventListener('click', e => {
+  if(e.target === document.getElementById('pngModalOverlay'))
+    document.getElementById('pngModalOverlay').classList.remove('active');
+});
+
+// ===== ANNOTATIONS =====
+const ANNOT_KEY = 'coopDashboard_annotations';
+let annotations = JSON.parse(localStorage.getItem(ANNOT_KEY)||'[]');
+
+function saveAnnotations(){ localStorage.setItem(ANNOT_KEY, JSON.stringify(annotations)); }
+
+function renderAnnotList(){
+  const list = document.getElementById('annotList');
+  if(!annotations.length){ list.innerHTML = ''; return; }
+  list.innerHTML = annotations.map((a,i) => `
+    <div class="annot-item">
+      <span class="ai-month">${a.month}</span>
+      <span class="ai-text">${a.text}</span>
+      <button class="ai-del" data-i="${i}" title="Supprimer">✕</button>
+    </div>`).join('');
+  list.querySelectorAll('.ai-del').forEach(btn => {
+    btn.addEventListener('click', () => {
+      annotations.splice(+btn.dataset.i, 1);
+      saveAnnotations();
+      renderAnnotList();
+      rebuildMonthlyWithAnnotations();
+    });
+  });
+}
+
+function rebuildMonthlyWithAnnotations(){
+  const year = (document.querySelector('.year-btn.active')||{}).dataset?.year || 'all';
+  buildMonthlyChart(year);
+}
+
+// Remplir le select mois avec les labels disponibles
+function populateAnnotMonthSelect(){
+  const sel = document.getElementById('annotMonth');
+  sel.innerHTML = monthly.labels.map(l => `<option value="${l}">${l}</option>`).join('');
+}
+
+document.getElementById('openAnnotModal').addEventListener('click', () => {
+  populateAnnotMonthSelect();
+  document.getElementById('annotText').value = '';
+  document.getElementById('annotModalOverlay').classList.add('active');
+});
+document.getElementById('closeAnnotBtn').addEventListener('click', () =>
+  document.getElementById('annotModalOverlay').classList.remove('active'));
+document.getElementById('annotModalOverlay').addEventListener('click', e => {
+  if(e.target === document.getElementById('annotModalOverlay'))
+    document.getElementById('annotModalOverlay').classList.remove('active');
+});
+document.getElementById('saveAnnotBtn').addEventListener('click', () => {
+  const month = document.getElementById('annotMonth').value;
+  const text = document.getElementById('annotText').value.trim();
+  if(!text){ showToast('Saisis une note','warn'); return; }
+  annotations.push({ month, text, createdAt: new Date().toISOString() });
+  saveAnnotations();
+  renderAnnotList();
+  rebuildMonthlyWithAnnotations();
+  document.getElementById('annotModalOverlay').classList.remove('active');
+  showToast('✓ Annotation ajoutée');
+});
+
+// Intégrer les annotations dans le tooltip du chart mensuel
+const _origBuildMonthlyChart = buildMonthlyChart;
+buildMonthlyChart = function(year){
+  _origBuildMonthlyChart(year);
+  // Ajouter les annotations comme points ApexCharts
+  const ch = apexRegistry['chartMonthly'];
+  if(!ch || !annotations.length) return;
+  const data = getFilteredMonthly(year);
+  const annots = annotations
+    .filter(a => data.labels.includes(a.month))
+    .map(a => ({
+      x: a.month,
+      borderColor: '#f59e0b',
+      label: {
+        borderColor: '#f59e0b',
+        style: { color:'#0b1020', background:'#f59e0b', fontSize:'10px', fontWeight:'700' },
+        text: a.text.length > 20 ? a.text.slice(0,20)+'…' : a.text,
+        orientation: 'horizontal'
+      }
+    }));
+  if(annots.length) ch.updateOptions({ annotations: { xaxis: annots } }, false, false);
+};
+renderAnnotList();
+
+// ===== BILAN ANNUEL =====
+function generateBilan(year){
+  const ds = year === 'all' ? getActiveDataset() : (yearData[year] || null);
+  if(!ds || !ds.totals.accompagnements){
+    return `<div class="data-banner show">Aucune donnée pour ${year === 'all' ? 'le cumul' : year}. Importe d\'abord les exports XLSX.</div>`;
+  }
+  const t = ds.totals;
+  const period = year === 'all' ? 'cumul 2024–2026' : `année ${year}`;
+  const topTheme = ds.themMed.length ? [...ds.themMed].sort((a,b)=>b.val-a.val)[0] : {label:'—',val:0,pct:0};
+  const top3Themes = [...ds.themMed].sort((a,b)=>b.val-a.val).filter(x=>x.val>0).slice(0,3);
+  const ratio = t.ateliersVal ? (t.participants/t.ateliersVal).toFixed(1) : 0;
+  const pctNouv = (t.nouveaux&&(t.nouveaux+t.suivis)) ? Math.round(t.nouveaux/(t.nouveaux+t.suivis)*100) : 0;
+  const topCommune = ds.communes.length ? ds.communes[0] : null;
+  const agentName = ds.agentName || 'Conseiller Numérique';
+  const now = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+
+  // Projection 2026
+  const monthsLoaded26 = monthly.labels.filter(l=>'20'+l.split('/')[1]==='2026'&&monthly.values[monthly.labels.indexOf(l)]>0).length;
+  const h1_26 = monthly.labels.reduce((acc,l,i)=>{
+    const [mm,yy]=l.split('/'); return yy==='26'&&parseInt(mm)<=6 ? acc+monthly.values[i] : acc;
+  },0);
+  const proj26 = monthsLoaded26 ? Math.round(h1_26/monthsLoaded26*12) : 0;
+
+  // Annotations de la période
+  const periodAnnots = annotations.filter(a => year === 'all' || '20'+a.month.split('/')[1] === year);
+
+  return `
+  <div class="bilan-header">
+    <h1>Bilan d'activité ${year === 'all' ? '2024–2026' : year}</h1>
+    <div class="bh-sub">${agentName} · Conseiller Numérique · Lot-et-Garonne · CD47</div>
+    <div class="bh-sub" style="margin-top:4px;font-size:11px;opacity:.6;">Généré le ${now}</div>
+  </div>
+
+  <div class="bilan-section">
+    <h2>Chiffres clés</h2>
+    <div class="bilan-kpi-row">
+      <div class="bilan-kpi"><div class="bk-val">${t.accompagnements.toLocaleString('fr-FR')}</div><div class="bk-label">Accompagnements</div></div>
+      <div class="bilan-kpi"><div class="bk-val" style="color:var(--green)">${t.beneficiaires.toLocaleString('fr-FR')}</div><div class="bk-label">Bénéficiaires</div></div>
+      <div class="bilan-kpi"><div class="bk-val" style="color:var(--orange)">${t.ateliersVal}</div><div class="bk-label">Ateliers collectifs</div></div>
+      <div class="bilan-kpi"><div class="bk-val" style="color:var(--purple)">${t.participants.toLocaleString('fr-FR')}</div><div class="bk-label">Participants</div></div>
+      <div class="bilan-kpi"><div class="bk-val" style="color:var(--pink)">${pctNouv}%</div><div class="bk-label">Nouveaux bénéf.</div></div>
+      <div class="bilan-kpi"><div class="bk-val" style="color:var(--cyan)">${ratio}×</div><div class="bk-label">Multiplicateur</div></div>
+    </div>
+  </div>
+
+  <div class="bilan-section">
+    <h2>Synthèse narrative</h2>
+    <div class="bilan-narrative">
+      Sur <b>${period}</b>, <b>${t.accompagnements.toLocaleString('fr-FR')} accompagnements</b> ont été réalisés,
+      touchant <b>${t.beneficiaires.toLocaleString('fr-FR')} bénéficiaires</b>
+      (dont <span class="bn-highlight">${pctNouv}% nouveaux publics</span> — ${t.nouveaux} personnes).
+      <br><br>
+      L'activité se répartit entre <b>${t.individuelsVal} accompagnements individuels</b> (${t.individuelsPct}%)
+      et <b>${t.ateliersVal} ateliers collectifs</b> (${t.ateliersPct}%), ayant rassemblé
+      <b>${t.participants} participants</b> avec un ratio moyen de <b>${ratio} personnes par séance</b>.
+      Le format collectif a généré une économie équivalente à
+      <b>${Math.max(0,t.participants-t.ateliersVal)} séances individuelles</b>.
+      <br><br>
+      La thématique dominante est <b>${topTheme.label}</b> avec ${topTheme.val} accompagnements
+      (${topTheme.pct}% du total).
+      ${top3Themes.length > 1 ? `Le top 3 : ${top3Themes.map(t=>t.label+' ('+t.val+')').join(', ')}.` : ''}
+      ${topCommune ? `<br><br>La commune la plus représentée est <b>${topCommune.label}</b> avec ${topCommune.val} bénéficiaires.` : ''}
+      ${proj26 && year !== '2024' && year !== '2025' ? `<br><br>Sur la base des données disponibles, la projection 2026 s'établit à <span class="bn-highlight">~${proj26.toLocaleString('fr-FR')} accompagnements</span> sur l'année pleine.` : ''}
+    </div>
+  </div>
+
+  ${top3Themes.length ? `
+  <div class="bilan-section">
+    <h2>Top thématiques</h2>
+    <div class="bilan-narrative">
+      ${ds.themMed.filter(x=>x.val>0).slice(0,8).map((th,i)=>`
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;">
+          <span style="color:var(--muted)">${i+1}. ${th.label}</span>
+          <span><b>${th.val}</b> <span style="color:var(--muted);font-size:11px;">${th.pct}%</span></span>
+        </div>`).join('')}
+    </div>
+  </div>` : ''}
+
+  ${periodAnnots.length ? `
+  <div class="bilan-section">
+    <h2>Événements & annotations</h2>
+    <div class="bilan-narrative">
+      ${periodAnnots.map(a=>`
+        <div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;">
+          <span style="color:var(--orange);font-weight:700;min-width:46px;">${a.month}</span>
+          <span>${a.text}</span>
+        </div>`).join('')}
+    </div>
+  </div>` : ''}
+
+  <div class="bilan-actions">
+    <button class="modal-btn primary" id="copyBilanBtn">📋 Copier le bilan</button>
+    <button class="modal-btn" id="exportBilanPngBtn">🖼 PNG</button>
+  </div>
+  `;
+}
+
+document.getElementById('generateBilanBtn').addEventListener('click', () => {
+  const year = document.getElementById('bilanYear').value;
+  document.getElementById('bilanContent').innerHTML = generateBilan(year);
+  document.getElementById('resumeMensuelContent').style.display = 'none';
+
+  document.getElementById('copyBilanBtn')?.addEventListener('click', () => {
+    const el = document.getElementById('bilanContent');
+    fallbackCopy(el.innerText);
+    showToast('✓ Bilan copié');
+  });
+
+  document.getElementById('exportBilanPngBtn')?.addEventListener('click', async () => {
+    const el = document.getElementById('bilanContent');
+    const btn = document.getElementById('exportBilanPngBtn');
+    btn.textContent = '⏳…';
+    try {
+      const canvas = await html2canvas(el, { scale:2, backgroundColor: document.body.classList.contains('light-mode')?'#f0f2f7':'#0b1020', useCORS:true });
+      const link = document.createElement('a');
+      link.download = `bilan-conum-${document.getElementById('bilanYear').value}-${new Date().toISOString().slice(0,10)}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      showToast('✓ Bilan exporté en PNG');
+    } catch(e){ showToast('Erreur','warn'); }
+    btn.textContent = '🖼 PNG';
+  });
+});
+
+// ===== RÉSUMÉ MENSUEL =====
+document.getElementById('generateResumeBtn').addEventListener('click', () => {
+  const year = document.getElementById('bilanYear').value;
+  const now = new Date();
+  const monthNames = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  const currentMonth = monthNames[now.getMonth()];
+  const currentYear = now.getFullYear();
+
+  // Données du mois en cours ou dernier mois disponible
+  const data = getFilteredMonthly(year);
+  const lastNonZeroIdx = [...data.values].reverse().findIndex(v=>v>0);
+  const lastIdx = lastNonZeroIdx >= 0 ? data.values.length - 1 - lastNonZeroIdx : -1;
+  const lastMonth = lastIdx >= 0 ? data.labels[lastIdx] : null;
+  const lastVal = lastIdx >= 0 ? data.values[lastIdx] : 0;
+  const prevVal = lastIdx > 0 ? data.values[lastIdx-1] : 0;
+  const evol = prevVal ? ((lastVal-prevVal)/prevVal*100).toFixed(1) : null;
+
+  const ds = year === 'all' ? getActiveDataset() : (yearData[year] || getActiveDataset());
+  const t = ds.totals;
+  const topTheme = ds.themMed.length ? [...ds.themMed].sort((a,b)=>b.val-a.val)[0] : {label:'—'};
+  const agentName = ds.agentName || 'Conseiller Numérique';
+
+  const monthAnnots = lastMonth ? annotations.filter(a=>a.month===lastMonth) : [];
+
+  const txt = `📊 RÉSUMÉ D'ACTIVITÉ — ${lastMonth || currentMonth+' '+currentYear}
+${agentName} · CD47 · Lot-et-Garonne
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📌 CE MOIS (${lastMonth || '—'})
+  Accompagnements    : ${lastVal}${evol ? ` (${evol>0?'+':''}${evol}% vs mois précédent)` : ''}
+  Mois précédent     : ${prevVal}
+
+📈 CUMUL ${year === 'all' ? '2024–2026' : year}
+  Accompagnements    : ${t.accompagnements.toLocaleString('fr-FR')}
+  Bénéficiaires      : ${t.beneficiaires.toLocaleString('fr-FR')}
+  Individuels        : ${t.individuelsVal}
+  Ateliers collectifs: ${t.ateliersVal} (${t.participants} participants)
+  Nouveaux bénéf.    : ${t.nouveaux} / ${t.nouveaux+t.suivis} identifiés
+
+🏷 TOP THÉMATIQUE
+  ${topTheme.label}${topTheme.val ? ' ('+topTheme.val+' accompagnements)' : ''}
+
+${monthAnnots.length ? `📌 ÉVÉNEMENTS DU MOIS\n${monthAnnots.map(a=>'  • '+a.text).join('\n')}\n` : ''}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Généré le ${now.toLocaleDateString('fr-FR')} via Dashboard Conum CD47`;
+
+  document.getElementById('resumeMensuelText').textContent = txt;
+  document.getElementById('resumeMensuelContent').style.display = '';
+  document.getElementById('bilanContent').innerHTML = '';
+  document.getElementById('resumeMensuelContent').scrollIntoView({behavior:'smooth'});
+});
+
+document.getElementById('copyResumeMensuelBtn').addEventListener('click', () => {
+  fallbackCopy(document.getElementById('resumeMensuelText').textContent);
+  showToast('✓ Résumé mensuel copié');
+});
+document.getElementById('closeResumeMensuelBtn').addEventListener('click', () => {
+  document.getElementById('resumeMensuelContent').style.display = 'none';
+});
 
 // ===== PERSISTANCE LOCALSTORAGE =====
 const STORAGE_KEY = 'coopDashboard_yearData';
