@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi-agents — Conum CD47</title>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.0/dist/apexcharts.min.js"></script>
+<style>
+  :root{--bg:#0b1020;--panel:#121a32;--panel2:#0e1530;--border:#243154;--text:#e8ecf7;--muted:#8b95b8;--blue:#3b82f6;--green:#10b981;--orange:#f59e0b;--purple:#a855f7;--cyan:#06b6d4;--red:#ef4444;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);padding:20px;}
+  .header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+  .badge{background:var(--blue);color:#fff;font-weight:800;padding:6px 12px;border-radius:6px;font-size:13px;letter-spacing:1px;}
+  .title{font-size:18px;font-weight:800;}
+  .sub{color:var(--muted);font-size:12px;}
+  .spacer{flex:1;}
+  .btn{border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;}
+  .btn-primary{background:var(--blue);color:#fff;}
+  .btn-sec{background:var(--panel);border:1px solid var(--border);color:var(--text);}
+  .btn-sec:hover{border-color:var(--blue);}
+  .btn-danger{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:var(--red);}
+  .grid2{display:grid;grid-template-columns:280px 1fr;gap:16px;}
+  @media(max-width:800px){.grid2{grid-template-columns:1fr;}}
+  .sidebar{display:flex;flex-direction:column;gap:12px;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;}
+  .card-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:12px;}
+  .agent-item{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:.15s;margin-bottom:8px;}
+  .agent-item:hover{border-color:#3a4a78;}
+  .agent-item.active{border-color:var(--blue);background:rgba(59,130,246,.08);}
+  .agent-item.aggregated{border-color:var(--green);background:rgba(16,185,129,.06);}
+  .agent-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .agent-name{font-size:13px;font-weight:700;flex:1;}
+  .agent-stats{font-size:11px;color:var(--muted);}
+  .agent-actions{display:flex;gap:6px;flex-shrink:0;}
+  .ia-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px;}
+  .ia-btn:hover{color:var(--text);}
+  input,select{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 10px;font-size:13px;margin-top:4px;}
+  label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+  .field{margin-bottom:10px;}
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;}
+  .kpi-box{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;border-top:3px solid var(--blue);}
+  .kpi-box.k2{border-top-color:var(--green);}
+  .kpi-box.k3{border-top-color:var(--orange);}
+  .kpi-box.k4{border-top-color:var(--purple);}
+  .kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;}
+  .kpi-val{font-size:26px;font-weight:800;}
+  .kpi-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap;}
+  .tab{padding:8px 14px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;}
+  .tab.active{color:var(--blue);border-color:var(--blue);}
+  .tabpage{display:none;}
+  .tabpage.active{display:block;}
+  .chart-wrap{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;}
+  .chart-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px;}
+  .bar-row{margin-bottom:8px;}
+  .bar-top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;}
+  .bar-track{height:6px;background:#1a2444;border-radius:3px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:3px;}
+  .leaderboard{display:flex;flex-direction:column;gap:8px;}
+  .lb-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--panel2);border-radius:8px;border:1px solid var(--border);}
+  .lb-rank{font-size:16px;font-weight:800;min-width:28px;text-align:center;}
+  .lb-name{font-size:13px;font-weight:700;flex:1;}
+  .lb-val{font-size:16px;font-weight:800;color:var(--blue);}
+  .lb-bar{height:4px;background:var(--border);border-radius:2px;margin-top:4px;}
+  .lb-bar-fill{height:100%;border-radius:2px;background:var(--blue);}
+  .empty{text-align:center;color:var(--muted);font-size:13px;padding:40px;opacity:.6;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--panel);border:1px solid var(--green);border-radius:10px;padding:10px 18px;font-size:13px;color:var(--green);z-index:100;transition:.3s;opacity:0;}
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(5,8,20,.7);align-items:center;justify-content:center;z-index:50;}
+  .modal-overlay.active{display:flex;}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:24px;width:100%;max-width:420px;}
+  .modal h2{font-size:16px;margin-bottom:14px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">CD47</div>
+  <div><div class="title">Multi-agents Conum</div><div class="sub">Vue agrégée + comparaison par conseiller</div></div>
+  <div class="spacer"></div>
+  <button class="btn btn-primary" id="addAgentBtn">+ Ajouter un agent</button>
+  <button class="btn btn-sec" onclick="location.href='dashboard-stats.html'">← Dashboard</button>
+</div>
+
+<!-- Modal ajout agent -->
+<div class="modal-overlay" id="addAgentModal">
+  <div class="modal">
+    <h2>Ajouter / modifier un agent</h2>
+    <input type="hidden" id="editAgentId">
+    <div class="field"><label>Nom complet</label><input id="agentNameInput" placeholder="Prénom NOM"></div>
+    <div class="field"><label>Couleur</label>
+      <div style="display:flex;gap:8px;margin-top:6px;" id="agentColorPicker">
+        <div data-c="3b82f6" style="width:28px;height:28px;border-radius:6px;background:#3b82f6;cursor:pointer;border:2px solid #fff;"></div>
+        <div data-c="10b981" style="width:28px;height:28px;border-radius:6px;background:#10b981;cursor:pointer;"></div>
+        <div data-c="f59e0b" style="width:28px;height:28px;border-radius:6px;background:#f59e0b;cursor:pointer;"></div>
+        <div data-c="a855f7" style="width:28px;height:28px;border-radius:6px;background:#a855f7;cursor:pointer;"></div>
+        <div data-c="ec4899" style="width:28px;height:28px;border-radius:6px;background:#ec4899;cursor:pointer;"></div>
+        <div data-c="06b6d4" style="width:28px;height:28px;border-radius:6px;background:#06b6d4;cursor:pointer;"></div>
+      </div>
+    </div>
+    <div class="field"><label>Importer JSON (export dashboard)</label><input type="file" id="agentJsonInput" accept=".json" style="padding:4px;"></div>
+    <div id="agentImportStatus" style="font-size:12px;margin-top:6px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="saveAgentBtn">Enregistrer</button>
+      <button class="btn btn-sec" id="cancelAgentBtn">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="grid2">
+  <!-- Sidebar agents -->
+  <div class="sidebar">
+    <div class="card">
+      <div class="card-title">Conseillers numériques</div>
+      <div id="agentList"><div class="empty">Aucun agent — cliquez sur "+ Ajouter"</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Vue</div>
+      <div id="agentViewList"></div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div>
+    <div class="tabs">
+      <div class="tab active" data-tab="vue">Vue agrégée</div>
+      <div class="tab" data-tab="compare">Comparaison</div>
+      <div class="tab" data-tab="individuel">Individuel</div>
+      <div class="tab" data-tab="classement">Classement</div>
+    </div>
+
+    <!-- Vue agrégée -->
+    <div class="tabpage active" id="tab-vue">
+      <div class="kpi-grid" id="aggKpis"></div>
+      <div class="chart-wrap"><div class="chart-title">Accompagnements par agent</div><div id="chartAgents" style="height:220px;"></div></div>
+      <div class="chart-wrap"><div class="chart-title">Top thématiques — cumul</div><div id="aggThemBars"></div></div>
+    </div>
+
+    <!-- Comparaison -->
+    <div class="tabpage" id="tab-compare">
+      <div id="compareTable"></div>
+    </div>
+
+    <!-- Individuel -->
+    <div class="tabpage" id="tab-individuel">
+      <div style="margin-bottom:14px;">
+        <select id="individualSelect"><option value="">— Sélectionner un agent —</option></select>
+      </div>
+      <div id="individualDetail"></div>
+    </div>
+
+    <!-- Classement -->
+    <div class="tabpage" id="tab-classement">
+      <div style="margin-bottom:12px;">
+        <select id="rankMetric">
+          <option value="accompagnements">Accompagnements</option>
+          <option value="beneficiaires">Bénéficiaires</option>
+          <option value="ateliersVal">Ateliers collectifs</option>
+          <option value="participants">Participants ateliers</option>
+        </select>
+      </div>
+      <div class="leaderboard" id="leaderboard"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'conumMultiAgents';
+let agents = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+let selectedAgentColor = '3b82f6';
+let agentJsonData = null;
+let currentView = 'aggregated'; // 'aggregated' | agentId
+
+function saveAgents(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(agents)); }
+function toast(msg, ok=true){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.borderColor=ok?'var(--green)':'var(--red)';
+  t.style.color=ok?'var(--green)':'var(--red)';
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// Tabs
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tabpage').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-'+tab.dataset.tab).classList.add('active');
+    renderAll();
+  });
+});
+
+// Couleur picker modal
+document.getElementById('agentColorPicker').querySelectorAll('div[data-c]').forEach(el=>{
+  el.addEventListener('click',()=>{
+    document.querySelectorAll('#agentColorPicker div[data-c]').forEach(e=>e.style.border='2px solid transparent');
+    el.style.border='2px solid #fff';
+    selectedAgentColor=el.dataset.c;
+  });
+});
+
+// Import JSON agent
+document.getElementById('agentJsonInput').addEventListener('change', e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=evt=>{
+    try{
+      const raw=JSON.parse(evt.target.result);
+      agentJsonData={};
+      Object.keys(raw).filter(k=>!k.startsWith('_')).forEach(y=>agentJsonData[y]=raw[y]);
+      const years=Object.keys(agentJsonData);
+      document.getElementById('agentImportStatus').textContent=`✓ ${years.join(', ')} — ${Object.values(agentJsonData).reduce((a,d)=>a+(d.totals?.accompagnements||0),0)} accompagnements`;
+      document.getElementById('agentImportStatus').style.color='var(--green)';
+      // Auto-remplir nom si dispo
+      const firstName = agentJsonData[years[0]]?.agentName;
+      if(firstName && !document.getElementById('agentNameInput').value)
+        document.getElementById('agentNameInput').value=firstName;
+    }catch(err){
+      document.getElementById('agentImportStatus').textContent='Fichier invalide';
+      document.getElementById('agentImportStatus').style.color='var(--red)';
+    }
+  };
+  reader.readAsText(file);
+});
+
+// Modal
+document.getElementById('addAgentBtn').addEventListener('click',()=>{
+  document.getElementById('editAgentId').value='';
+  document.getElementById('agentNameInput').value='';
+  document.getElementById('agentImportStatus').textContent='';
+  agentJsonData=null;
+  document.getElementById('agentJsonInput').value='';
+  document.getElementById('addAgentModal').classList.add('active');
+});
+document.getElementById('cancelAgentBtn').addEventListener('click',()=>document.getElementById('addAgentModal').classList.remove('active'));
+
+document.getElementById('saveAgentBtn').addEventListener('click',()=>{
+  const name=document.getElementById('agentNameInput').value.trim();
+  if(!name){toast('Nom requis',false);return;}
+  const editId=document.getElementById('editAgentId').value;
+  if(editId){
+    const a=agents.find(x=>x.id===editId);
+    if(a){ a.name=name; a.color=selectedAgentColor; if(agentJsonData) a.data=agentJsonData; }
+  } else {
+    agents.push({id:'a'+Date.now(), name, color:selectedAgentColor, data:agentJsonData||{}});
+  }
+  saveAgents();
+  document.getElementById('addAgentModal').classList.remove('active');
+  toast(`✓ ${name} enregistré`);
+  renderAll();
+});
+
+// Agréger un agent sur toutes ses années
+function agentTotals(agent){
+  const years=Object.keys(agent.data||{});
+  if(!years.length) return {accompagnements:0,beneficiaires:0,ateliersVal:0,participants:0,individuelsVal:0};
+  const t={accompagnements:0,beneficiaires:0,ateliersVal:0,participants:0,individuelsVal:0,nouveaux:0,suivis:0};
+  years.forEach(y=>{ const d=agent.data[y]?.totals||{}; Object.keys(t).forEach(k=>{ t[k]+=(d[k]||0); }); });
+  return t;
+}
+function agentThemes(agent){
+  const years=Object.keys(agent.data||{});
+  const map=new Map();
+  years.forEach(y=>{ (agent.data[y]?.themMed||[]).forEach(x=>{ const c=map.get(x.label)||{label:x.label,val:0}; c.val+=x.val; map.set(x.label,c); }); });
+  const arr=[...map.values()]; const tot=arr.reduce((a,b)=>a+b.val,0)||1;
+  arr.forEach(x=>x.pct=Math.round(x.val/tot*1000)/10);
+  return arr.sort((a,b)=>b.val-a.val);
+}
+
+function renderSidebar(){
+  const list=document.getElementById('agentList');
+  const viewList=document.getElementById('agentViewList');
+  const sel=document.getElementById('individualSelect');
+
+  if(!agents.length){ list.innerHTML='<div class="empty">Aucun agent</div>'; viewList.innerHTML=''; sel.innerHTML='<option value="">—</option>'; return; }
+
+  list.innerHTML=agents.map(a=>{
+    const t=agentTotals(a);
+    return `<div class="agent-item" data-id="${a.id}">
+      <div class="agent-dot" style="background:#${a.color}"></div>
+      <div><div class="agent-name">${a.name}</div><div class="agent-stats">${t.accompagnements} accompagnements</div></div>
+      <div class="agent-actions">
+        <button class="ia-btn" data-edit="${a.id}" title="Modifier">✏️</button>
+        <button class="ia-btn" data-del="${a.id}" title="Supprimer">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Vue selector
+  viewList.innerHTML=`
+    <div class="agent-item aggregated ${currentView==='aggregated'?'active':''}" data-view="aggregated">
+      <div class="agent-dot" style="background:var(--green)"></div>
+      <div><div class="agent-name">Vue agrégée</div><div class="agent-stats">${agents.length} agent(s)</div></div>
+    </div>
+    ${agents.map(a=>`
+    <div class="agent-item ${currentView===a.id?'active':''}" data-view="${a.id}">
+      <div class="agent-dot" style="background:#${a.color}"></div>
+      <div class="agent-name">${a.name}</div>
+    </div>`).join('')}
+  `;
+
+  sel.innerHTML='<option value="">— Sélectionner —</option>'+agents.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
+
+  // Events
+  list.querySelectorAll('[data-edit]').forEach(btn=>btn.addEventListener('click',e=>{
+    e.stopPropagation();
+    const a=agents.find(x=>x.id===btn.dataset.edit);
+    if(!a) return;
+    document.getElementById('editAgentId').value=a.id;
+    document.getElementById('agentNameInput').value=a.name;
+    selectedAgentColor=a.color;
+    document.querySelectorAll('#agentColorPicker div[data-c]').forEach(el=>{
+      el.style.border=el.dataset.c===a.color?'2px solid #fff':'2px solid transparent';
+    });
+    agentJsonData=null;
+    document.getElementById('agentImportStatus').textContent=Object.keys(a.data||{}).length?`✓ Données : ${Object.keys(a.data).join(', ')}`:'';
+    document.getElementById('addAgentModal').classList.add('active');
+  }));
+  list.querySelectorAll('[data-del]').forEach(btn=>btn.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(!confirm('Supprimer cet agent ?')) return;
+    agents=agents.filter(x=>x.id!==btn.dataset.del);
+    saveAgents(); toast('Agent supprimé'); renderAll();
+  }));
+  viewList.querySelectorAll('[data-view]').forEach(el=>el.addEventListener('click',()=>{
+    currentView=el.dataset.view; renderAll();
+  }));
+}
+
+const COLORS=['#3b82f6','#10b981','#f59e0b','#a855f7','#ec4899','#06b6d4','#ef4444','#eab308'];
+let chartAgentsInst=null;
+
+function renderVue(){
+  if(!agents.length){ document.getElementById('aggKpis').innerHTML='<div class="empty">Aucun agent</div>'; return; }
+  const totals=agents.map(a=>({...agentTotals(a),name:a.name,color:'#'+a.color}));
+  const agg={accompagnements:0,beneficiaires:0,ateliersVal:0,participants:0};
+  totals.forEach(t=>{ Object.keys(agg).forEach(k=>agg[k]+=(t[k]||0)); });
+
+  document.getElementById('aggKpis').innerHTML=`
+    <div class="kpi-box"><div class="kpi-label">Accompagnements</div><div class="kpi-val">${agg.accompagnements.toLocaleString('fr-FR')}</div><div class="kpi-sub">cumul équipe</div></div>
+    <div class="kpi-box k2"><div class="kpi-label">Bénéficiaires</div><div class="kpi-val">${agg.beneficiaires.toLocaleString('fr-FR')}</div><div class="kpi-sub">non dédoublonné</div></div>
+    <div class="kpi-box k3"><div class="kpi-label">Ateliers collectifs</div><div class="kpi-val">${agg.ateliersVal.toLocaleString('fr-FR')}</div><div class="kpi-sub">${agg.participants} participants</div></div>
+    <div class="kpi-box k4"><div class="kpi-label">Agents actifs</div><div class="kpi-val">${agents.length}</div><div class="kpi-sub">conseillers numériques</div></div>
+  `;
+
+  // Chart barres par agent
+  const opts={
+    chart:{type:'bar',height:220,background:'transparent',toolbar:{show:false},fontFamily:"-apple-system,sans-serif"},
+    theme:{mode:'dark'},series:[{name:'Accompagnements',data:totals.map(t=>t.accompagnements)}],
+    colors:totals.map(t=>t.color),
+    xaxis:{categories:totals.map(t=>t.name.split(' ')[0]),labels:{style:{colors:'#8b95b8',fontSize:'11px'}},axisBorder:{show:false}},
+    yaxis:{labels:{style:{colors:'#8b95b8'}}},
+    plotOptions:{bar:{borderRadius:4,columnWidth:'55%',distributed:true,dataLabels:{position:'top'}}},
+    dataLabels:{enabled:true,formatter:v=>v.toLocaleString('fr-FR'),style:{fontSize:'11px',fontWeight:'600',colors:['#e8ecf7']}},
+    legend:{show:false},grid:{borderColor:'#1a2444',strokeDashArray:4},
+    tooltip:{theme:'dark',y:{formatter:v=>v.toLocaleString('fr-FR')+' accompagnements'}}
+  };
+  if(chartAgentsInst){ try{chartAgentsInst.destroy();}catch(e){} }
+  chartAgentsInst=new ApexCharts(document.getElementById('chartAgents'),opts);
+  chartAgentsInst.render();
+
+  // Thématiques agrégées
+  const themeMap=new Map();
+  agents.forEach(a=>agentThemes(a).forEach(x=>{ const c=themeMap.get(x.label)||{label:x.label,val:0}; c.val+=x.val; themeMap.set(x.label,c); }));
+  const themes=[...themeMap.values()].sort((a,b)=>b.val-a.val).slice(0,8);
+  const maxT=themes[0]?.val||1;
+  document.getElementById('aggThemBars').innerHTML=themes.map((th,i)=>`
+    <div class="bar-row">
+      <div class="bar-top"><span>${th.label}</span><span style="color:var(--muted)">${th.val}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(th.val/maxT*100).toFixed(1)}%;background:${COLORS[i%COLORS.length]}"></div></div>
+    </div>`).join('');
+}
+
+function renderCompare(){
+  if(agents.length<2){ document.getElementById('compareTable').innerHTML='<div class="empty">Ajoutez au moins 2 agents pour comparer</div>'; return; }
+  const metrics=[
+    {key:'accompagnements',label:'Accompagnements'},
+    {key:'beneficiaires',label:'Bénéficiaires'},
+    {key:'individuelsVal',label:'Individuels'},
+    {key:'ateliersVal',label:'Ateliers'},
+    {key:'participants',label:'Participants'},
+    {key:'nouveaux',label:'Nouveaux bénéf.'},
+  ];
+  const agTotals=agents.map(a=>({...agentTotals(a),name:a.name,color:'#'+a.color}));
+  const header=`<div style="display:grid;grid-template-columns:180px ${agents.map(()=>'1fr').join(' ')};gap:8px;margin-bottom:8px;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">
+    <div>Métrique</div>${agents.map(a=>`<div style="color:#${a.color}">${a.name.split(' ')[0]}</div>`).join('')}
+  </div>`;
+  const rows=metrics.map(m=>{
+    const vals=agTotals.map(t=>t[m.key]||0);
+    const maxV=Math.max(...vals)||1;
+    return `<div style="display:grid;grid-template-columns:180px ${agents.map(()=>'1fr').join(' ')};gap:8px;padding:10px 0;border-bottom:1px solid var(--border);align-items:center;">
+      <div style="font-size:12px;color:var(--muted)">${m.label}</div>
+      ${vals.map((v,i)=>`<div>
+        <div style="font-size:16px;font-weight:800;color:#${agents[i].color}">${v.toLocaleString('fr-FR')}</div>
+        <div class="lb-bar"><div class="lb-bar-fill" style="width:${(v/maxV*100).toFixed(1)}%;background:#${agents[i].color}"></div></div>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+  document.getElementById('compareTable').innerHTML=`<div class="card">${header}${rows}</div>`;
+}
+
+function renderIndividuel(){
+  const sel=document.getElementById('individualSelect').value;
+  const detail=document.getElementById('individualDetail');
+  if(!sel){ detail.innerHTML='<div class="empty">Sélectionne un agent</div>'; return; }
+  const agent=agents.find(a=>a.id===sel);
+  if(!agent){ detail.innerHTML=''; return; }
+  const t=agentTotals(agent);
+  const themes=agentThemes(agent).filter(x=>x.val>0).slice(0,8);
+  const maxT=themes[0]?.val||1;
+  detail.innerHTML=`
+    <div class="kpi-grid">
+      <div class="kpi-box"><div class="kpi-label">Accompagnements</div><div class="kpi-val" style="color:#${agent.color}">${t.accompagnements.toLocaleString('fr-FR')}</div></div>
+      <div class="kpi-box k2"><div class="kpi-label">Bénéficiaires</div><div class="kpi-val">${t.beneficiaires.toLocaleString('fr-FR')}</div></div>
+      <div class="kpi-box k3"><div class="kpi-label">Ateliers</div><div class="kpi-val">${t.ateliersVal}</div><div class="kpi-sub">${t.participants} participants</div></div>
+      <div class="kpi-box k4"><div class="kpi-label">Individuels</div><div class="kpi-val">${t.individuelsVal}</div></div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Top thématiques — ${agent.name}</div>
+      ${themes.map((th,i)=>`<div class="bar-row">
+        <div class="bar-top"><span>${th.label}</span><span style="color:var(--muted)">${th.val} · ${th.pct}%</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(th.val/maxT*100).toFixed(1)}%;background:#${agent.color}"></div></div>
+      </div>`).join('')}
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Données par année</div>
+      ${Object.keys(agent.data||{}).sort().map(y=>{
+        const d=agent.data[y]?.totals||{};
+        return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+          <span style="font-weight:700;color:#${agent.color}">${y}</span>
+          <span>${d.accompagnements||0} accompagnements</span>
+          <span style="color:var(--muted)">${d.beneficiaires||0} bénéf.</span>
+          <span style="color:var(--muted)">${d.ateliersVal||0} ateliers</span>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderClassement(){
+  const metric=document.getElementById('rankMetric').value;
+  const sorted=[...agents].map(a=>({...agentTotals(a),name:a.name,color:'#'+a.color}))
+    .sort((a,b)=>(b[metric]||0)-(a[metric]||0));
+  const maxV=sorted[0]?.[metric]||1;
+  const medals=['🥇','🥈','🥉'];
+  document.getElementById('leaderboard').innerHTML=sorted.map((a,i)=>`
+    <div class="lb-row">
+      <div class="lb-rank">${medals[i]||i+1}</div>
+      <div style="flex:1">
+        <div class="lb-name" style="color:${a.color}">${a.name}</div>
+        <div class="lb-bar"><div class="lb-bar-fill" style="width:${((a[metric]||0)/maxV*100).toFixed(1)}%;background:${a.color}"></div></div>
+      </div>
+      <div class="lb-val" style="color:${a.color}">${(a[metric]||0).toLocaleString('fr-FR')}</div>
+    </div>`).join('');
+}
+
+document.getElementById('individualSelect').addEventListener('change',renderIndividuel);
+document.getElementById('rankMetric').addEventListener('change',renderClassement);
+
+function renderAll(){
+  renderSidebar();
+  renderVue();
+  renderCompare();
+  renderIndividuel();
+  renderClassement();
+}
+renderAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Export PPTX — Conum CD47</title>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<style>
+  :root{--bg:#0b1020;--panel:#121a32;--border:#243154;--text:#e8ecf7;--muted:#8b95b8;--blue:#3b82f6;--green:#10b981;--orange:#f59e0b;--purple:#a855f7;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);padding:20px;min-height:100vh;}
+  h1{font-size:20px;font-weight:800;margin-bottom:6px;}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:24px;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;}
+  .card h2{font-size:14px;font-weight:700;margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
+  .field{margin-bottom:12px;}
+  label{font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;}
+  input,select,textarea{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:13px;}
+  textarea{min-height:80px;resize:vertical;}
+  .slide-list{display:flex;flex-direction:column;gap:8px;}
+  .slide-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;}
+  .slide-row.on{border-color:var(--purple);background:rgba(168,85,247,.08);}
+  .slide-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--purple);}
+  .slide-row .sr-label{font-size:13px;font-weight:600;flex:1;}
+  .slide-row .sr-desc{font-size:11px;color:var(--muted);}
+  .color-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .color-opt{width:32px;height:32px;border-radius:8px;border:2px solid transparent;cursor:pointer;transition:.15s;}
+  .color-opt.active{border-color:#fff;}
+  .btn{border:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:8px;}
+  .btn-primary{background:var(--purple);color:#fff;}
+  .btn-primary:hover{background:#9333ea;}
+  .btn-secondary{background:var(--panel);border:1px solid var(--border);color:var(--text);}
+  .btn-secondary:hover{border-color:var(--blue);}
+  .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;}
+  .status{font-size:13px;color:var(--muted);margin-top:12px;min-height:20px;}
+  .status.ok{color:var(--green);}
+  .status.err{color:#ef4444;}
+  .import-zone{border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center;font-size:13px;color:var(--muted);cursor:pointer;transition:.15s;}
+  .import-zone:hover{border-color:var(--blue);color:var(--blue);}
+  .import-zone input{display:none;}
+  .badge{display:inline-block;background:var(--blue);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:12px;letter-spacing:1px;margin-bottom:16px;}
+  .preview-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:12px;}
+  .preview-slide{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:11px;color:var(--muted);min-height:90px;position:relative;}
+  .preview-slide .ps-num{position:absolute;top:6px;right:8px;font-size:10px;color:rgba(255,255,255,.25);}
+  .preview-slide .ps-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;}
+  .sep{border:none;border-top:1px solid var(--border);margin:20px 0;}
+</style>
+</head>
+<body>
+
+<div class="badge">CD47 · CONUM</div>
+<h1>Générateur PPTX</h1>
+<p class="sub">Crée une présentation PowerPoint depuis les données du dashboard.</p>
+
+<div class="card">
+  <h2>1 — Importer les données</h2>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Exporte le JSON depuis le dashboard (bouton "Exporter JSON" dans Importer données), puis charge-le ici.</p>
+  <label class="import-zone" id="jsonDropZone">
+    <div>📂 Clique ou glisse le fichier JSON du dashboard</div>
+    <input type="file" id="jsonFileInput" accept=".json">
+  </label>
+  <div class="status" id="importStatus"></div>
+</div>
+
+<div class="card">
+  <h2>2 — Informations</h2>
+  <div class="field"><label>Titre de la présentation</label><input id="pptxTitle" value="Bilan d'activité — Conseiller Numérique"></div>
+  <div class="field"><label>Sous-titre / Nom</label><input id="pptxSubtitle" placeholder="Michel Aswad · Lot-et-Garonne"></div>
+  <div class="field"><label>Période couverte</label><input id="pptxPeriod" placeholder="Janvier 2024 – Juin 2026"></div>
+  <div class="field"><label>Organisme</label><input id="pptxOrg" value="Conseil Départemental de Lot-et-Garonne"></div>
+</div>
+
+<div class="card">
+  <h2>3 — Couleur principale</h2>
+  <div class="color-row" id="colorRow">
+    <div class="color-opt active" data-color="3b82f6" style="background:#3b82f6"></div>
+    <div class="color-opt" data-color="a855f7" style="background:#a855f7"></div>
+    <div class="color-opt" data-color="10b981" style="background:#10b981"></div>
+    <div class="color-opt" data-color="f59e0b" style="background:#f59e0b"></div>
+    <div class="color-opt" data-color="ec4899" style="background:#ec4899"></div>
+    <div class="color-opt" data-color="06b6d4" style="background:#06b6d4"></div>
+    <div class="color-opt" data-color="1d4ed8" style="background:#1d4ed8"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>4 — Slides à inclure</h2>
+  <div class="slide-list" id="slideList"></div>
+</div>
+
+<div class="card">
+  <h2>5 — Aperçu</h2>
+  <div class="preview-grid" id="previewGrid"></div>
+</div>
+
+<div class="actions">
+  <button class="btn btn-primary" id="generateBtn">⬇ Générer le PPTX</button>
+  <button class="btn btn-secondary" onclick="history.back()">← Retour</button>
+</div>
+<div class="status" id="generateStatus"></div>
+
+<script>
+let dashData = null;
+let accentColor = '3b82f6';
+
+const SLIDES_CONFIG = [
+  { id:'cover',     label:'Couverture',              desc:'Titre, nom, période, organisme' },
+  { id:'kpis',      label:'Chiffres clés',            desc:'Accompagnements, bénéf., ateliers, moyenne' },
+  { id:'evolution', label:'Évolution annuelle',        desc:'Totaux 2024/2025/2026 + croissance' },
+  { id:'themes',    label:'Top thématiques',           desc:'Top 8 thématiques médiation numérique' },
+  { id:'benef',     label:'Profil bénéficiaires',      desc:'Genres, statuts, top communes' },
+  { id:'ateliers',  label:'Ateliers collectifs',       desc:'KPIs ateliers + multiplicateur d\'impact' },
+  { id:'conclusion',label:'Synthèse',                  desc:'Récapitulatif + projection 2026' },
+];
+
+// Sélecteur couleur
+document.getElementById('colorRow').querySelectorAll('.color-opt').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.color-opt').forEach(e=>e.classList.remove('active'));
+    el.classList.add('active');
+    accentColor = el.dataset.color;
+    updatePreview();
+  });
+});
+
+// Slide list
+const slideList = document.getElementById('slideList');
+SLIDES_CONFIG.forEach(s => {
+  const row = document.createElement('label');
+  row.className = 'slide-row on';
+  row.innerHTML = `<input type="checkbox" checked data-id="${s.id}"> <span class="sr-label">${s.label}</span> <span class="sr-desc">${s.desc}</span>`;
+  row.querySelector('input').addEventListener('change', e => {
+    row.classList.toggle('on', e.target.checked);
+    updatePreview();
+  });
+  slideList.appendChild(row);
+});
+
+function getSelectedSlides(){
+  return [...document.querySelectorAll('#slideList input[type=checkbox]')]
+    .filter(cb=>cb.checked).map(cb=>cb.dataset.id);
+}
+
+function updatePreview(){
+  const selected = getSelectedSlides();
+  const grid = document.getElementById('previewGrid');
+  grid.innerHTML = selected.map((id,i) => {
+    const cfg = SLIDES_CONFIG.find(s=>s.id===id);
+    return `<div class="preview-slide" style="border-top:3px solid #${accentColor}">
+      <div class="ps-num">${i+1}</div>
+      <div class="ps-title">${cfg.label}</div>
+      <div>${cfg.desc}</div>
+    </div>`;
+  }).join('');
+}
+updatePreview();
+
+// Import JSON
+document.getElementById('jsonFileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const raw = JSON.parse(evt.target.result);
+      dashData = {};
+      Object.keys(raw).filter(k=>!k.startsWith('_')).forEach(y => dashData[y] = raw[y]);
+      const years = Object.keys(dashData);
+      document.getElementById('importStatus').textContent = `✓ Données chargées : ${years.join(', ')}`;
+      document.getElementById('importStatus').className = 'status ok';
+      // Auto-remplir période
+      if(!document.getElementById('pptxPeriod').value){
+        document.getElementById('pptxPeriod').value = `Janvier ${Math.min(...years)} – aujourd'hui`;
+      }
+    } catch(err){
+      document.getElementById('importStatus').textContent = 'Erreur : fichier JSON invalide';
+      document.getElementById('importStatus').className = 'status err';
+    }
+  };
+  reader.readAsText(file);
+});
+
+// Génération PPTX
+document.getElementById('generateBtn').addEventListener('click', async () => {
+  if(!dashData){ document.getElementById('generateStatus').textContent = 'Importe d\'abord le JSON du dashboard.'; return; }
+  const btn = document.getElementById('generateBtn');
+  btn.textContent = '⏳ Génération…'; btn.disabled = true;
+
+  const title = document.getElementById('pptxTitle').value || 'Bilan Conum';
+  const subtitle = document.getElementById('pptxSubtitle').value;
+  const period = document.getElementById('pptxPeriod').value;
+  const org = document.getElementById('pptxOrg').value;
+  const accent = '#'+accentColor;
+  const selected = getSelectedSlides();
+
+  // Agréger les données
+  function sumDatasets(list){
+    const t = list.reduce((acc, ds) => {
+      Object.keys(ds.totals).forEach(k => { if(!k.endsWith('Pct')) acc[k]=(acc[k]||0)+ds.totals[k]; });
+      return acc;
+    }, {});
+    const total = (t.individuelsVal||0)+(t.ateliersVal||0)||1;
+    t.ateliersPct = Math.round((t.ateliersVal/total)*1000)/10;
+    return t;
+  }
+  function mergeArr(arrays){
+    const map = new Map();
+    arrays.forEach(arr=>(arr||[]).forEach(x=>{
+      const c=map.get(x.label)||{label:x.label,val:0}; c.val+=x.val; map.set(x.label,c);
+    }));
+    const m=[...map.values()]; const tot=m.reduce((a,b)=>a+b.val,0)||1;
+    m.forEach(x=>x.pct=Math.round(x.val/tot*1000)/10);
+    return m.sort((a,b)=>b.val-a.val);
+  }
+  const years = Object.keys(dashData).sort();
+  const t = sumDatasets(years.map(y=>dashData[y]));
+  const themMed = mergeArr(years.map(y=>dashData[y].themMed));
+  const genre = mergeArr(years.map(y=>dashData[y].genre));
+  const statut = mergeArr(years.map(y=>dashData[y].statut));
+  const communes = mergeArr(years.map(y=>dashData[y].communes)).slice(0,8);
+  const ratio = t.ateliersVal ? (t.participants/t.ateliersVal) : 0;
+
+  const pptx = new PptxGenJS();
+  pptx.layout = 'LAYOUT_WIDE';
+  pptx.author = subtitle || 'Conum CD47';
+  pptx.subject = title;
+
+  // Helpers
+  const W = 13.33, H = 7.5;
+  const DARK = '0b1020';
+  const PANEL = '121a32';
+  const MUTED = '8b95b8';
+
+  function addSlide(){ return pptx.addSlide(); }
+
+  function kpiBox(slide, x, y, w, h, label, val, sub, color){
+    slide.addShape(pptx.ShapeType.roundRect, {x,y,w,h,fill:{color:PANEL},line:{color:'243154',pt:1},rectRadius:0.12});
+    slide.addShape(pptx.ShapeType.rect, {x,y,w:w,h:0.04,fill:{color:color||accentColor}});
+    slide.addText(label.toUpperCase(), {x:x+0.15,y:y+0.12,w:w-0.3,h:0.25,fontSize:7,bold:true,color:MUTED,charSpacing:1});
+    slide.addText(val, {x:x+0.15,y:y+0.35,w:w-0.3,h:0.55,fontSize:26,bold:true,color:'e8ecf7'});
+    if(sub) slide.addText(sub, {x:x+0.15,y:y+0.88,w:w-0.3,h:0.22,fontSize:8,color:MUTED,wrap:true});
+  }
+
+  function barRow(slide, x, y, label, pct, val, color){
+    slide.addText(label, {x,y,w:3.2,h:0.22,fontSize:9,color:'e8ecf7'});
+    slide.addText(`${val}`, {x:x+3.3,y,w:0.8,h:0.22,fontSize:9,color:MUTED,align:'right'});
+    slide.addShape(pptx.ShapeType.rect,{x,y:y+0.23,w:3.8,h:0.07,fill:{color:'1a2444'}});
+    slide.addShape(pptx.ShapeType.rect,{x,y:y+0.23,w:Math.max(0.05,3.8*pct/100),h:0.07,fill:{color:color||accentColor}});
+  }
+
+  // Fond sombre sur toutes les slides
+  function darkBg(slide){
+    slide.addShape(pptx.ShapeType.rect,{x:0,y:0,w:W,h:H,fill:{color:DARK}});
+    // Bande colorée en haut
+    slide.addShape(pptx.ShapeType.rect,{x:0,y:0,w:W,h:0.06,fill:{color:accentColor}});
+  }
+
+  function sectionTitle(slide, txt, y=0.3){
+    slide.addText(txt.toUpperCase(), {x:0.4,y,w:12,h:0.3,fontSize:9,bold:true,color:accentColor,charSpacing:2});
+    slide.addShape(pptx.ShapeType.line,{x:0.4,y:y+0.32,w:12.5,h:0,line:{color:'243154',pt:1}});
+  }
+
+  function footerLine(slide){
+    slide.addShape(pptx.ShapeType.line,{x:0.4,y:H-0.35,w:12.5,h:0,line:{color:'243154',pt:0.5}});
+    slide.addText(`${org} · ${period}`, {x:0.4,y:H-0.3,w:12,h:0.22,fontSize:7,color:MUTED});
+  }
+
+  for(const sid of selected){
+    const slide = addSlide();
+    darkBg(slide);
+
+    if(sid === 'cover'){
+      slide.addShape(pptx.ShapeType.rect,{x:0,y:0,w:W,h:H*0.55,fill:{color:PANEL}});
+      slide.addShape(pptx.ShapeType.rect,{x:0,y:0,w:0.12,h:H,fill:{color:accentColor}});
+      slide.addText('CD47', {x:0.4,y:0.35,w:1.5,h:0.4,fontSize:11,bold:true,color:'ffffff',fill:{color:accentColor},align:'center',valign:'middle'});
+      slide.addText(title, {x:0.4,y:1.0,w:W-0.8,h:1.2,fontSize:36,bold:true,color:'e8ecf7',breakLine:true});
+      slide.addText(subtitle||'', {x:0.4,y:2.3,w:W-0.8,h:0.4,fontSize:14,color:MUTED});
+      slide.addText(org, {x:0.4,y:H-1.2,w:W-0.8,h:0.3,fontSize:10,color:MUTED});
+      slide.addText(period, {x:0.4,y:H-0.85,w:W-0.8,h:0.3,fontSize:10,color:accentColor});
+      const today = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+      slide.addText(`Présenté le ${today}`, {x:0.4,y:H-0.5,w:W-0.8,h:0.25,fontSize:8,color:'4b5563'});
+    }
+
+    else if(sid === 'kpis'){
+      sectionTitle(slide, 'Chiffres clés');
+      const pctNouv = (t.nouveaux&&(t.nouveaux+t.suivis)) ? Math.round(t.nouveaux/(t.nouveaux+t.suivis)*100) : 0;
+      kpiBox(slide,0.4,0.75,3.0,1.2,'Accompagnements',(t.accompagnements||0).toLocaleString('fr-FR'),period,accentColor);
+      kpiBox(slide,3.6,0.75,3.0,1.2,'Bénéficiaires',(t.beneficiaires||0).toLocaleString('fr-FR'),`${t.nouveaux} nouveaux · ${t.suivis} suivis`,'10b981');
+      kpiBox(slide,6.8,0.75,3.0,1.2,'Ateliers collectifs',(t.ateliersVal||0).toString(),`${t.participants} participants`,'a855f7');
+      kpiBox(slide,10.0,0.75,3.0,1.2,'Nouveaux bénéf.',pctNouv+'%',`${t.nouveaux} / ${t.nouveaux+t.suivis} identifiés`,'ec4899');
+      kpiBox(slide,0.4,2.1,3.0,1.2,'Individuels',(t.individuelsVal||0).toString(),`${t.individuelsPct||0}% des accompagnements`,'06b6d4');
+      kpiBox(slide,3.6,2.1,3.0,1.2,'Participants ateliers',(t.participants||0).toString(),`ratio ${ratio.toFixed(1)}× / séance`,'f59e0b');
+      kpiBox(slide,6.8,2.1,3.0,1.2,'Séances économisées',Math.max(0,t.participants-t.ateliersVal).toLocaleString('fr-FR'),'vs format individuel','ef4444');
+      kpiBox(slide,10.0,2.1,3.0,1.2,'Multiplicateur impact',ratio.toFixed(1)+'×','participants par séance','ec4899');
+      footerLine(slide);
+    }
+
+    else if(sid === 'evolution'){
+      sectionTitle(slide, 'Évolution annuelle');
+      const yData = years.map(y => ({
+        year:y, total: dashData[y].totals.accompagnements,
+        color: y==='2024'?'3b82f6': y==='2025'?'f59e0b':'a855f7'
+      }));
+      yData.forEach((d,i) => {
+        kpiBox(slide, 0.4+i*3.1, 0.75, 2.9, 1.4, `Total ${d.year}`, d.total.toLocaleString('fr-FR'),
+          i===0 ? 'Année de référence' :
+          yData[i-1].total ? (d.total>yData[i-1].total?'+':'')+((d.total-yData[i-1].total)/yData[i-1].total*100).toFixed(1)+'% vs '+(parseInt(d.year)-1) : '',
+          d.color);
+      });
+      // Mini graphe en barres ASCII-like
+      const maxY = Math.max(...yData.map(d=>d.total))||1;
+      yData.forEach((d,i) => {
+        const bh = 1.8*(d.total/maxY);
+        const bx = 0.4+i*3.1+0.7, by = 3.8-bh;
+        slide.addShape(pptx.ShapeType.rect,{x:bx,y:by,w:1.5,h:bh,fill:{color:d.color},rectRadius:0.05});
+        slide.addText(d.total.toLocaleString('fr-FR'),{x:bx,y:by-0.28,w:1.5,h:0.25,fontSize:10,bold:true,color:'e8ecf7',align:'center'});
+        slide.addText(d.year,{x:bx,y:3.85,w:1.5,h:0.25,fontSize:11,bold:true,color:d.color,align:'center'});
+      });
+      footerLine(slide);
+    }
+
+    else if(sid === 'themes'){
+      sectionTitle(slide, 'Top thématiques — Médiation numérique');
+      const top8 = themMed.filter(x=>x.val>0).slice(0,8);
+      const colors = ['3b82f6','10b981','f59e0b','a855f7','ec4899','06b6d4','ef4444','eab308'];
+      top8.forEach((th,i) => {
+        const col = i < 4 ? 0 : 1;
+        const row = i % 4;
+        const x = 0.4 + col*6.5, y = 0.75 + row*1.5;
+        barRow(slide, x, y, th.label, th.pct, th.val, colors[i]);
+      });
+      footerLine(slide);
+    }
+
+    else if(sid === 'benef'){
+      sectionTitle(slide, 'Profil des bénéficiaires');
+      // Genres
+      slide.addText('GENRES', {x:0.4,y:0.72,w:4,h:0.22,fontSize:8,bold:true,color:MUTED,charSpacing:1});
+      genre.filter(x=>x.val>0).forEach((g,i)=>{
+        barRow(slide,0.4,0.98+i*0.42,g.label,g.pct,g.val,['ec4899','3b82f6','475569'][i]||accentColor);
+      });
+      // Statuts
+      slide.addText('STATUTS', {x:0.4,y:2.3,w:4,h:0.22,fontSize:8,bold:true,color:MUTED,charSpacing:1});
+      statut.filter(x=>x.val>0).slice(0,5).forEach((s,i)=>{
+        barRow(slide,0.4,2.56+i*0.42,s.label,s.pct,s.val,['ef4444','3b82f6','10b981','f59e0b','475569'][i]||accentColor);
+      });
+      // Top communes
+      slide.addText('TOP COMMUNES', {x:7.0,y:0.72,w:6,h:0.22,fontSize:8,bold:true,color:MUTED,charSpacing:1});
+      communes.slice(0,8).forEach((c,i)=>{
+        barRow(slide,7.0,0.98+i*0.42,c.label.replace(/\s*·\s*\d+/,''),c.pct,c.val,accentColor);
+      });
+      footerLine(slide);
+    }
+
+    else if(sid === 'ateliers'){
+      sectionTitle(slide, 'Ateliers collectifs — Impact');
+      kpiBox(slide,0.4,0.75,2.8,1.3,'Ateliers collectifs',(t.ateliersVal||0).toString(),`${t.ateliersPct||0}% de l'activité`,'a855f7');
+      kpiBox(slide,3.4,0.75,2.8,1.3,'Participants',(t.participants||0).toString(),'cumulés','10b981');
+      kpiBox(slide,6.4,0.75,2.8,1.3,'Ratio moy./séance',ratio.toFixed(1),'participants par atelier','f59e0b');
+      kpiBox(slide,9.4,0.75,2.8,1.3,'Multiplicateur',ratio.toFixed(1)+'×','d\'impact collectif','ec4899');
+      kpiBox(slide,0.4,2.2,5.8,1.3,'Séances économisées',Math.max(0,t.participants-t.ateliersVal).toLocaleString('fr-FR'),`${t.participants} participants − ${t.ateliersVal} séances réalisées`,'06b6d4');
+      kpiBox(slide,6.4,2.2,6.5,1.3,'Accompagnements individuels',(t.individuelsVal||0).toString(),`${t.individuelsPct||0}% des accompagnements`,'3b82f6');
+      // Insight texte
+      slide.addShape(pptx.ShapeType.roundRect,{x:0.4,y:3.7,w:12.5,h:1.0,fill:{color:'0d2140'},line:{color:'1e3a5f',pt:1},rectRadius:0.1});
+      slide.addText(
+        `${t.ateliersVal} ateliers collectifs ont rassemblé ${t.participants} participants (${ratio.toFixed(1)} en moyenne par séance), `+
+        `représentant ${t.ateliersPct}% de l'activité. Cela équivaut à une économie de ${Math.max(0,t.participants-t.ateliersVal)} séances individuelles.`,
+        {x:0.6,y:3.78,w:12.1,h:0.85,fontSize:11,color:'93c5fd',italic:true}
+      );
+      footerLine(slide);
+    }
+
+    else if(sid === 'conclusion'){
+      sectionTitle(slide, 'Synthèse');
+      slide.addText(`${(t.accompagnements||0).toLocaleString('fr-FR')}`, {x:0.4,y:1.0,w:12,h:1.4,fontSize:72,bold:true,color:accentColor,align:'center'});
+      slide.addText('accompagnements', {x:0.4,y:2.4,w:12,h:0.4,fontSize:18,color:MUTED,align:'center'});
+      const bullets = [
+        `${t.beneficiaires} bénéficiaires accompagnés (${t.nouveaux} nouveaux · ${t.suivis} suivis)`,
+        `${t.ateliersVal} ateliers collectifs — ${t.participants} participants — multiplicateur ×${ratio.toFixed(1)}`,
+        themMed[0] ? `Thématique dominante : ${themMed[0].label} (${themMed[0].val} accompagnements)` : '',
+        communes[0] ? `Commune principale : ${communes[0].label.replace(/\s*·\s*\d+/,'')} (${communes[0].val} bénéficiaires)` : '',
+      ].filter(Boolean);
+      bullets.forEach((b,i) => {
+        slide.addShape(pptx.ShapeType.rect,{x:1.5,y:3.1+i*0.55,w:0.06,h:0.22,fill:{color:accentColor}});
+        slide.addText(b,{x:1.75,y:3.08+i*0.55,w:10,h:0.28,fontSize:12,color:'e8ecf7'});
+      });
+      slide.addText(`${org} · ${period}`,{x:0.4,y:H-0.8,w:12,h:0.3,fontSize:9,color:MUTED,align:'center'});
+      footerLine(slide);
+    }
+  }
+
+  try {
+    const fname = `bilan-conum-${period.replace(/\s/g,'-').replace(/[^a-zA-Z0-9\-]/g,'')}-${new Date().toISOString().slice(0,10)}.pptx`;
+    await pptx.writeFile({ fileName: fname });
+    document.getElementById('generateStatus').textContent = `✓ Fichier téléchargé : ${fname}`;
+    document.getElementById('generateStatus').className = 'status ok';
+  } catch(e){
+    document.getElementById('generateStatus').textContent = 'Erreur lors de la génération : ' + e.message;
+    document.getElementById('generateStatus').className = 'status err';
+  }
+  btn.textContent = '⬇ Générer le PPTX'; btn.disabled = false;
+});
+</script>
+</body>
+</html>

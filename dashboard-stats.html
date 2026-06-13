@@ -8,6 +8,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   :root{
     --bg:#0b1020;
@@ -465,6 +467,94 @@
     .card:hover, .kpi:hover{ transform:none; box-shadow:none; }
     .bar-fill{ transition:none; }
   }
+
+  /* ===== MODE CLAIR/SOMBRE ===== */
+  body.light-mode{
+    --bg:#f0f2f7;--panel:#ffffff;--panel2:#f5f7fb;--border:#c9d2e6;
+    --text:#111827;--muted:#6b7280;
+  }
+  body.light-mode .header{background:var(--bg);}
+  body.light-mode .tabs{background:var(--bg);}
+  .theme-btn{
+    border:1px solid var(--border);background:var(--panel);color:var(--muted);
+    padding:7px 11px;border-radius:8px;font-size:15px;cursor:pointer;transition:.15s;line-height:1;
+  }
+  .theme-btn:hover{border-color:var(--yellow);color:var(--yellow);}
+
+  /* ===== TOAST ===== */
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    padding:12px 20px;font-size:13px;color:var(--text);z-index:300;
+    box-shadow:0 4px 20px rgba(0,0,0,.35);transition:transform .3s ease,opacity .3s ease;
+    opacity:0;pointer-events:none;white-space:nowrap;
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+  .toast.ok{border-color:var(--green);color:var(--green);}
+  .toast.warn{border-color:var(--orange);color:var(--orange);}
+
+  /* ===== BOUTONS SUPPLÉMENTAIRES ===== */
+  .csv-btn{
+    border:1px solid var(--border);background:var(--panel);color:var(--muted);
+    padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
+    display:flex;align-items:center;gap:6px;transition:.15s;
+  }
+  .csv-btn:hover{border-color:var(--green);color:var(--green);}
+
+  /* ===== QR CODE ===== */
+  .qr-modal{
+    background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:24px;width:100%;max-width:340px;text-align:center;
+  }
+  .qr-modal h2{font-size:16px;margin-bottom:6px;}
+  .qr-modal p{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5;}
+  #qrCanvas{border-radius:8px;background:#fff;padding:10px;display:block;margin:0 auto;}
+  .qr-url{font-size:11px;color:var(--muted);word-break:break-all;margin-top:12px;background:var(--panel2);border-radius:6px;padding:8px;text-align:left;}
+
+  /* ===== COMPARAISON ===== */
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  @media(max-width:700px){.compare-grid{grid-template-columns:1fr;}}
+  .compare-col{border:1px solid var(--border);border-radius:12px;padding:16px;background:var(--panel);}
+  .compare-col .cc-title{font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  .compare-kpi-row{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .compare-kpi-row:last-child{border-bottom:none;}
+  .compare-kpi-row .ck-label{color:var(--muted);}
+  .compare-kpi-row .ck-val{font-weight:700;font-size:16px;}
+  .delta-badge{font-size:11px;font-weight:700;padding:2px 6px;border-radius:12px;margin-left:6px;}
+  .delta-badge.up{background:rgba(16,185,129,.15);color:var(--green);}
+  .delta-badge.down{background:rgba(239,68,68,.15);color:var(--red);}
+  /* ===== SÉLECTEUR DE SLIDES ===== */
+  .slide-picker-modal{
+    background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;
+  }
+  .slide-picker-modal h2{font-size:17px;margin-bottom:6px;}
+  .slide-picker-modal p{font-size:12px;color:var(--muted);margin-bottom:16px;}
+  .slide-item{
+    display:flex;align-items:center;gap:12px;padding:10px 12px;
+    border:1px solid var(--border);border-radius:10px;margin-bottom:8px;
+    cursor:pointer;transition:.15s;user-select:none;
+  }
+  .slide-item:hover{border-color:#3a4a78;}
+  .slide-item.selected{border-color:var(--purple);background:rgba(168,85,247,.08);}
+  .slide-item .si-num{font-size:11px;font-weight:700;color:var(--muted);min-width:20px;}
+  .slide-item .si-label{font-size:13px;font-weight:600;flex:1;}
+  .slide-item .si-check{font-size:16px;}
+  .slide-picker-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;}
+
+  /* ===== CARTE COMMUNES ===== */
+  #communeMapWrap{
+    background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    overflow:hidden;position:relative;
+  }
+  #communeMap{width:100%;height:340px;}
+  .map-legend{
+    position:absolute;bottom:10px;right:10px;background:rgba(18,26,50,.9);
+    border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:11px;
+  }
+  .map-legend-item{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+  .map-legend-item:last-child{margin-bottom:0;}
+  .map-legend-dot{width:10px;height:10px;border-radius:50%;}
 </style>
 </head>
 <body>
@@ -483,12 +573,47 @@
     <button class="year-btn" data-year="2026">2026</button>
   </div>
   <button class="import-btn" id="openImportModal">⭱ Importer données</button>
+  <button class="csv-btn" id="exportCsvBtn" title="Exporter les données en CSV">⬇ CSV</button>
   <button class="print-btn" title="Imprimer via le navigateur">🖨 Imprimer</button>
   <button class="pdf-btn" id="openRapportBtn" title="Générer un rapport PDF">📄 Rapport PDF</button>
-  <button class="pdf-btn" id="openPresBtn" title="Mode présentation" style="border-color:var(--purple);color:var(--purple);">▶ Présenter</button>
+  <button class="pdf-btn" id="openPresBtn" title="Personnaliser et lancer la présentation" style="border-color:var(--purple);color:var(--purple);">▶ Présenter</button>
+  <button class="theme-btn" id="themeToggleBtn" title="Mode clair/sombre">🌙</button>
+  <button class="csv-btn" id="openQrBtn" title="Partager via QR code" style="border-color:var(--cyan);color:var(--cyan);">⬡ QR</button>
+  <button class="csv-btn" id="shareUrlBtn" title="Partager les données via URL" style="border-color:var(--green);color:var(--green);">🔗 Partager</button>
+  <button class="csv-btn" onclick="location.href='conum-pptx.html'" title="Générateur PowerPoint" style="border-color:var(--orange);color:var(--orange);">📑 PPTX</button>
+  <button class="csv-btn" onclick="location.href='conum-multi-agents.html'" title="Vue multi-agents" style="border-color:var(--cyan);color:var(--cyan);">👥 Multi</button>
 </div>
 
-<!-- PRÉSENTATION OVERLAY -->
+<!-- TOAST -->
+<div class="toast" id="toastMsg"></div>
+
+<!-- QR CODE MODAL -->
+<div class="modal-overlay" id="qrModalOverlay">
+  <div class="qr-modal">
+    <h2>Partager ce dashboard</h2>
+    <p>Scannez ce QR code pour ouvrir le dashboard.<br>Hébergez le fichier HTML sur votre serveur pour un lien permanent.</p>
+    <canvas id="qrCanvas" width="200" height="200"></canvas>
+    <div class="qr-url" id="qrUrl"></div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:14px;">
+      <button class="modal-btn primary" id="qrCopyBtn">Copier le lien</button>
+      <button class="modal-btn" id="qrCloseBtn">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- SÉLECTEUR DE SLIDES -->
+<div class="modal-overlay" id="slidePickerOverlay">
+  <div class="slide-picker-modal">
+    <h2>Personnaliser la présentation</h2>
+    <p>Sélectionne les slides à inclure. Glisse pour réordonner.</p>
+    <div id="slidePickerList"></div>
+    <div class="slide-picker-actions">
+      <button class="modal-btn" id="slidePickerAll">Tout sélectionner</button>
+      <button class="modal-btn primary" id="slidePickerLaunch">▶ Lancer</button>
+      <button class="modal-btn" id="slidePickerCancel">Annuler</button>
+    </div>
+  </div>
+</div>
 <div class="pres-overlay" id="presOverlay">
   <div class="pres-progress"><div class="pres-progress-fill" id="presProgressFill"></div></div>
   <div class="pres-topbar">
@@ -571,6 +696,7 @@
   <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="beneficiaires">Bénéficiaires</div>
   <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="lieux">Lieux & canaux</div>
   <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="ateliers">Ateliers</div>
+  <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="compare">⇄ Comparaison</div>
 </div>
 
 <div class="data-banner" id="dataBanner"></div>
@@ -748,6 +874,12 @@
     <div class="card-title green"><span class="dot"></span>Top communes de résidence (hors "non communiqué")</div>
     <div id="communes"></div>
   </div>
+  <div class="card" style="margin-top:16px;">
+    <div class="card-title cyan"><span class="dot"></span>Carte des communes — densité bénéficiaires</div>
+    <div id="communeMapWrap">
+      <div id="communeMap"></div>
+    </div>
+  </div>
 </div>
 
 <!-- PAGE: LIEUX -->
@@ -832,6 +964,29 @@
   <div class="card" title="Part des ateliers collectifs dans l'ensemble de tes accompagnements, année par année.">
     <div class="card-title green"><span class="dot"></span>Poids des ateliers dans l'activité globale (%)</div>
     <div id="atelShareBars"></div>
+  </div>
+</div>
+
+<!-- PAGE: COMPARAISON -->
+<div class="pages" id="page-compare">
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title cyan"><span class="dot"></span>Comparer deux années côte à côte</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
+      <span style="font-size:13px;color:var(--muted);">Année A :</span>
+      <select id="compareYearA" style="background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px;">
+        <option value="2024">2024</option>
+        <option value="2025" selected>2025</option>
+        <option value="2026">2026</option>
+      </select>
+      <span style="font-size:13px;color:var(--muted);">Année B :</span>
+      <select id="compareYearB" style="background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px;">
+        <option value="2024">2024</option>
+        <option value="2025">2025</option>
+        <option value="2026" selected>2026</option>
+      </select>
+      <button class="modal-btn primary" id="runCompareBtn" style="padding:7px 14px;">Comparer</button>
+    </div>
+    <div id="compareResult"></div>
   </div>
 </div>
 
@@ -2523,35 +2678,8 @@ function presRender(){
 function presNext(){ if(presIndex < presSlides.length-1){ presIndex++; presRender(); } }
 function presPrev(){ if(presIndex > 0){ presIndex--; presRender(); } }
 
-document.getElementById('openPresBtn').addEventListener('click', async () => {
-  const btn = document.getElementById('openPresBtn');
-  btn.textContent = '⏳ Préparation…';
-  btn.disabled = true;
-
-  // Rendre tous les charts si besoin
-  const allPages = document.querySelectorAll('.pages');
-  const prevActive = document.querySelector('.pages.active');
-  allPages.forEach(p => p.classList.add('active'));
-  document.getElementById('globalKpis').style.display = '';
-  await new Promise(r => setTimeout(r, 200));
-  const activeYear = (document.querySelector('.year-btn.active')||{}).dataset?.year||'all';
-  buildEvolutionChart(activeYear);
-  buildThemYearChart();
-  buildAtelYearCharts();
-  await new Promise(r => setTimeout(r, 350));
-  allPages.forEach(p => p.classList.remove('active'));
-  if(prevActive) prevActive.classList.add('active');
-
-  await buildPresSlides();
-  presIndex = 0;
-  presRender();
-  document.getElementById('presOverlay').classList.add('active');
-
-  // Plein écran si dispo
-  try { document.getElementById('presOverlay').requestFullscreen?.(); } catch(e){}
-
-  btn.innerHTML = '▶ Présenter';
-  btn.disabled = false;
+document.getElementById('openPresBtn').addEventListener('click', () => {
+  openSlidePicker();
 });
 
 document.getElementById('presClose').addEventListener('click', () => {
@@ -2577,6 +2705,466 @@ document.getElementById('presStage').addEventListener('touchend', e => {
   const dx = e.changedTouches[0].clientX - presSwipeStartX;
   if(Math.abs(dx) > 50){ dx < 0 ? presNext() : presPrev(); }
 }, {passive:true});
+
+// ===== TOAST =====
+function showToast(msg, type='ok', duration=3000){
+  const t = document.getElementById('toastMsg');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), duration);
+}
+
+// ===== MODE CLAIR/SOMBRE =====
+(function(){
+  const btn = document.getElementById('themeToggleBtn');
+  const saved = localStorage.getItem('coopTheme');
+  if(saved === 'light'){ document.body.classList.add('light-mode'); btn.textContent = '☀️'; }
+  btn.addEventListener('click', ()=>{
+    const isLight = document.body.classList.toggle('light-mode');
+    btn.textContent = isLight ? '☀️' : '🌙';
+    localStorage.setItem('coopTheme', isLight ? 'light' : 'dark');
+  });
+})();
+
+// ===== DÉTECTION ANNÉE EN COURS =====
+(function(){
+  const currentYear = new String(new Date().getFullYear());
+  const btn = document.querySelector(`.year-btn[data-year="${currentYear}"]`);
+  // Si des données existent pour l'année en cours, la sélectionner par défaut
+  // (sera exécuté après loadYearDataFromStorage dans init)
+  window._autoSelectYear = currentYear;
+})();
+
+// ===== SAUVEGARDE AUTOMATIQUE PÉRIODIQUE (toutes les 5 min si données) =====
+setInterval(()=>{
+  if(Object.keys(yearData).length){
+    saveYearDataToStorage();
+  }
+}, 5 * 60 * 1000);
+
+// ===== NOTIFICATION DONNÉES PÉRIMÉES =====
+function checkDataFreshness(){
+  const meta = localStorage.getItem('coopDashboard_lastImport');
+  if(!meta) return;
+  const daysSince = (Date.now() - parseInt(meta)) / (1000*60*60*24);
+  if(daysSince > 30){
+    showToast(`⚠ Dernière importation il y a ${Math.round(daysSince)} jours — pensez à mettre à jour`, 'warn', 6000);
+  }
+}
+
+// Enregistrer la date d'import à chaque chargement de fichier
+const _origSave = saveYearDataToStorage;
+function saveYearDataToStorage(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(yearData));
+    localStorage.setItem('coopDashboard_lastImport', Date.now().toString());
+  } catch(err){ console.error('Erreur sauvegarde localStorage', err); }
+}
+
+// ===== EXPORT CSV =====
+document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+  const ds = getActiveDataset();
+  const period = getPeriodLabel();
+  const t = ds.totals;
+  const rows = [
+    ['Métrique','Valeur','Période'],
+    ['Accompagnements', t.accompagnements, period],
+    ['Individuels', t.individuelsVal, period],
+    ['Ateliers collectifs', t.ateliersVal, period],
+    ['Participants ateliers', t.participants, period],
+    ['Bénéficiaires', t.beneficiaires, period],
+    ['Nouveaux bénéficiaires', t.nouveaux, period],
+    ['Bénéficiaires suivis', t.suivis, period],
+    ['Bénéficiaires anonymes', t.anonymes, period],
+    [],
+    ['Thématiques médiation','Valeur','%'],
+    ...ds.themMed.filter(x=>x.val>0).map(x=>[x.label, x.val, x.pct+'%']),
+    [],
+    ['Thématiques administratives','Valeur','%'],
+    ...ds.themAdmin.filter(x=>x.val>0).map(x=>[x.label, x.val, x.pct+'%']),
+    [],
+    ['Durées','Valeur','%'],
+    ...ds.durees.filter(x=>x.val>0).map(x=>[x.label, x.val, x.pct+'%']),
+    [],
+    ['Canaux','Valeur','%'],
+    ...ds.canaux.filter(x=>x.val>0).map(x=>[x.label, x.val, x.pct+'%']),
+    [],
+    ['Matériel','Valeur','%'],
+    ...ds.materiel.filter(x=>x.val>0).map(x=>[x.label, x.val, x.pct+'%']),
+    [],
+    ['Genres','Valeur','%'],
+    ...ds.genre.filter(x=>x.val>0).map(x=>[x.label, x.val, x.pct+'%']),
+    [],
+    ['Tranches d\'âge','Valeur','%'],
+    ...ds.age.filter(x=>x.val>0).map(x=>[x.label, x.val, x.pct+'%']),
+    [],
+    ['Statuts','Valeur','%'],
+    ...ds.statut.filter(x=>x.val>0).map(x=>[x.label, x.val, x.pct+'%']),
+    [],
+    ['Top communes','Valeur','%'],
+    ...ds.communes.filter(x=>x.val>0).map(x=>[x.label, x.val, x.pct+'%']),
+    [],
+    ['Mensuel','Mois','Accompagnements'],
+    ...monthly.labels.map((l,i)=>['', l, monthly.values[i]])
+  ];
+  const csv = '\uFEFF' + rows.map(r=>r.map(c=>'"'+(String(c||'').replace(/"/g,'""'))+'"').join(';')).join('\r\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `conum-export-${period.replace(/\s/g,'-')}-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✓ Export CSV téléchargé');
+});
+
+// ===== QR CODE (génération canvas sans lib externe) =====
+// Génère un QR code simple via API qrserver.com (image)
+document.getElementById('openQrBtn').addEventListener('click', ()=>{
+  const url = location.href.split('?')[0];
+  document.getElementById('qrUrl').textContent = url;
+  // Utilise l'API QR server publique
+  const qrImg = new Image();
+  const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=0b1020&qzone=1`;
+  const canvas = document.getElementById('qrCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0,0,200,200);
+  ctx.fillStyle = '#8b95b8';
+  ctx.font = '12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Chargement…', 100, 105);
+  qrImg.onload = ()=>{ ctx.clearRect(0,0,200,200); ctx.drawImage(qrImg,0,0,200,200); };
+  qrImg.onerror = ()=>{ ctx.clearRect(0,0,200,200); ctx.fillStyle='#ef4444'; ctx.fillText('Erreur réseau', 100, 105); };
+  qrImg.src = apiUrl;
+  document.getElementById('qrModalOverlay').classList.add('active');
+});
+document.getElementById('qrCloseBtn').addEventListener('click', ()=>{
+  document.getElementById('qrModalOverlay').classList.remove('active');
+});
+document.getElementById('qrCopyBtn').addEventListener('click', ()=>{
+  const url = location.href.split('?')[0];
+  // Fallback execCommand pour les contextes non-HTTPS (fichier local, content://)
+  if(navigator.clipboard && location.protocol === 'https:'){
+    navigator.clipboard.writeText(url)
+      .then(()=>showToast('✓ Lien copié dans le presse-papiers'))
+      .catch(()=>fallbackCopy(url));
+  } else {
+    fallbackCopy(url);
+  }
+});
+function fallbackCopy(text){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try {
+    document.execCommand('copy');
+    showToast('✓ Lien copié dans le presse-papiers');
+  } catch(e){
+    showToast('Copiez manuellement : ' + text, 'warn', 5000);
+  }
+  document.body.removeChild(ta);
+}
+document.getElementById('qrModalOverlay').addEventListener('click', e=>{
+  if(e.target === document.getElementById('qrModalOverlay'))
+    document.getElementById('qrModalOverlay').classList.remove('active');
+});
+
+// ===== COMPARAISON CÔTE À CÔTE =====
+function delta(a, b){
+  if(!a || !b) return '';
+  const pct = ((b-a)/a*100);
+  const sign = pct >= 0 ? '+' : '';
+  const cls = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat';
+  return `<span class="delta-badge ${cls}">${sign}${pct.toFixed(1)}%</span>`;
+}
+
+function renderCompare(yA, yB){
+  const dA = yearData[yA], dB = yearData[yB];
+  const missing = [];
+  if(!dA) missing.push(yA);
+  if(!dB) missing.push(yB);
+  if(missing.length){
+    document.getElementById('compareResult').innerHTML =
+      `<div class="data-banner show">Importe d'abord les données pour : ${missing.join(', ')}</div>`;
+    return;
+  }
+  const tA = dA.totals, tB = dB.totals;
+
+  const metrics = [
+    ['Accompagnements', tA.accompagnements, tB.accompagnements],
+    ['Individuels', tA.individuelsVal, tB.individuelsVal],
+    ['Ateliers collectifs', tA.ateliersVal, tB.ateliersVal],
+    ['Participants ateliers', tA.participants, tB.participants],
+    ['Bénéficiaires', tA.beneficiaires, tB.beneficiaires],
+    ['Nouveaux bénéficiaires', tA.nouveaux, tB.nouveaux],
+    ['Suivis', tA.suivis, tB.suivis],
+    ['Ratio ateliers (%)', tA.ateliersPct, tB.ateliersPct],
+  ];
+
+  const rows = metrics.map(([label, vA, vB]) => `
+    <div class="compare-kpi-row">
+      <span class="ck-label">${label}</span>
+      <span class="ck-val" style="color:#3b82f6">${(vA||0).toLocaleString('fr-FR')}</span>
+      <span class="ck-val" style="color:#f59e0b">${(vB||0).toLocaleString('fr-FR')}</span>
+      <span>${delta(vA||0, vB||0)}</span>
+    </div>`).join('');
+
+  // Top thématiques
+  const allThemes = [...new Set([...dA.themMed.map(x=>x.label), ...dB.themMed.map(x=>x.label)])];
+  const themRows = allThemes.slice(0,8).map(th => {
+    const a = (dA.themMed.find(x=>x.label===th)||{val:0}).val;
+    const b = (dB.themMed.find(x=>x.label===th)||{val:0}).val;
+    return `<div class="compare-kpi-row">
+      <span class="ck-label" style="font-size:12px;">${th}</span>
+      <span style="color:#3b82f6;font-weight:700;">${a}</span>
+      <span style="color:#f59e0b;font-weight:700;">${b}</span>
+      <span>${delta(a,b)}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('compareResult').innerHTML = `
+    <div style="display:flex;gap:16px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#3b82f6;">● ${yA}</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#f59e0b;">● ${yB}</div>
+    </div>
+    <div class="compare-col" style="margin-bottom:14px;">
+      <div class="cc-title">KPIs principaux</div>
+      ${rows}
+    </div>
+    <div class="compare-col">
+      <div class="cc-title">Top thématiques</div>
+      ${themRows}
+    </div>
+  `;
+}
+
+document.getElementById('runCompareBtn').addEventListener('click', ()=>{
+  const yA = document.getElementById('compareYearA').value;
+  const yB = document.getElementById('compareYearB').value;
+  if(yA === yB){ showToast('Sélectionne deux années différentes','warn'); return; }
+  renderCompare(yA, yB);
+});
+
+// ===== PERSONNALISATION SLIDES =====
+const SLIDE_DEFS = [
+  { id: 'cover',      label: '🎯 Couverture' },
+  { id: 'kpis',       label: '📊 Chiffres clés' },
+  { id: 'monthly',    label: '📅 Activité mensuelle' },
+  { id: 'evolution',  label: '📈 Évolution & croissance' },
+  { id: 'repartition',label: '🔵 Répartition des activités' },
+  { id: 'themes',     label: '🏷 Thématiques numériques' },
+  { id: 'benef',      label: '👥 Profil bénéficiaires' },
+  { id: 'ateliers',   label: '🎓 Ateliers collectifs' },
+  { id: 'conclusion', label: '✅ Synthèse / Conclusion' },
+];
+let selectedSlideIds = SLIDE_DEFS.map(s => s.id); // tous sélectionnés par défaut
+
+function openSlidePicker(){
+  const list = document.getElementById('slidePickerList');
+  list.innerHTML = SLIDE_DEFS.map(s => `
+    <div class="slide-item ${selectedSlideIds.includes(s.id) ? 'selected' : ''}" data-id="${s.id}">
+      <span class="si-num">${SLIDE_DEFS.indexOf(s)+1}</span>
+      <span class="si-label">${s.label}</span>
+      <span class="si-check">${selectedSlideIds.includes(s.id) ? '✓' : ''}</span>
+    </div>
+  `).join('');
+  list.querySelectorAll('.slide-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = el.dataset.id;
+      if(selectedSlideIds.includes(id)){
+        if(selectedSlideIds.length > 1) selectedSlideIds = selectedSlideIds.filter(x=>x!==id);
+      } else {
+        selectedSlideIds.push(id);
+      }
+      el.classList.toggle('selected', selectedSlideIds.includes(id));
+      el.querySelector('.si-check').textContent = selectedSlideIds.includes(id) ? '✓' : '';
+    });
+  });
+  document.getElementById('slidePickerOverlay').classList.add('active');
+}
+
+document.getElementById('slidePickerAll').addEventListener('click', () => {
+  selectedSlideIds = SLIDE_DEFS.map(s => s.id);
+  document.querySelectorAll('.slide-item').forEach(el => {
+    el.classList.add('selected');
+    el.querySelector('.si-check').textContent = '✓';
+  });
+});
+document.getElementById('slidePickerCancel').addEventListener('click', () => {
+  document.getElementById('slidePickerOverlay').classList.remove('active');
+});
+document.getElementById('slidePickerOverlay').addEventListener('click', e => {
+  if(e.target === document.getElementById('slidePickerOverlay'))
+    document.getElementById('slidePickerOverlay').classList.remove('active');
+});
+
+// Lancer depuis le picker
+document.getElementById('slidePickerLaunch').addEventListener('click', async () => {
+  document.getElementById('slidePickerOverlay').classList.remove('active');
+  const btn = document.getElementById('openPresBtn');
+  btn.textContent = '⏳ Préparation…';
+  btn.disabled = true;
+
+  const allPages = document.querySelectorAll('.pages');
+  const prevActive = document.querySelector('.pages.active');
+  allPages.forEach(p => p.classList.add('active'));
+  document.getElementById('globalKpis').style.display = '';
+  await new Promise(r => setTimeout(r, 200));
+  const activeYear = (document.querySelector('.year-btn.active')||{}).dataset?.year||'all';
+  buildEvolutionChart(activeYear);
+  buildThemYearChart();
+  buildAtelYearCharts();
+  await new Promise(r => setTimeout(r, 350));
+  allPages.forEach(p => p.classList.remove('active'));
+  if(prevActive) prevActive.classList.add('active');
+
+  await buildPresSlides();
+  // Filtrer selon sélection
+  const slideMap = {};
+  SLIDE_DEFS.forEach((s, i) => { slideMap[s.id] = presSlides[i]; });
+  presSlides = selectedSlideIds.map(id => slideMap[id]).filter(Boolean);
+
+  presIndex = 0;
+  presRender();
+  document.getElementById('presOverlay').classList.add('active');
+  try { document.getElementById('presOverlay').requestFullscreen?.(); } catch(e){}
+
+  btn.innerHTML = '▶ Présenter';
+  btn.disabled = false;
+});
+
+// ===== PARTAGE URL BASE64 =====
+document.getElementById('shareUrlBtn').addEventListener('click', () => {
+  if(!Object.keys(yearData).length){
+    showToast('Aucune donnée à partager — importe d\'abord un fichier', 'warn');
+    return;
+  }
+  try {
+    const payload = JSON.stringify({ _version:2, _sharedAt: new Date().toISOString(), ...yearData });
+    const b64 = btoa(unescape(encodeURIComponent(payload)));
+    // Limiter à ~50KB encodé (URL limit)
+    if(b64.length > 50000){
+      showToast('Données trop volumineuses pour l\'URL — utilisez l\'export JSON', 'warn', 5000);
+      return;
+    }
+    const shareUrl = location.href.split('?')[0] + '?d=' + b64;
+    fallbackCopy(shareUrl);
+    showToast('✓ Lien avec données copié — colle-le dans un message');
+  } catch(e){
+    showToast('Erreur de génération du lien', 'warn');
+    console.error(e);
+  }
+});
+
+// Charger données depuis URL au démarrage
+(function(){
+  const params = new URLSearchParams(location.search);
+  const d = params.get('d');
+  if(!d) return;
+  try {
+    const json = decodeURIComponent(escape(atob(d)));
+    const data = JSON.parse(json);
+    Object.keys(data).filter(k=>!k.startsWith('_')).forEach(year => {
+      yearData[year] = data[year];
+    });
+    saveYearDataToStorage();
+    showToast('✓ Données reçues via lien partagé', 'ok', 4000);
+    // Nettoyer l'URL sans recharger
+    history.replaceState(null,'', location.pathname);
+  } catch(e){ console.error('Erreur lecture données URL', e); }
+})();
+
+// ===== CARTE LEAFLET COMMUNES =====
+let leafletMap = null;
+
+function buildCommuneMap(communes){
+  if(!communes || !communes.length) return;
+
+  // Geocoding approximatif des communes du Lot-et-Garonne connues
+  const GEO = {
+    'agen':               [44.2003, 0.6201],
+    'marmande':           [44.5002, 0.1670],
+    'villeneuve-sur-lot': [44.4089, 0.7050],
+    'fumel':              [44.4969, 0.9700],
+    'tonneins':           [44.3881, 0.3058],
+    'nérac':              [44.1372, 0.3381],
+    'sainte-livrade-sur-lot':[44.3986, 0.5919],
+    'castillonnès':       [44.6536, 0.5894],
+    'penne-d\'agenais':   [44.4681, 0.9281],
+    'monflanquin':        [44.5236, 0.7406],
+    'monsempron-libos':   [44.4875, 0.9597],
+    'montayral':          [44.5044, 0.9894],
+    'miramont-de-guyenne':[44.5997, 0.3633],
+    'sainte-bazeille':    [44.5169, 0.2553],
+    'condezaygues':       [44.5161, 1.0008],
+    'saint-vite':         [44.4819, 1.0308],
+    'saint-barthélemy-d\'agenais':[44.4522, 0.5453],
+    'castelmoron-sur-lot':[44.4019, 0.5064],
+    'casseneuil':         [44.4411, 0.6100],
+    'prayssas':           [44.2681, 0.5397],
+    'bon-encontre':       [44.1836, 0.6600],
+    'layrac':             [44.1317, 0.6639],
+    'astaffort':          [44.0639, 0.6567],
+    'laroque-timbaut':    [44.2583, 0.6967],
+    'tournon-d\'agenais': [44.4019, 0.9597],
+  };
+
+  function normalize(s){
+    return s.toLowerCase()
+      .replace(/\s*·\s*\d+.*$/, '') // retirer code postal
+      .replace(/[-\s]+/g, '-')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-z0-9\-']/g,'')
+      .trim();
+  }
+
+  const points = communes.map(c => {
+    const key = normalize(c.label);
+    // Cherche correspondance partielle
+    const match = Object.keys(GEO).find(k => key.includes(k) || k.includes(key.split('-')[0]));
+    return match ? { ...c, lat: GEO[match][0], lng: GEO[match][1] } : null;
+  }).filter(Boolean);
+
+  if(!points.length){
+    document.getElementById('communeMap').innerHTML =
+      '<div class="empty-placeholder"><div class="ep-icon">🗺</div>Communes non localisées automatiquement</div>';
+    return;
+  }
+
+  if(leafletMap){ leafletMap.remove(); leafletMap = null; }
+
+  leafletMap = L.map('communeMap', { zoomControl:true }).setView([44.35, 0.63], 9);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution:'© OpenStreetMap © CARTO', maxZoom:14
+  }).addTo(leafletMap);
+
+  const maxVal = Math.max(...points.map(p=>p.val));
+  points.forEach(p => {
+    const r = 8 + (p.val / maxVal) * 22;
+    const opacity = 0.5 + (p.val / maxVal) * 0.45;
+    const circle = L.circleMarker([p.lat, p.lng], {
+      radius: r, fillColor:'#3b82f6', color:'#fff',
+      weight:1.5, opacity:1, fillOpacity: opacity
+    }).addTo(leafletMap);
+    circle.bindPopup(`<b>${p.label}</b><br>${p.val} bénéficiaires (${p.pct}%)`);
+  });
+
+  // Ajuster la vue sur les points
+  const bounds = L.latLngBounds(points.map(p=>[p.lat,p.lng]));
+  leafletMap.fitBounds(bounds.pad(0.15));
+}
+
+// Reconstruire la carte quand les données agrégées changent
+const _origRenderAggregates = renderAggregates;
+function renderAggregates(ds, periodLabel){
+  _origRenderAggregates(ds, periodLabel);
+  // Rebuild map si l'onglet bénéficiaires est visible ou en lazy
+  setTimeout(()=> buildCommuneMap(ds.communes), 100);
+}
 
 // ===== PERSISTANCE LOCALSTORAGE =====
 const STORAGE_KEY = 'coopDashboard_yearData';
@@ -2629,9 +3217,29 @@ function loadYearDataFromStorage(){
 
 // init
 loadYearDataFromStorage();
-applyYearAggregates('all');
-if(Object.keys(yearData).length){ rebuildMonthlyAndEvolution(); }
-else { updateKPIs('all'); buildMonthlyChart('all'); }
+
+// Auto-sélection de l'année en cours si données disponibles
+(function(){
+  const currentYear = window._autoSelectYear;
+  const hasData = Object.keys(yearData).length > 0;
+
+  // Changer le bouton actif EN PREMIER pour que rebuildMonthlyAndEvolution lise la bonne année
+  if(currentYear && yearData[currentYear]){
+    document.querySelectorAll('.year-btn').forEach(b=>b.classList.remove('active'));
+    const btn = document.querySelector(`.year-btn[data-year="${currentYear}"]`);
+    if(btn) btn.classList.add('active');
+  }
+
+  if(hasData){
+    rebuildMonthlyAndEvolution(); // lit le bouton actif déjà positionné
+    applyYearAggregates(currentYear && yearData[currentYear] ? currentYear : 'all');
+  } else {
+    updateKPIs('all');
+    buildMonthlyChart('all');
+  }
+
+  setTimeout(checkDataFreshness, 2000);
+})();
 </script>
 </body>
 </html>
