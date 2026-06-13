@@ -292,7 +292,7 @@
 
   .modal-overlay{
     display:none;position:fixed;inset:0;background:rgba(5,8,20,.65);
-    align-items:center;justify-content:center;z-index:50;
+    align-items:center;justify-content:center;z-index:90;
   }
   .modal-overlay.active{display:flex;}
   .modal{
@@ -523,6 +523,66 @@
   .delta-badge{font-size:11px;font-weight:700;padding:2px 6px;border-radius:12px;margin-left:6px;}
   .delta-badge.up{background:rgba(16,185,129,.15);color:var(--green);}
   .delta-badge.down{background:rgba(239,68,68,.15);color:var(--red);}
+  /* ===== MENU DRAWER ===== */
+  .menu-btn{
+    border:1px solid var(--border);background:var(--panel);color:var(--text);
+    padding:8px 12px;border-radius:8px;font-size:18px;cursor:pointer;
+    transition:.15s;line-height:1;flex-shrink:0;
+  }
+  .menu-btn:hover{border-color:var(--blue);color:var(--blue);}
+
+  .drawer-overlay{
+    display:none;position:fixed;inset:0;z-index:80;background:rgba(5,8,20,.55);
+  }
+  .drawer-overlay.active{display:block;}
+
+  .drawer{
+    position:fixed;top:0;right:0;bottom:0;z-index:81;
+    width:min(300px,85vw);background:var(--panel);
+    border-left:1px solid var(--border);
+    transform:translateX(100%);transition:transform .25s cubic-bezier(.22,1,.36,1);
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .drawer.open{transform:translateX(0);}
+
+  .drawer-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 18px;border-bottom:1px solid var(--border);flex-shrink:0;
+  }
+  .drawer-header .dh-title{font-size:14px;font-weight:800;color:var(--text);}
+  .drawer-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px;}
+  .drawer-close:hover{color:var(--text);}
+
+  .drawer-body{flex:1;overflow-y:auto;padding:12px;}
+
+  .drawer-section{margin-bottom:6px;}
+  .drawer-section-label{
+    font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+    color:var(--muted);padding:8px 10px 4px;
+  }
+  .drawer-item{
+    display:flex;align-items:center;gap:12px;padding:11px 12px;
+    border-radius:10px;cursor:pointer;transition:.12s;font-size:13px;font-weight:600;
+    color:var(--text);border:none;background:none;width:100%;text-align:left;
+  }
+  .drawer-item:hover{background:rgba(255,255,255,.06);}
+  .drawer-item .di-icon{font-size:17px;width:24px;text-align:center;flex-shrink:0;}
+  .drawer-item .di-label{flex:1;}
+  .drawer-item .di-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:rgba(59,130,246,.2);color:var(--blue);}
+  .drawer-item.active-item{background:rgba(59,130,246,.1);color:var(--blue);}
+  .drawer-divider{height:1px;background:var(--border);margin:6px 10px;}
+
+  /* Cacher tous les anciens boutons sur mobile */
+  @media(max-width:900px){
+    .import-btn,.csv-btn,.print-btn,.pdf-btn,.theme-btn{display:none!important;}
+  }
+  /* Sur desktop : garder import + thème visible, cacher le reste */
+  @media(min-width:901px){
+    .import-btn{display:flex;}
+    .theme-btn{display:flex;}
+    .csv-btn,.print-btn,.pdf-btn{display:none!important;}
+  }
+
   /* ===== SÉLECTEUR DE SLIDES ===== */
   .slide-picker-modal{
     background:var(--panel);border:1px solid var(--border);border-radius:14px;
@@ -566,22 +626,66 @@
     <div class="subtitle" id="agentSubtitle">Conseiller Numérique · Lot-et-Garonne</div>
   </div>
   <div class="spacer"></div>
+  <button class="menu-btn" id="openDrawerBtn" title="Menu">
+    <svg width="18" height="14" viewBox="0 0 18 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="18" height="2" rx="1" fill="currentColor"/>
+      <rect y="6" width="18" height="2" rx="1" fill="currentColor"/>
+      <rect y="12" width="18" height="2" rx="1" fill="currentColor"/>
+    </svg>
+  </button>
   <div class="years">
     <button class="year-btn active" data-year="all">Tout (24-26)</button>
     <button class="year-btn" data-year="2024">2024</button>
     <button class="year-btn" data-year="2025">2025</button>
     <button class="year-btn" data-year="2026">2026</button>
   </div>
-  <button class="import-btn" id="openImportModal">⭱ Importer données</button>
-  <button class="csv-btn" id="exportCsvBtn" title="Exporter les données en CSV">⬇ CSV</button>
-  <button class="print-btn" title="Imprimer via le navigateur">🖨 Imprimer</button>
-  <button class="pdf-btn" id="openRapportBtn" title="Générer un rapport PDF">📄 Rapport PDF</button>
-  <button class="pdf-btn" id="openPresBtn" title="Personnaliser et lancer la présentation" style="border-color:var(--purple);color:var(--purple);">▶ Présenter</button>
+  <button class="import-btn" id="openImportModal">⭱ Importer</button>
   <button class="theme-btn" id="themeToggleBtn" title="Mode clair/sombre">🌙</button>
-  <button class="csv-btn" id="openQrBtn" title="Partager via QR code" style="border-color:var(--cyan);color:var(--cyan);">⬡ QR</button>
-  <button class="csv-btn" id="shareUrlBtn" title="Partager les données via URL" style="border-color:var(--green);color:var(--green);">🔗 Partager</button>
-  <button class="csv-btn" onclick="location.href='conum-pptx.html'" title="Générateur PowerPoint" style="border-color:var(--orange);color:var(--orange);">📑 PPTX</button>
-  <button class="csv-btn" onclick="location.href='conum-multi-agents.html'" title="Vue multi-agents" style="border-color:var(--cyan);color:var(--cyan);">👥 Multi</button>
+</div>
+
+<!-- DRAWER MENU -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="drawer" id="mainDrawer">
+  <div class="drawer-header">
+    <span class="dh-title">Menu</span>
+    <button class="drawer-close" id="closeDrawerBtn">✕</button>
+  </div>
+  <div class="drawer-body">
+
+    <div class="drawer-section">
+      <div class="drawer-section-label">Données</div>
+      <button class="drawer-item" id="openImportModal2"><span class="di-icon">⭱</span><span class="di-label">Importer données</span></button>
+      <button class="drawer-item" id="exportCsvBtn"><span class="di-icon">⬇</span><span class="di-label">Exporter CSV</span></button>
+      <button class="drawer-item" id="jsonExportBtnDrawer"><span class="di-icon">💾</span><span class="di-label">Exporter JSON</span></button>
+    </div>
+
+    <div class="drawer-divider"></div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-label">Export & Impression</div>
+      <button class="drawer-item print-btn"><span class="di-icon">🖨</span><span class="di-label">Imprimer</span></button>
+      <button class="drawer-item" id="openRapportBtn"><span class="di-icon">📄</span><span class="di-label">Rapport PDF</span></button>
+      <button class="drawer-item" id="openPresBtn"><span class="di-icon">▶</span><span class="di-label">Présenter</span></button>
+      <button class="drawer-item" onclick="location.href='conum-pptx.html'"><span class="di-icon">📑</span><span class="di-label">Générer PPTX</span></button>
+    </div>
+
+    <div class="drawer-divider"></div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-label">Partage</div>
+      <button class="drawer-item" id="openQrBtn"><span class="di-icon">⬡</span><span class="di-label">QR Code</span></button>
+      <button class="drawer-item" id="shareUrlBtn"><span class="di-icon">🔗</span><span class="di-label">Partager via URL</span></button>
+    </div>
+
+    <div class="drawer-divider"></div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-label">Outils</div>
+      <button class="drawer-item" id="themeToggleBtnDrawer"><span class="di-icon">🌙</span><span class="di-label">Mode clair/sombre</span></button>
+      <button class="drawer-item" onclick="location.href='conum-multi-agents.html'"><span class="di-icon">👥</span><span class="di-label">Multi-agents</span></button>
+    </div>
+
+  </div>
 </div>
 
 <!-- TOAST -->
@@ -1324,7 +1428,7 @@ function buildThemYearChart(){
     data: topThemes.map(th => { const f = (yearData[y].themMed||[]).find(x=>x.label===th); return f ? f.val : 0; })
   }));
   apexMake('chartThemYear', {
-    chart: { ...apexBase.chartCfg, type: 'bar', height: 300 , events: spotlightHandlers },
+    chart: { ...apexBase.chartCfg, type: 'bar', height: 300 },
     theme: { mode: 'dark' },
     series,
     xaxis: { categories: topThemes, labels: { rotate: -30, style: { colors: '#8b95b8', fontSize: '11px' } }, axisBorder:{show:false} },
@@ -1334,6 +1438,7 @@ function buildThemYearChart(){
     dataLabels: { enabled: false },
     legend: { position:'top', labels:{ colors:'#8b95b8' } },
     grid: apexBase.grid,
+    states: { hover: { filter: { type: 'lighten', value: 0.15 } }, active: { filter: { type: 'none' } } },
     tooltip: { theme:'dark', shared:true, intersect:false }
   });
   // Insight thème en plus forte croissance
@@ -1367,29 +1472,7 @@ function buildDureesYearChart(){
     })
   }));
   apexMake('chartDureesYear', {
-    chart: { ...apexBase.chartCfg, type: 'bar', height: 200, events: {
-      dataPointMouseEnter(event, ctx, config){
-        const bars = ctx.el.querySelectorAll('.apexcharts-bar-area');
-        const perSeries = Math.ceil(bars.length / (ctx.w.globals.series.length || 1));
-        bars.forEach((b, i) => {
-          const groupIdx = i % perSeries;
-          if(groupIdx === config.dataPointIndex){
-            b.style.filter = 'drop-shadow(0 0 6px ' + (ctx.w.globals.colors[Math.floor(i/perSeries)] || '#fff') + ')';
-            b.style.opacity = '1';
-          } else {
-            b.style.filter = 'none';
-            b.style.opacity = '0.35';
-          }
-          b.style.transition = 'opacity .15s, filter .15s';
-        });
-      },
-      dataPointMouseLeave(event, ctx){
-        ctx.el.querySelectorAll('.apexcharts-bar-area').forEach(b => {
-          b.style.filter = 'none';
-          b.style.opacity = '1';
-        });
-      }
-    }},
+    chart: { ...apexBase.chartCfg, type: 'bar', height: 200 },
     theme: { mode: 'dark' },
     series,
     xaxis: { categories: dureesLabels, labels: { style: { colors:'#8b95b8', fontSize:'11px' } }, axisBorder:{show:false} },
@@ -1399,7 +1482,7 @@ function buildDureesYearChart(){
     dataLabels: { enabled: false },
     legend: { position:'top', labels:{ colors:'#8b95b8' } },
     grid: apexBase.grid,
-    states: { hover: { filter: { type: 'none' } }, active: { filter: { type: 'none' } } },
+    states: { hover: { filter: { type: 'lighten', value: 0.15 } }, active: { filter: { type: 'none' } } },
     tooltip: { theme:'dark', shared:true, intersect:false }
   });
 }
@@ -2705,6 +2788,41 @@ document.getElementById('presStage').addEventListener('touchend', e => {
   const dx = e.changedTouches[0].clientX - presSwipeStartX;
   if(Math.abs(dx) > 50){ dx < 0 ? presNext() : presPrev(); }
 }, {passive:true});
+
+// ===== DRAWER MENU =====
+const drawerOverlay = document.getElementById('drawerOverlay');
+const mainDrawer = document.getElementById('mainDrawer');
+
+function openDrawer(){ mainDrawer.classList.add('open'); drawerOverlay.classList.add('active'); }
+function closeDrawer(){ mainDrawer.classList.remove('open'); drawerOverlay.classList.remove('active'); }
+
+document.getElementById('openDrawerBtn').addEventListener('click', openDrawer);
+document.getElementById('closeDrawerBtn').addEventListener('click', closeDrawer);
+drawerOverlay.addEventListener('click', closeDrawer);
+
+// Fermer le drawer avant toute action
+mainDrawer.querySelectorAll('.drawer-item').forEach(item => {
+  item.addEventListener('click', closeDrawer);
+});
+
+// Rewire boutons dans le drawer
+document.getElementById('openImportModal2').addEventListener('click', () =>
+  document.getElementById('importModalOverlay').classList.add('active'));
+
+document.getElementById('jsonExportBtnDrawer').addEventListener('click', () =>
+  document.getElementById('jsonExportBtn').click());
+
+// Bouton thème dans le drawer
+document.getElementById('themeToggleBtnDrawer').addEventListener('click', () => {
+  document.getElementById('themeToggleBtn').click();
+  const isLight = document.body.classList.contains('light-mode');
+  document.getElementById('themeToggleBtnDrawer').querySelector('.di-icon').textContent = isLight ? '☀️' : '🌙';
+  document.getElementById('themeToggleBtnDrawer').querySelector('.di-label').textContent = isLight ? 'Mode sombre' : 'Mode clair';
+});
+
+// Bouton imprimer dans le drawer
+mainDrawer.querySelector('.print-btn').addEventListener('click', () =>
+  setTimeout(() => window.print(), 300));
 
 // ===== TOAST =====
 function showToast(msg, type='ok', duration=3000){
