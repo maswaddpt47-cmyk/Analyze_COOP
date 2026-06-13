@@ -2,14 +2,12 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<script src="apexcharts.min.js"></script>
-<script>if(typeof ApexCharts==='undefined')document.write('<script src="https:\/\/cdn.jsdelivr.net\/npm\/apexcharts@3.49.0\/dist\/apexcharts.min.js"><\/script>');</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>COOP — Dashboard Activité Conum</title>
-
-
-<script src="xlsx.full.min.js"></script>
-<script>if(typeof XLSX==='undefined')document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/xlsx\/0.18.5\/xlsx.full.min.js"><\/script>');</script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.0/dist/apexcharts.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   :root{
     --bg:#0b1020;
@@ -137,9 +135,10 @@
   .pages{display:none;}
   .pages.active{display:block;}
 
-  .chart-wrap{overflow:visible;position:relative;height:260px;}
+  .chart-wrap{overflow:visible;position:relative;height:260px;will-change:transform;}
   .chart-wrap>div{height:100%;width:100%;}
-  .chart-wrap:hover .apexcharts-canvas svg{transform:scale(1.015);transition:transform .3s ease;}
+  .chart-wrap:hover{transform:scale(1.012);transition:transform .3s ease;}
+  .chart-wrap:not(:hover){transition:transform .25s ease;}
   .spark-wrap>div{height:100%;width:100%;}
 
   .legend-list{display:flex;flex-direction:column;gap:6px;font-size:13px;}
@@ -155,6 +154,139 @@
     display:flex;align-items:center;gap:6px;transition:.15s;
   }
   .import-btn:hover{border-color:var(--blue);color:var(--blue);}
+  .print-btn{
+    border:1px solid var(--border);background:var(--panel);color:var(--muted);
+    padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
+    display:flex;align-items:center;gap:6px;transition:.15s;
+  }
+  .print-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+  @media print{ .print-btn{display:none!important;} }
+
+  .pdf-btn{
+    border:1px solid var(--border);background:var(--panel);color:var(--muted);
+    padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
+    display:flex;align-items:center;gap:6px;transition:.15s;
+  }
+  .pdf-btn:hover{border-color:var(--red);color:var(--red);}
+  .pdf-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+  /* ===== MODE RAPPORT ===== */
+  .rapport-overlay{
+    display:none;position:fixed;inset:0;z-index:100;
+    background:#f0f2f7;overflow-y:auto;
+  }
+  .rapport-overlay.active{display:block;}
+  .rp-cover{
+    display:flex;flex-direction:column;justify-content:space-between;
+    background:linear-gradient(145deg,#0b1020 0%,#121a32 100%);
+    color:#e8ecf7;
+  }
+  .rp-cover .rp-logo{font-size:11px;font-weight:800;letter-spacing:2px;color:#3b82f6;text-transform:uppercase;}
+  .rp-cover .rp-kpi-box{
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+    border-radius:10px;padding:12px;
+  }
+  .rp-cover .rp-kpi-box .rk-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#8b95b8;margin-bottom:6px;}
+  .rp-cover .rp-kpi-box .rk-sub{font-size:11px;color:#8b95b8;margin-top:3px;}
+  .rp-cover .rp-footer{font-size:11px;color:#4b5563;border-top:1px solid rgba(255,255,255,.1);padding-top:14px;margin-top:24px;}
+
+  .rp-section-title{
+    font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+    color:#3b82f6;margin-bottom:18px;padding-bottom:8px;border-bottom:2px solid #e5e7eb;
+  }
+  .rp-h2{font-size:20px;font-weight:800;margin-bottom:4px;color:#111827;}
+  .rp-muted{font-size:12px;color:#6b7280;margin-bottom:18px;}
+
+  .rp-kpi-card{
+    border:1px solid #e5e7eb;border-radius:10px;padding:14px;
+  }
+  .rp-kpi-card .rk-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:6px;}
+  .rp-kpi-card .rk-sub{font-size:11px;color:#9ca3af;margin-top:3px;}
+  .rp-kpi-card.accent-blue{border-top:3px solid #3b82f6;}
+  .rp-kpi-card.accent-green{border-top:3px solid #10b981;}
+  .rp-kpi-card.accent-orange{border-top:3px solid #f59e0b;}
+  .rp-kpi-card.accent-purple{border-top:3px solid #a855f7;}
+  .rp-kpi-card.accent-pink{border-top:3px solid #ec4899;}
+  .rp-kpi-card.accent-cyan{border-top:3px solid #06b6d4;}
+
+  .rp-chart-box{border:1px solid #e5e7eb;border-radius:10px;padding:14px;margin-bottom:14px;}
+  .rp-chart-box .rc-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#374151;margin-bottom:10px;}
+  .rp-chart-box img{width:100%;height:auto;display:block;}
+
+  .rp-bar-row{margin-bottom:8px;}
+  .rp-bar-row .rp-bar-top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;color:#374151;}
+  .rp-bar-row .rp-bar-track{height:6px;background:#f3f4f6;border-radius:4px;overflow:hidden;}
+  .rp-bar-row .rp-bar-fill{height:100%;border-radius:4px;}
+
+  .rp-insight{
+    background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;
+    padding:14px 16px;font-size:13px;line-height:1.6;color:#1e40af;margin-bottom:14px;
+  }
+  .rp-insight.green{background:#f0fdf4;border-color:#bbf7d0;color:#166534;}
+  .rp-insight.orange{background:#fffbeb;border-color:#fde68a;color:#92400e;}
+
+  .rp-page-num{
+    position:absolute;bottom:10mm;right:16mm;
+    font-size:10px;color:#9ca3af;
+  }
+  /* Barre de navigation du rapport */
+  .rapport-topbar{
+    position:fixed;top:0;left:0;right:0;z-index:102;
+    background:rgba(15,20,40,.95);backdrop-filter:blur(8px);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 16px;gap:10px;border-bottom:1px solid rgba(255,255,255,.1);
+  }
+  .rapport-topbar .rt-title{color:#e8ecf7;font-size:13px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .rapport-pdf-btn{
+    background:#ef4444;border:1px solid #ef4444;border-radius:8px;
+    padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;color:#fff;
+    white-space:nowrap;flex-shrink:0;
+  }
+  .rapport-pdf-btn:hover{background:#dc2626;}
+  .rapport-close{
+    background:#fff;border:1px solid #c9d2e6;border-radius:8px;
+    padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;color:#374151;
+    white-space:nowrap;flex-shrink:0;
+  }
+  .rapport-close:hover{background:#f3f4f6;}
+
+  /* Le contenu du rapport commence sous la topbar */
+  #rapportContent{
+    width:min(210mm, 100%);margin:0 auto;padding:60px 8px 40px;
+  }
+  .rp-page{
+    background:#fff;width:100%;min-height:auto;
+    margin-bottom:12px;padding:clamp(16px, 5vw, 18mm) clamp(14px, 4vw, 16mm);
+    box-shadow:0 2px 16px rgba(0,0,0,.12);
+    page-break-after:always;position:relative;
+    font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    color:#111827;overflow:hidden;
+  }
+
+  /* Grilles responsive */
+  .rp-kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;}
+  .rp-kpi-card .rk-val{font-size:clamp(16px,4vw,24px);font-weight:800;color:#111827;}
+  .rp-cover .rp-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:32px;}
+  .rp-cover .rp-kpi-box .rk-val{font-size:clamp(18px,5vw,28px);font-weight:800;}
+  .rp-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px;}
+
+  /* Texte responsive cover */
+  .rp-cover .rp-hero h1{font-size:clamp(22px,6vw,32px);font-weight:800;line-height:1.2;margin-bottom:8px;}
+  .rp-cover .rp-hero .rp-sub{font-size:clamp(12px,3vw,15px);color:#8b95b8;}
+  .rp-cover .rp-hero{margin-top:24px;}
+  .empty-placeholder{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    height:160px;gap:10px;color:var(--muted);font-size:13px;opacity:.65;
+  }
+  .empty-placeholder .ep-icon{font-size:28px;opacity:.45;}
+
+  /* Spinner import */
+  .spinner{
+    display:inline-block;width:14px;height:14px;border:2px solid var(--border);
+    border-top-color:var(--blue);border-radius:50%;
+    animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
 
   .modal-overlay{
     display:none;position:fixed;inset:0;background:rgba(5,8,20,.65);
@@ -224,7 +356,104 @@
   .stat-row .stat-val{font-size:22px;font-weight:800;}
   .stat-row .stat-label{font-size:13px;color:var(--muted);}
 
-  /* ===== IMPRESSION (bilan d'activité) ===== */
+  /* ===== MODE PRÉSENTATION ===== */
+  .pres-overlay{
+    display:none;position:fixed;inset:0;z-index:200;
+    background:#0b1020;
+  }
+  .pres-overlay.active{display:flex;flex-direction:column;}
+
+  .pres-topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 20px;background:rgba(255,255,255,.04);
+    border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;
+    gap:12px;
+  }
+  .pres-logo{font-size:11px;font-weight:800;letter-spacing:2px;color:var(--blue);text-transform:uppercase;}
+  .pres-counter{font-size:13px;color:var(--muted);font-weight:600;}
+  .pres-controls{display:flex;gap:8px;align-items:center;}
+  .pres-nav-btn{
+    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+    color:var(--text);border-radius:8px;padding:6px 14px;font-size:14px;
+    cursor:pointer;transition:.15s;font-weight:600;
+  }
+  .pres-nav-btn:hover{background:rgba(255,255,255,.14);}
+  .pres-nav-btn:disabled{opacity:.3;cursor:not-allowed;}
+  .pres-close-btn{
+    background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);
+    color:#ef4444;border-radius:8px;padding:6px 14px;font-size:13px;
+    cursor:pointer;font-weight:700;transition:.15s;
+  }
+  .pres-close-btn:hover{background:rgba(239,68,68,.3);}
+
+  /* Zone slide */
+  .pres-stage{
+    flex:1;display:flex;align-items:center;justify-content:center;
+    padding:16px 24px;overflow:auto;position:relative;
+  }
+  .pres-slide{
+    width:100%;max-width:960px;max-height:100%;
+    animation:slideIn .3s cubic-bezier(.22,1,.36,1);
+  }
+  @keyframes slideIn{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
+
+  /* Barre de progression */
+  .pres-progress{
+    height:3px;background:rgba(255,255,255,.08);flex-shrink:0;
+  }
+  .pres-progress-fill{height:100%;background:var(--blue);transition:width .4s ease;}
+
+  /* Indicateurs de slide (dots) */
+  .pres-dots{
+    display:flex;justify-content:center;gap:6px;padding:10px;flex-shrink:0;
+  }
+  .pres-dot{
+    width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.2);
+    cursor:pointer;transition:.2s;
+  }
+  .pres-dot.active{background:var(--blue);width:20px;border-radius:3px;}
+
+  /* Styles des slides */
+  .sl-cover{text-align:center;padding:20px 0;}
+  .sl-cover .sl-badge{display:inline-block;background:var(--blue);color:#fff;font-size:11px;font-weight:800;letter-spacing:2px;padding:5px 14px;border-radius:20px;text-transform:uppercase;margin-bottom:20px;}
+  .sl-cover h1{font-size:clamp(28px,5vw,52px);font-weight:800;color:#fff;line-height:1.15;margin-bottom:10px;}
+  .sl-cover .sl-sub{font-size:clamp(13px,2vw,17px);color:var(--muted);}
+  .sl-cover .sl-date{font-size:12px;color:var(--muted);margin-top:24px;opacity:.6;}
+
+  .sl-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:8px;}
+  .sl-kpi{
+    background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:20px;text-align:center;
+  }
+  .sl-kpi .sk-val{font-size:clamp(28px,5vw,48px);font-weight:800;margin-bottom:4px;}
+  .sl-kpi .sk-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
+  .sl-kpi .sk-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+
+  .sl-title{font-size:clamp(13px,2vw,16px);font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:16px;}
+  .sl-chart-wrap{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;overflow:hidden;}
+  .sl-chart-wrap img{width:100%;height:auto;max-height:320px;object-fit:contain;display:block;border-radius:6px;}
+
+  .sl-split{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:600px){.sl-split{grid-template-columns:1fr;}}
+
+  .sl-bars{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;}
+  .sl-bar-row{margin-bottom:10px;}
+  .sl-bar-top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;color:var(--text);}
+  .sl-bar-track{height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;}
+  .sl-bar-fill{height:100%;border-radius:4px;}
+
+  .sl-insight{
+    background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);
+    border-radius:12px;padding:14px 18px;font-size:clamp(13px,1.8vw,16px);
+    line-height:1.6;color:var(--text);margin-top:12px;
+  }
+  .sl-insight b{color:var(--blue);}
+  .sl-insight.green{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.25);}
+  .sl-insight.green b{color:var(--green);}
+
+  .pres-hint{font-size:11px;color:rgba(255,255,255,.25);text-align:center;padding:6px;flex-shrink:0;}
+
+  @media print{.pres-overlay{display:none!important;}}
   @media print{
     :root{ --bg:#ffffff; --panel:#ffffff; --panel2:#f5f7fb; --border:#c9d2e6; --text:#111827; --muted:#4b5563; }
     body{ background:#fff; color:#111827; padding:0; }
@@ -254,6 +483,40 @@
     <button class="year-btn" data-year="2026">2026</button>
   </div>
   <button class="import-btn" id="openImportModal">⭱ Importer données</button>
+  <button class="print-btn" title="Imprimer via le navigateur">🖨 Imprimer</button>
+  <button class="pdf-btn" id="openRapportBtn" title="Générer un rapport PDF">📄 Rapport PDF</button>
+  <button class="pdf-btn" id="openPresBtn" title="Mode présentation" style="border-color:var(--purple);color:var(--purple);">▶ Présenter</button>
+</div>
+
+<!-- PRÉSENTATION OVERLAY -->
+<div class="pres-overlay" id="presOverlay">
+  <div class="pres-progress"><div class="pres-progress-fill" id="presProgressFill"></div></div>
+  <div class="pres-topbar">
+    <div class="pres-logo">CD47 · Conum</div>
+    <div class="pres-counter" id="presCounter">1 / 1</div>
+    <div class="pres-controls">
+      <button class="pres-nav-btn" id="presPrev">← Préc.</button>
+      <button class="pres-nav-btn" id="presNext">Suiv. →</button>
+      <button class="pres-close-btn" id="presClose">✕ Quitter</button>
+    </div>
+  </div>
+  <div class="pres-stage" id="presStage">
+    <div class="pres-slide" id="presSlide"></div>
+  </div>
+  <div class="pres-dots" id="presDots"></div>
+  <div class="pres-hint" id="presHint">← → pour naviguer · Échap pour quitter · Swipe sur mobile</div>
+</div>
+
+<!-- RAPPORT OVERLAY -->
+<div class="rapport-overlay" id="rapportOverlay">
+  <div class="rapport-topbar">
+    <div class="rt-title">📄 Rapport d'activité</div>
+    <button class="rapport-pdf-btn" id="rapportExportPdf">⬇ Télécharger PDF</button>
+    <button class="rapport-close" id="rapportClose">✕ Fermer</button>
+  </div>
+  <div id="rapportContent">
+    <!-- généré dynamiquement -->
+  </div>
 </div>
 
 <div class="modal-overlay" id="importModalOverlay">
@@ -292,6 +555,10 @@
       <label class="modal-btn" style="cursor:pointer;">Importer JSON<input type="file" accept=".json" id="jsonImportInput" style="display:none;"></label>
       <button class="modal-btn" id="jsonExportBtn">Exporter JSON</button>
       <button class="modal-btn" id="resetDataBtn" title="Efface toutes les données importées (sauvegarde locale comprise).">↺ Réinitialiser</button>
+      <div id="resetConfirm" style="display:none;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--red);margin-top:10px;">
+        ⚠ Toutes les données seront effacées. <button id="resetConfirmYes" class="modal-btn" style="margin-left:10px;background:var(--red);border-color:var(--red);color:#fff;padding:4px 10px;font-size:12px;">Confirmer</button>
+        <button id="resetConfirmNo" class="modal-btn" style="margin-left:6px;padding:4px 10px;font-size:12px;">Annuler</button>
+      </div>
       <button class="modal-btn" id="closeImportModal">Fermer</button>
     </div>
   </div>
@@ -350,11 +617,11 @@
   <div class="grid2">
     <div class="card">
       <div class="card-title"><span class="dot"></span>Accompagnements par mois</div>
-      <div class="chart-wrap"><div id="chartMonthly"></div></div>
+      <div class="chart-wrap"><div id="chartMonthly"><div class="empty-placeholder"><div class="ep-icon">📊</div>Importe des données pour afficher ce graphique</div></div></div>
     </div>
     <div class="card">
       <div class="card-title green"><span class="dot"></span>Répartition par type</div>
-      <div class="chart-wrap"><div id="chartTypes"></div></div>
+      <div class="chart-wrap"><div id="chartTypes"><div class="empty-placeholder"><div class="ep-icon">🍩</div>Importe des données pour afficher ce graphique</div></div></div>
     </div>
   </div>
   <div class="grid3">
@@ -568,7 +835,7 @@
   </div>
 </div>
 
-<div class="footer-note">Données issues de l'export La Coop de la médiation numérique — export du 12/06/2026 · Période couverte : 01/2024 → 06/2026</div>
+<div class="footer-note" id="footerNote">Données issues de l'export La Coop de la médiation numérique</div>
 
 <script>
 // ===== DATA =====
@@ -843,8 +1110,8 @@ function renderAggregates(ds, periodLabel){
   document.getElementById('kpi-atel-ratio-sub').textContent = `${t.participants} participants / ${t.ateliersVal} ateliers`;
   document.getElementById('kpi-atel-multiplier').textContent = ratio.toFixed(1) + '×';
   document.getElementById('kpi-atel-multiplier-sub').textContent = `${t.participants} participants / ${t.ateliersVal} séances`;
-  document.getElementById('kpi-atel-equiv').textContent = t.participants.toLocaleString('fr-FR');
-  document.getElementById('kpi-atel-equiv-sub').textContent = `vs ${t.ateliersVal} séances réalisées`;
+  document.getElementById('kpi-atel-equiv').textContent = Math.max(0, t.participants - t.ateliersVal).toLocaleString('fr-FR');
+  document.getElementById('kpi-atel-equiv-sub').textContent = `${t.participants} participants − ${t.ateliersVal} séances`;
 
   const sharePct = (t.individuelsVal + t.ateliersVal) ? Math.round((t.ateliersVal/(t.individuelsVal+t.ateliersVal))*1000)/10 : 0;
   document.getElementById('atelInsightText').innerHTML = `
@@ -1298,14 +1565,66 @@ function highlightYearCompare(year){
 
 // ===== IMPRESSION =====
 let printPrevActive = null;
-window.addEventListener('beforeprint', ()=>{
+
+// Remplace les charts ApexCharts par des <img> PNG avant impression
+// (les SVG/canvas ne s'impriment pas correctement sur mobile)
+async function chartsToImages(){
+  const promises = Object.entries(apexRegistry).map(async ([id, chart]) => {
+    try {
+      const uri = await chart.dataURI({ scale: 2 });
+      const el = document.getElementById(id);
+      if(!el) return;
+      const img = document.createElement('img');
+      img.src = uri.imgURI;
+      img.style.cssText = 'width:100%;height:auto;display:block;';
+      img.dataset.printReplace = id;
+      el.style.display = 'none';
+      el.parentNode.insertBefore(img, el);
+    } catch(e) { /* chart vide ou pas encore rendu */ }
+  });
+  await Promise.all(promises);
+}
+
+function removeChartImages(){
+  document.querySelectorAll('img[data-print-replace]').forEach(img => {
+    const id = img.dataset.printReplace;
+    const el = document.getElementById(id);
+    if(el) el.style.display = '';
+    img.remove();
+  });
+}
+
+// Bouton imprimer : conversion async puis print()
+document.querySelector('.print-btn').addEventListener('click', async (e) => {
+  e.preventDefault();
+  const btn = e.currentTarget;
+  btn.textContent = '⏳ Préparation…';
+  btn.disabled = true;
+
+  // Afficher toutes les pages
   printPrevActive = document.querySelector('.pages.active');
-  document.querySelectorAll('.pages').forEach(p=>p.classList.add('active'));
+  document.querySelectorAll('.pages').forEach(p => p.classList.add('active'));
   document.getElementById('globalKpis').style.display = '';
-  setTimeout(()=> window.dispatchEvent(new Event('resize')), 100);
+
+  // Laisser le DOM se mettre à jour
+  await new Promise(r => setTimeout(r, 200));
+  await chartsToImages();
+
+  window.print();
+
+  // Nettoyage après impression
+  setTimeout(() => {
+    removeChartImages();
+    document.querySelectorAll('.pages').forEach(p => p.classList.remove('active'));
+    if(printPrevActive) printPrevActive.classList.add('active');
+    btn.innerHTML = '🖨 Imprimer';
+    btn.disabled = false;
+  }, 1000);
 });
-window.addEventListener('afterprint', ()=>{
-  document.querySelectorAll('.pages').forEach(p=>p.classList.remove('active'));
+
+window.addEventListener('afterprint', () => {
+  removeChartImages();
+  document.querySelectorAll('.pages').forEach(p => p.classList.remove('active'));
   if(printPrevActive) printPrevActive.classList.add('active');
 });
 
@@ -1414,10 +1733,21 @@ function parseWorkbookToDataset(wb){
     }
   }
 
+  // Collecte des IDs bénéficiaires pour dédoublonnage inter-années
+  const benefIdRow = rows.find(r => norm(r[0]).toLowerCase().includes('identifiant'));
+  const benefIds = new Set();
+  if(benefIdRow){
+    const idIdx = rows.indexOf(benefIdRow);
+    for(let i=idIdx+1;i<rows.length;i++){
+      if(rows[i][0]) benefIds.add(String(rows[i][0]).trim());
+    }
+  }
+
   return {
     totals,
     types,
     agentName,
+    benefIds: [...benefIds],
     monthly: monthlyData,
     themMed: rowsBetween(rows, 'Thématiques Médiation numérique'),
     themAdmin: rowsBetween(rows, 'Thématiques Démarches administratives'),
@@ -1455,6 +1785,15 @@ function sumDatasets(list){
     });
     return acc;
   }, {});
+
+  // Dédoublonnage bénéficiaires si les IDs sont disponibles dans tous les datasets
+  const allHaveIds = list.every(ds => ds.benefIds && ds.benefIds.length > 0);
+  if(allHaveIds){
+    const mergedIds = new Set(list.flatMap(ds => ds.benefIds));
+    t.beneficiaires = mergedIds.size;
+    t._deduplicated = true;
+  }
+
   const indivTotal = (t.individuelsVal||0) + (t.ateliersVal||0) || 1;
   t.individuelsPct = Math.round((t.individuelsVal/indivTotal)*1000)/10;
   t.ateliersPct = Math.round((t.ateliersVal/indivTotal)*1000)/10;
@@ -1490,9 +1829,13 @@ function applyYearAggregates(year){
     if(loaded.length >= 1){
       renderAggregates(sumDatasets(loaded), 'cumul ' + loadedYears.join('+'));
       const missing = ['2024','2025','2026'].filter(y=>!yearData[y]);
+      const summed = sumDatasets(loaded);
+      const dedupNote = summed.totals._deduplicated
+        ? ''
+        : ' NB : les bénéficiaires cumulés ne sont pas dédoublonnés entre années.';
       setBanner(missing.length
-        ? `Cumul partiel (${loadedYears.join(', ')}) — importe ${missing.join(', ')} pour le cumul complet. NB : les bénéficiaires cumulés ne sont pas dédoublonnés entre années.`
-        : '');
+        ? `Cumul partiel (${loadedYears.join(', ')}) — importe ${missing.join(', ')} pour le cumul complet.${dedupNote}`
+        : dedupNote ? dedupNote.trim() : '');
     } else {
       renderAggregates(defaultDataset, 'cumul 24-26');
       setBanner('Aucune donnée — importe les exports annuels via "Importer données".');
@@ -1520,7 +1863,7 @@ document.querySelectorAll('.import-row input[type=file]').forEach(input=>{
     const file = e.target.files[0];
     const statusEl = document.getElementById('status-'+year);
     if(!file) return;
-    statusEl.textContent = 'Lecture en cours…';
+    statusEl.innerHTML = '<span class="spinner"></span>Lecture en cours…';
     statusEl.className = 'import-status';
     const reader = new FileReader();
     reader.onload = (evt)=>{
@@ -1546,7 +1889,8 @@ document.querySelectorAll('.import-row input[type=file]').forEach(input=>{
 
 // ===== JSON EXPORT / IMPORT =====
 document.getElementById('jsonExportBtn').addEventListener('click', ()=>{
-  const blob = new Blob([JSON.stringify(yearData, null, 2)], {type:'application/json'});
+  const exportPayload = { _version: 2, _exportedAt: new Date().toISOString(), ...yearData };
+  const blob = new Blob([JSON.stringify(exportPayload, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -1562,7 +1906,7 @@ document.getElementById('jsonImportInput').addEventListener('change', (e)=>{
   reader.onload = (evt)=>{
     try{
       const data = JSON.parse(evt.target.result);
-      Object.keys(data).forEach(year=>{
+      Object.keys(data).filter(k => !k.startsWith('_')).forEach(year=>{
         yearData[year] = data[year];
         saveYearDataToStorage();
         const statusEl = document.getElementById('status-'+year);
@@ -1583,7 +1927,12 @@ document.getElementById('jsonImportInput').addEventListener('change', (e)=>{
 });
 
 document.getElementById('resetDataBtn').addEventListener('click', ()=>{
-  if(!confirm('Effacer toutes les données importées ? Le tableau de bord sera vide jusqu\'au prochain import.')) return;
+  document.getElementById('resetConfirm').style.display = '';
+});
+document.getElementById('resetConfirmNo').addEventListener('click', ()=>{
+  document.getElementById('resetConfirm').style.display = 'none';
+});
+document.getElementById('resetConfirmYes').addEventListener('click', ()=>{
   localStorage.removeItem(STORAGE_KEY);
   location.reload();
 });
@@ -1630,6 +1979,605 @@ document.querySelectorAll('.tab').forEach(tab=>{
   });
 });
 
+// ===== RAPPORT PDF =====
+
+// Récupère le dataset actif
+function getActiveDataset(){
+  const btn = document.querySelector('.year-btn.active');
+  const year = btn ? btn.dataset.year : 'all';
+  if(year === 'all'){
+    const loaded = ['2024','2025','2026'].filter(y => yearData[y]).map(y => yearData[y]);
+    return loaded.length ? sumDatasets(loaded) : defaultDataset;
+  }
+  return yearData[year] || defaultDataset;
+}
+
+function getPeriodLabel(){
+  const btn = document.querySelector('.year-btn.active');
+  const year = btn ? btn.dataset.year : 'all';
+  if(year === 'all'){
+    const loaded = Object.keys(yearData).sort();
+    return loaded.length ? 'cumul ' + loaded.join('+') : 'cumul 2024–2026';
+  }
+  return 'année ' + year;
+}
+
+// Capture un chart ApexCharts en PNG base64
+async function chartToBase64(id){
+  const ch = apexRegistry[id];
+  if(!ch) return null;
+  try {
+    const r = await ch.dataURI({ scale: 2 });
+    return r.imgURI;
+  } catch(e){ return null; }
+}
+
+// Barre de progression légère (light)
+function rpBar(label, val, pct, color){
+  return `<div class="rp-bar-row">
+    <div class="rp-bar-top"><span>${label}</span><span>${val} · ${pct}%</span></div>
+    <div class="rp-bar-track"><div class="rp-bar-fill" style="width:${pct}%;background:${color||'#3b82f6'}"></div></div>
+  </div>`;
+}
+
+function rpKpi(label, val, sub, accent){
+  return `<div class="rp-kpi-card accent-${accent||'blue'}">
+    <div class="rk-label">${label}</div>
+    <div class="rk-val">${val}</div>
+    ${sub ? `<div class="rk-sub">${sub}</div>` : ''}
+  </div>`;
+}
+
+async function buildRapport(){
+  const ds = getActiveDataset();
+  const t = ds.totals;
+  const period = getPeriodLabel();
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+  const agentName = ds.agentName || '';
+
+  // Capturer tous les charts nécessaires en parallèle
+  const [imgMonthly, imgTypes, imgEvol, imgOverlay, imgCompare,
+         imgThemMed, imgThemAdmin, imgThemYear,
+         imgGenre, imgAge, imgStatut, imgLieux, imgCanaux, imgDurees,
+         imgAtelTypes, imgAtelYears, imgAtelPart] = await Promise.all([
+    chartToBase64('chartMonthly'), chartToBase64('chartTypes'),
+    chartToBase64('chartEvolutionFull'), chartToBase64('chartYearOverlay'), chartToBase64('chartYearCompare'),
+    chartToBase64('chartThemMed'), chartToBase64('chartThemAdmin'), chartToBase64('chartThemYear'),
+    chartToBase64('chartGenre'), chartToBase64('chartAge'), chartToBase64('chartStatut'),
+    chartToBase64('chartLieux'), chartToBase64('chartCanaux'), chartToBase64('chartDureesYear'),
+    chartToBase64('chartAtelTypes'), chartToBase64('chartAtelYears'), chartToBase64('chartAtelPartYears')
+  ]);
+
+  const imgTag = (src, title) => src
+    ? `<div class="rp-chart-box"><div class="rc-title">${title}</div><img src="${src}"></div>`
+    : '';
+
+  const topTheme = ds.themMed.length ? [...ds.themMed].sort((a,b)=>b.val-a.val)[0] : {label:'—',val:0,pct:0};
+  const ratio = t.ateliersVal ? (t.participants/t.ateliersVal) : 0;
+  const pctNouv = (t.nouveaux&&(t.nouveaux+t.suivis)) ? Math.round(t.nouveaux/(t.nouveaux+t.suivis)*100) : 0;
+  const y24 = sumYear('2024'), y25 = sumYear('2025'), y26 = sumYear('2026');
+
+  const html = `
+  <!-- PAGE 1 : COUVERTURE -->
+  <div class="rp-page rp-cover">
+    <div>
+      <div class="rp-logo">CD47 — Conseil Départemental de Lot-et-Garonne</div>
+      <div class="rp-hero">
+        <h1>Bilan d'activité<br>Conseiller Numérique</h1>
+        <div class="rp-sub">${agentName ? agentName + ' · ' : ''}Lot-et-Garonne · ${period}</div>
+      </div>
+      <div class="rp-kpi-grid">
+        <div class="rp-kpi-box">
+          <div class="rk-label">Accompagnements</div>
+          <div class="rk-val">${t.accompagnements.toLocaleString('fr-FR')}</div>
+          <div class="rk-sub">${period}</div>
+        </div>
+        <div class="rp-kpi-box">
+          <div class="rk-label">Bénéficiaires</div>
+          <div class="rk-val">${t.beneficiaires.toLocaleString('fr-FR')}</div>
+          <div class="rk-sub">${t.nouveaux} nouveaux · ${t.suivis} suivis</div>
+        </div>
+        <div class="rp-kpi-box">
+          <div class="rk-label">Ateliers collectifs</div>
+          <div class="rk-val">${t.ateliersVal}</div>
+          <div class="rk-sub">${t.participants} participants · ×${ratio.toFixed(1)}</div>
+        </div>
+        <div class="rp-kpi-box">
+          <div class="rk-label">Moyenne mensuelle</div>
+          <div class="rk-val">${document.getElementById('kpi-avg').textContent}</div>
+          <div class="rk-sub">accompagnements/mois</div>
+        </div>
+        <div class="rp-kpi-box">
+          <div class="rk-label">Thématique dominante</div>
+          <div class="rk-val" style="font-size:16px;line-height:1.3;">${topTheme.label}</div>
+          <div class="rk-sub">${topTheme.val} acct · ${topTheme.pct}%</div>
+        </div>
+        <div class="rp-kpi-box">
+          <div class="rk-label">Nouveaux bénéficiaires</div>
+          <div class="rk-val">${pctNouv}%</div>
+          <div class="rk-sub">${t.nouveaux} / ${t.nouveaux+t.suivis} identifiés</div>
+        </div>
+      </div>
+    </div>
+    <div class="rp-footer">Rapport généré le ${dateStr} · Données issues de l'export La Coop de la médiation numérique</div>
+  </div>
+
+  <!-- PAGE 2 : VUE GLOBALE -->
+  <div class="rp-page">
+    <div class="rp-section-title">01 — Vue globale</div>
+    <div class="rp-kpi-row">
+      ${rpKpi('Accompagnements', t.accompagnements.toLocaleString('fr-FR'), period, 'blue')}
+      ${rpKpi('Individuels / Ateliers', `${t.individuelsVal} / ${t.ateliersVal}`, `${t.participants} participants`, 'green')}
+      ${rpKpi('Bénéficiaires', t.beneficiaires.toLocaleString('fr-FR'), `${t.suivis} suivis · ${t.anonymes} anonymes`, 'orange')}
+    </div>
+    <div class="rp-kpi-row">
+      ${rpKpi('Thématique dominante', topTheme.label, `${topTheme.val} accompagnements · ${topTheme.pct}%`, 'purple')}
+      ${rpKpi('Moyenne mensuelle', document.getElementById('kpi-avg').textContent, 'accompagnements/mois', 'pink')}
+      ${rpKpi('Nouveaux bénéf.', `${t.nouveaux} / ${t.suivis}`, `${pctNouv}% nouveaux · ${100-pctNouv}% suivis`, 'cyan')}
+    </div>
+    <div class="rp-grid2">
+      ${imgTag(imgMonthly, 'Accompagnements par mois')}
+      ${imgTag(imgTypes, 'Répartition par type')}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+      <div class="rp-chart-box"><div class="rc-title">Durée des activités</div>
+        ${ds.durees.map((d,i)=>rpBar(d.label,d.val,d.pct,['#3b82f6','#10b981','#f59e0b','#a855f7'][i]||'#3b82f6')).join('')}
+      </div>
+      <div class="rp-chart-box"><div class="rc-title">Canaux</div>
+        ${ds.canaux.map((d,i)=>rpBar(d.label,d.val,d.pct,['#3b82f6','#10b981','#f59e0b','#a855f7'][i]||'#3b82f6')).join('')}
+      </div>
+      <div class="rp-chart-box"><div class="rc-title">Matériel utilisé</div>
+        ${ds.materiel.map((d,i)=>rpBar(d.label,d.val,d.pct,['#3b82f6','#10b981','#f59e0b','#a855f7','#ec4899'][i]||'#3b82f6')).join('')}
+      </div>
+    </div>
+    <div class="rp-page-num">2</div>
+  </div>
+
+  <!-- PAGE 3 : ÉVOLUTION -->
+  <div class="rp-page">
+    <div class="rp-section-title">02 — Évolution</div>
+    <div class="rp-kpi-row">
+      ${rpKpi('Total 2024', y24.toLocaleString('fr-FR'), 'Année de référence', 'blue')}
+      ${rpKpi('Total 2025', y25.toLocaleString('fr-FR'), y24 ? `vs 2024 : ${y25>y24?'+':''}${((y25-y24)/y24*100).toFixed(1)}%` : '', 'orange')}
+      ${rpKpi('Total 2026 (jan–jun)', y26.toLocaleString('fr-FR'), `Projection : ~${Math.round(y26/Math.max(1,monthly.labels.filter(l=>'20'+l.split('/')[1]==='2026'&&monthly.values[monthly.labels.indexOf(l)]>0).length)*12).toLocaleString('fr-FR')} sur 12 mois`, 'purple')}
+    </div>
+    ${imgTag(imgEvol, 'Évolution mensuelle 2024–2026')}
+    ${imgTag(imgOverlay, 'Superposition des années (Jan → Déc)')}
+    ${imgTag(imgCompare, 'Comparaison calendaire par mois')}
+    <div class="rp-page-num">3</div>
+  </div>
+
+  <!-- PAGE 4 : THÉMATIQUES -->
+  <div class="rp-page">
+    <div class="rp-section-title">03 — Thématiques</div>
+    <div class="rp-grid2">
+      ${imgTag(imgThemMed, 'Médiation numérique')}
+      ${imgTag(imgThemAdmin, 'Démarches administratives')}
+    </div>
+    <div class="rp-chart-box" style="margin-bottom:14px;">
+      <div class="rc-title">Détail — Médiation numérique</div>
+      ${ds.themMed.filter(x=>x.val>0).slice(0,10).map((d,i)=>rpBar(d.label,d.val,d.pct,['#3b82f6','#10b981','#f59e0b','#a855f7','#ec4899','#06b6d4','#ef4444','#eab308','#22c55e','#6366f1'][i]||'#3b82f6')).join('')}
+    </div>
+    ${imgTag(imgThemYear, 'Top thématiques — évolution par année')}
+    <div class="rp-page-num">4</div>
+  </div>
+
+  <!-- PAGE 5 : BÉNÉFICIAIRES -->
+  <div class="rp-page">
+    <div class="rp-section-title">04 — Bénéficiaires</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;">
+      ${imgTag(imgGenre, 'Genres')}
+      ${imgTag(imgAge, 'Tranches d\'âge')}
+      ${imgTag(imgStatut, 'Statuts')}
+    </div>
+    <div class="rp-chart-box">
+      <div class="rc-title">Top communes de résidence</div>
+      ${ds.communes.filter(x=>x.val>0).map((d,i)=>rpBar(d.label,d.val,d.pct,'#3b82f6')).join('')}
+    </div>
+    <div class="rp-page-num">5</div>
+  </div>
+
+  <!-- PAGE 6 : LIEUX & CANAUX -->
+  <div class="rp-page">
+    <div class="rp-section-title">05 — Lieux & canaux</div>
+    <div class="rp-grid2">
+      ${imgTag(imgLieux, 'Accompagnements par lieu')}
+      ${imgTag(imgCanaux, 'Canaux d\'activité')}
+    </div>
+    ${imgTag(imgDurees, 'Durée des activités — répartition par année')}
+    <div class="rp-page-num">6</div>
+  </div>
+
+  <!-- PAGE 7 : ATELIERS -->
+  <div class="rp-page">
+    <div class="rp-section-title">06 — Ateliers collectifs</div>
+    <div class="rp-kpi-row">
+      ${rpKpi('Ateliers collectifs', t.ateliersVal.toLocaleString('fr-FR'), `${t.ateliersPct}% du total`, 'purple')}
+      ${rpKpi('Participants', t.participants.toLocaleString('fr-FR'), period, 'green')}
+      ${rpKpi('Ratio moy. / atelier', ratio.toFixed(1), `${t.participants} participants / ${t.ateliersVal} ateliers`, 'orange')}
+    </div>
+    <div class="rp-kpi-row">
+      ${rpKpi('Séances économisées', Math.max(0,t.participants-t.ateliersVal).toLocaleString('fr-FR'), `${t.participants} participants − ${t.ateliersVal} séances`, 'pink')}
+      ${rpKpi('Multiplicateur d\'impact', ratio.toFixed(1)+'×', 'participants par séance', 'cyan')}
+    </div>
+    <div class="rp-insight green">
+      <b>${t.ateliersVal} ateliers</b> ont rassemblé <b>${t.participants} participants</b>
+      (${ratio.toFixed(1)} en moyenne), soit <b>${t.ateliersPct}%</b> de l'activité totale.
+      Le format collectif a généré une économie équivalente à <b>${Math.max(0,t.participants-t.ateliersVal)} séances individuelles</b>.
+    </div>
+    <div class="rp-grid2">
+      ${imgTag(imgAtelTypes, 'Ateliers vs accompagnements individuels')}
+      ${imgTag(imgAtelYears, 'Nb d\'ateliers par année')}
+    </div>
+    ${imgTag(imgAtelPart, 'Participants aux ateliers par année')}
+    <div class="rp-page-num">7</div>
+  </div>
+  `;
+
+  document.getElementById('rapportContent').innerHTML = html;
+}
+
+// Ouverture du rapport
+document.getElementById('openRapportBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('openRapportBtn');
+  btn.textContent = '⏳ Génération…';
+  btn.disabled = true;
+
+  // S'assurer que tous les onglets ont été rendus au moins une fois
+  const activeTab = document.querySelector('.tab.active');
+  const allTabs = document.querySelectorAll('.tab');
+  const allPages = document.querySelectorAll('.pages');
+
+  // Activer toutes les pages brièvement pour que les charts soient rendus
+  allPages.forEach(p => p.classList.add('active'));
+  document.getElementById('globalKpis').style.display = '';
+  await new Promise(r => setTimeout(r, 300));
+
+  // Rebuild les charts des onglets non visités
+  const activeYear = (document.querySelector('.year-btn.active')||{}).dataset?.year||'all';
+  buildEvolutionChart(activeYear);
+  buildThemYearChart();
+  buildDureesYearChart();
+  buildAtelYearCharts();
+  await new Promise(r => setTimeout(r, 400));
+
+  // Remettre l'état normal
+  allPages.forEach(p => p.classList.remove('active'));
+  if(activeTab) document.getElementById('page-'+activeTab.dataset.page).classList.add('active');
+  document.getElementById('globalKpis').style.display = activeTab && activeTab.dataset.page === 'ateliers' ? 'none' : '';
+
+  await buildRapport();
+
+  document.getElementById('rapportOverlay').classList.add('active');
+  btn.innerHTML = '📄 Rapport PDF';
+  btn.disabled = false;
+});
+
+document.getElementById('rapportClose').addEventListener('click', () => {
+  document.getElementById('rapportOverlay').classList.remove('active');
+});
+
+// Export PDF via jsPDF + html2canvas
+document.getElementById('rapportExportPdf').addEventListener('click', async () => {
+  const btn = document.getElementById('rapportExportPdf');
+  btn.textContent = '⏳ Export…';
+  btn.disabled = true;
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pages = document.querySelectorAll('#rapportContent .rp-page');
+  const W = 210, H = 297;
+
+  for(let i = 0; i < pages.length; i++){
+    const page = pages[i];
+    const canvas = await html2canvas(page, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: page.classList.contains('rp-cover') ? '#0b1020' : '#ffffff',
+      width: page.offsetWidth,
+      height: page.offsetHeight
+    });
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    if(i > 0) pdf.addPage();
+    // Ajuster à la page A4
+    const canvasRatio = canvas.height / canvas.width;
+    const pdfH = Math.min(H, W * canvasRatio);
+    pdf.addImage(imgData, 'JPEG', 0, 0, W, pdfH);
+  }
+
+  const agentName = (document.getElementById('agentSubtitle').textContent.split('·')[0]||'').trim().replace(/\s+/g,'-') || 'conum';
+  const dateSlug = new Date().toISOString().slice(0,10);
+  pdf.save(`bilan-activite-${agentName}-${dateSlug}.pdf`);
+
+  btn.textContent = '⬇ Télécharger PDF';
+  btn.disabled = false;
+});
+
+// ===== MODE PRÉSENTATION =====
+
+let presSlides = [];
+let presIndex = 0;
+let presSwipeStartX = 0;
+
+function slBar(label, val, pct, color){
+  return `<div class="sl-bar-row">
+    <div class="sl-bar-top"><span>${label}</span><span>${val} · ${pct}%</span></div>
+    <div class="sl-bar-track"><div class="sl-bar-fill" style="width:${Math.min(pct,100)}%;background:${color||'#3b82f6'}"></div></div>
+  </div>`;
+}
+
+async function buildPresSlides(){
+  const ds = getActiveDataset();
+  const t = ds.totals;
+  const period = getPeriodLabel();
+  const agentName = ds.agentName || '';
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+  const topTheme = ds.themMed.length ? [...ds.themMed].sort((a,b)=>b.val-a.val)[0] : {label:'—',val:0,pct:0};
+  const ratio = t.ateliersVal ? (t.participants/t.ateliersVal) : 0;
+  const pctNouv = (t.nouveaux&&(t.nouveaux+t.suivis)) ? Math.round(t.nouveaux/(t.nouveaux+t.suivis)*100) : 0;
+  const avgVal = document.getElementById('kpi-avg').textContent;
+  const y24=sumYear('2024'), y25=sumYear('2025'), y26=sumYear('2026');
+  const monthsLoaded26 = monthly.labels.filter(l=>'20'+l.split('/')[1]==='2026'&&monthly.values[monthly.labels.indexOf(l)]>0).length;
+  const proj26 = monthsLoaded26 ? Math.round(y26/monthsLoaded26*12) : 0;
+
+  // Capturer les charts nécessaires
+  const [imgMonthly, imgTypes, imgEvol, imgOverlay,
+         imgThemMed, imgGenre, imgAge, imgStatut,
+         imgAtelTypes, imgAtelYears] = await Promise.all([
+    chartToBase64('chartMonthly'), chartToBase64('chartTypes'),
+    chartToBase64('chartEvolutionFull'), chartToBase64('chartYearOverlay'),
+    chartToBase64('chartThemMed'),
+    chartToBase64('chartGenre'), chartToBase64('chartAge'), chartToBase64('chartStatut'),
+    chartToBase64('chartAtelTypes'), chartToBase64('chartAtelYears')
+  ]);
+
+  const ci = src => src ? `<img src="${src}" style="width:100%;height:auto;display:block;border-radius:6px;">` : '';
+
+  presSlides = [
+
+    // SLIDE 1 — Couverture
+    `<div class="sl-cover">
+      <div class="sl-badge">Bilan d'activité · CD47</div>
+      <h1>Conseiller Numérique<br>${agentName ? '— '+agentName+' —' : ''}</h1>
+      <div class="sl-sub">Lot-et-Garonne · ${period}</div>
+      <div class="sl-date">Présenté le ${dateStr}</div>
+    </div>`,
+
+    // SLIDE 2 — KPIs clés
+    `<div>
+      <div class="sl-title">Chiffres clés — ${period}</div>
+      <div class="sl-kpis">
+        <div class="sl-kpi">
+          <div class="sk-val" style="color:#3b82f6">${t.accompagnements.toLocaleString('fr-FR')}</div>
+          <div class="sk-label">Accompagnements</div>
+          <div class="sk-sub">${period}</div>
+        </div>
+        <div class="sl-kpi">
+          <div class="sk-val" style="color:#10b981">${t.beneficiaires.toLocaleString('fr-FR')}</div>
+          <div class="sk-label">Bénéficiaires</div>
+          <div class="sk-sub">${t.nouveaux} nouveaux · ${t.suivis} suivis</div>
+        </div>
+        <div class="sl-kpi">
+          <div class="sk-val" style="color:#f59e0b">${avgVal}</div>
+          <div class="sk-label">Moy. mensuelle</div>
+          <div class="sk-sub">accompagnements/mois</div>
+        </div>
+        <div class="sl-kpi">
+          <div class="sk-val" style="color:#a855f7">${pctNouv}%</div>
+          <div class="sk-label">Nouveaux bénéf.</div>
+          <div class="sk-sub">${t.nouveaux} / ${t.nouveaux+t.suivis} identifiés</div>
+        </div>
+      </div>
+    </div>`,
+
+    // SLIDE 3 — Activité mensuelle
+    `<div>
+      <div class="sl-title">Activité mensuelle</div>
+      <div class="sl-chart-wrap">${ci(imgMonthly)}</div>
+    </div>`,
+
+    // SLIDE 4 — Évolution & croissance
+    `<div>
+      <div class="sl-title">Évolution & croissance</div>
+      <div class="sl-kpis" style="margin-bottom:14px;">
+        <div class="sl-kpi">
+          <div class="sk-val" style="color:#3b82f6">${y24.toLocaleString('fr-FR')}</div>
+          <div class="sk-label">2024</div>
+          <div class="sk-sub">Année de référence</div>
+        </div>
+        <div class="sl-kpi">
+          <div class="sk-val" style="color:#f59e0b">${y25.toLocaleString('fr-FR')}</div>
+          <div class="sk-label">2025</div>
+          <div class="sk-sub">${y24 ? (y25>y24?'+':'')+((y25-y24)/y24*100).toFixed(1)+'% vs 2024' : ''}</div>
+        </div>
+        <div class="sl-kpi">
+          <div class="sk-val" style="color:#a855f7">${y26.toLocaleString('fr-FR')}</div>
+          <div class="sk-label">2026 (jan–jun)</div>
+          <div class="sk-sub">${proj26 ? 'Projection : ~'+proj26.toLocaleString('fr-FR') : ''}</div>
+        </div>
+      </div>
+      <div class="sl-chart-wrap">${ci(imgOverlay)}</div>
+    </div>`,
+
+    // SLIDE 5 — Répartition des activités
+    `<div>
+      <div class="sl-title">Répartition des activités</div>
+      <div class="sl-split">
+        <div>
+          <div class="sl-chart-wrap">${ci(imgTypes)}</div>
+        </div>
+        <div class="sl-bars">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px;">Durées</div>
+          ${ds.durees.filter(x=>x.val>0).map((d,i)=>slBar(d.label,d.val,d.pct,['#3b82f6','#10b981','#f59e0b','#a855f7'][i]||'#3b82f6')).join('')}
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:14px 0 10px;">Canaux</div>
+          ${ds.canaux.filter(x=>x.val>0).map((d,i)=>slBar(d.label,d.val,d.pct,['#3b82f6','#10b981','#f59e0b','#a855f7'][i]||'#3b82f6')).join('')}
+        </div>
+      </div>
+    </div>`,
+
+    // SLIDE 6 — Thématique dominante
+    `<div>
+      <div class="sl-title">Thématiques numériques</div>
+      <div class="sl-split">
+        <div class="sl-chart-wrap">${ci(imgThemMed)}</div>
+        <div>
+          <div class="sl-bars">
+            ${ds.themMed.filter(x=>x.val>0).slice(0,8).map((d,i)=>slBar(d.label,d.val,d.pct,['#3b82f6','#10b981','#f59e0b','#a855f7','#ec4899','#06b6d4','#ef4444','#eab308'][i]||'#3b82f6')).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="sl-insight">
+        Thématique dominante : <b>${topTheme.label}</b> —
+        <b>${topTheme.val} accompagnements</b> (${topTheme.pct}% du total)
+      </div>
+    </div>`,
+
+    // SLIDE 7 — Profil des bénéficiaires
+    `<div>
+      <div class="sl-title">Profil des bénéficiaires</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
+        <div class="sl-chart-wrap"><div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">Genres</div>${ci(imgGenre)}</div>
+        <div class="sl-chart-wrap"><div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">Tranches d'âge</div>${ci(imgAge)}</div>
+        <div class="sl-chart-wrap"><div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">Statuts</div>${ci(imgStatut)}</div>
+      </div>
+      <div class="sl-insight">
+        <b>${t.beneficiaires.toLocaleString('fr-FR')} bénéficiaires</b> accompagnés —
+        <b>${pctNouv}% nouveaux</b>, ${100-pctNouv}% suivis.
+        ${ds.communes.length ? 'Commune principale : <b>'+ds.communes[0].label+'</b> ('+ds.communes[0].val+' bénéf.)' : ''}
+      </div>
+    </div>`,
+
+    // SLIDE 8 — Ateliers collectifs
+    `<div>
+      <div class="sl-title">Ateliers collectifs — impact</div>
+      <div class="sl-kpis" style="margin-bottom:14px;">
+        <div class="sl-kpi">
+          <div class="sk-val" style="color:#a855f7">${t.ateliersVal}</div>
+          <div class="sk-label">Ateliers</div>
+          <div class="sk-sub">${t.ateliersPct}% du total</div>
+        </div>
+        <div class="sl-kpi">
+          <div class="sk-val" style="color:#10b981">${t.participants.toLocaleString('fr-FR')}</div>
+          <div class="sk-label">Participants</div>
+          <div class="sk-sub">cumulés</div>
+        </div>
+        <div class="sl-kpi">
+          <div class="sk-val" style="color:#ec4899">${ratio.toFixed(1)}×</div>
+          <div class="sk-label">Multiplicateur</div>
+          <div class="sk-sub">participants / séance</div>
+        </div>
+        <div class="sl-kpi">
+          <div class="sk-val" style="color:#06b6d4">${Math.max(0,t.participants-t.ateliersVal).toLocaleString('fr-FR')}</div>
+          <div class="sk-label">Séances économisées</div>
+          <div class="sk-sub">vs format individuel</div>
+        </div>
+      </div>
+      <div class="sl-insight green">
+        <b>${t.ateliersVal} ateliers</b> ont touché <b>${t.participants} personnes</b>
+        (moy. ${ratio.toFixed(1)}/séance), économisant l'équivalent de
+        <b>${Math.max(0,t.participants-t.ateliersVal)} séances individuelles</b>.
+      </div>
+    </div>`,
+
+    // SLIDE 9 — Conclusion
+    `<div class="sl-cover">
+      <div class="sl-badge">Synthèse</div>
+      <h1 style="font-size:clamp(22px,4vw,38px);">
+        ${t.accompagnements.toLocaleString('fr-FR')} accompagnements<br>
+        <span style="color:var(--blue)">${t.beneficiaires.toLocaleString('fr-FR')} bénéficiaires</span><br>
+        <span style="color:var(--green);">${t.ateliersVal} ateliers collectifs</span>
+      </h1>
+      <div class="sl-sub" style="margin-top:16px;">${period} · Lot-et-Garonne</div>
+      ${proj26 ? `<div class="sl-insight" style="margin-top:24px;text-align:left;">Projection 2026 : <b>~${proj26.toLocaleString('fr-FR')} accompagnements</b> sur 12 mois au rythme actuel.</div>` : ''}
+      <div class="sl-date">Données issues de La Coop de la médiation numérique</div>
+    </div>`
+  ];
+}
+
+function presRender(){
+  const slide = presSlides[presIndex];
+  const el = document.getElementById('presSlide');
+  el.style.animation = 'none';
+  el.offsetHeight; // reflow
+  el.style.animation = '';
+  el.innerHTML = slide;
+
+  const total = presSlides.length;
+  document.getElementById('presCounter').textContent = `${presIndex+1} / ${total}`;
+  document.getElementById('presProgressFill').style.width = `${((presIndex+1)/total)*100}%`;
+  document.getElementById('presPrev').disabled = presIndex === 0;
+  document.getElementById('presNext').disabled = presIndex === total-1;
+
+  // Dots
+  const dots = document.getElementById('presDots');
+  dots.innerHTML = presSlides.map((_,i) =>
+    `<div class="pres-dot${i===presIndex?' active':''}" data-i="${i}"></div>`
+  ).join('');
+  dots.querySelectorAll('.pres-dot').forEach(d => {
+    d.addEventListener('click', () => { presIndex = +d.dataset.i; presRender(); });
+  });
+}
+
+function presNext(){ if(presIndex < presSlides.length-1){ presIndex++; presRender(); } }
+function presPrev(){ if(presIndex > 0){ presIndex--; presRender(); } }
+
+document.getElementById('openPresBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('openPresBtn');
+  btn.textContent = '⏳ Préparation…';
+  btn.disabled = true;
+
+  // Rendre tous les charts si besoin
+  const allPages = document.querySelectorAll('.pages');
+  const prevActive = document.querySelector('.pages.active');
+  allPages.forEach(p => p.classList.add('active'));
+  document.getElementById('globalKpis').style.display = '';
+  await new Promise(r => setTimeout(r, 200));
+  const activeYear = (document.querySelector('.year-btn.active')||{}).dataset?.year||'all';
+  buildEvolutionChart(activeYear);
+  buildThemYearChart();
+  buildAtelYearCharts();
+  await new Promise(r => setTimeout(r, 350));
+  allPages.forEach(p => p.classList.remove('active'));
+  if(prevActive) prevActive.classList.add('active');
+
+  await buildPresSlides();
+  presIndex = 0;
+  presRender();
+  document.getElementById('presOverlay').classList.add('active');
+
+  // Plein écran si dispo
+  try { document.getElementById('presOverlay').requestFullscreen?.(); } catch(e){}
+
+  btn.innerHTML = '▶ Présenter';
+  btn.disabled = false;
+});
+
+document.getElementById('presClose').addEventListener('click', () => {
+  document.getElementById('presOverlay').classList.remove('active');
+  try { document.exitFullscreen?.(); } catch(e){}
+});
+document.getElementById('presNext').addEventListener('click', presNext);
+document.getElementById('presPrev').addEventListener('click', presPrev);
+
+// Clavier
+document.addEventListener('keydown', e => {
+  if(!document.getElementById('presOverlay').classList.contains('active')) return;
+  if(e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); presNext(); }
+  if(e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); presPrev(); }
+  if(e.key === 'Escape') { document.getElementById('presClose').click(); }
+});
+
+// Swipe mobile
+document.getElementById('presStage').addEventListener('touchstart', e => {
+  presSwipeStartX = e.changedTouches[0].clientX;
+}, {passive:true});
+document.getElementById('presStage').addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - presSwipeStartX;
+  if(Math.abs(dx) > 50){ dx < 0 ? presNext() : presPrev(); }
+}, {passive:true});
+
 // ===== PERSISTANCE LOCALSTORAGE =====
 const STORAGE_KEY = 'coopDashboard_yearData';
 
@@ -1654,7 +2602,30 @@ function loadYearDataFromStorage(){
   } catch(err){ console.error('Erreur lecture localStorage', err); }
 }
 
-// (impression gérée plus haut)
+// ===== FOOTER DYNAMIQUE =====
+(function(){
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const dateStr = pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear();
+  const loadedYears = Object.keys(yearData).sort();
+  const period = loadedYears.length
+    ? `01/${loadedYears[0].slice(2)} → ${pad(now.getMonth()+1)}/${now.getFullYear().toString().slice(2)}`
+    : '01/2024 → présent';
+  document.getElementById('footerNote').textContent =
+    `Données issues de l'export La Coop de la médiation numérique — généré le ${dateStr} · Période couverte : ${period}`;
+})();
+
+// ===== IMPRESSION PAR ONGLET (param ?print=pageid) =====
+(function(){
+  const params = new URLSearchParams(location.search);
+  const printPage = params.get('print');
+  if(printPage){
+    document.querySelectorAll('.pages').forEach(p=>p.classList.remove('active'));
+    const target = document.getElementById('page-'+printPage);
+    if(target){ target.classList.add('active'); }
+    setTimeout(()=>window.print(), 400);
+  }
+})();
 
 // init
 loadYearDataFromStorage();
