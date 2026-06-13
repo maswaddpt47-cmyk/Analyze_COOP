@@ -110,6 +110,8 @@
   .kpi.k4{border-top-color:var(--purple);}
   .kpi.k5{border-top-color:var(--pink);}
   .kpi.k6{border-top-color:var(--cyan);}
+  .spark-wrap{margin-top:10px;height:36px;position:relative;overflow:hidden;opacity:.85;}
+  .spark-wrap canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important;}
   .bar-row{margin-bottom:10px;cursor:default;}
   .bar-row:hover .bar-fill{
     filter:brightness(1.35);
@@ -312,6 +314,7 @@
     <div class="kpi-label">Accompagnements</div>
     <div class="kpi-value" id="kpi-total">—</div>
     <div class="kpi-sub" id="kpi-total-sub">période sélectionnée</div>
+    <div class="spark-wrap"><canvas id="spark-total"></canvas></div>
   </div>
   <div class="kpi k2">
     <div class="kpi-label">Individuels / Ateliers</div>
@@ -332,6 +335,7 @@
     <div class="kpi-label">Moyenne mensuelle</div>
     <div class="kpi-value" id="kpi-avg">—</div>
     <div class="kpi-sub" id="kpi-avg-sub">sur la période</div>
+    <div class="spark-wrap"><canvas id="spark-avg"></canvas></div>
   </div>
   <div class="kpi k6" title="Ratio nouveaux bénéficiaires sur total accompagnés (hors anonymes). Mesure l'attraction vs la fidélisation.">
     <div class="kpi-label">Nouveaux bénéf.</div>
@@ -505,11 +509,13 @@
       <div class="kpi-label">Ateliers collectifs</div>
       <div class="kpi-value" id="kpi-atel-nb">—</div>
       <div class="kpi-sub" id="kpi-atel-nb-sub">part du total accompagnements</div>
+      <div class="spark-wrap"><canvas id="spark-atel-nb"></canvas></div>
     </div>
     <div class="kpi k2" title="Somme des présences cumulées sur tous les ateliers de la période (une même personne venue 3 fois compte 3 fois).">
       <div class="kpi-label">Participants ateliers</div>
       <div class="kpi-value" id="kpi-atel-part">—</div>
       <div class="kpi-sub" id="kpi-atel-part-sub">total cumulé</div>
+      <div class="spark-wrap"><canvas id="spark-atel-part"></canvas></div>
     </div>
     <div class="kpi k3" title="Participants ateliers ÷ nombre d'ateliers. Indique le taux de remplissage moyen d'une séance.">
       <div class="kpi-label">Moy. participants / atelier</div>
@@ -611,12 +617,66 @@ Chart.defaults.animations.tension = { duration: 900, easing: 'easeOutQuart', fro
 Chart.defaults.transitions.active.animation.duration = 300;
 Chart.defaults.plugins.tooltip.padding = 10;
 Chart.defaults.plugins.tooltip.cornerRadius = 8;
-Chart.defaults.elements.arc.hoverOffset = 12;
-Chart.defaults.elements.bar.hoverBorderWidth = 2;
-Chart.defaults.elements.bar.hoverBorderColor = '#ffffff';
-Chart.defaults.elements.line.hoverBorderWidth = 4;
 Chart.defaults.elements.point.hoverRadius = 7;
 Chart.defaults.elements.point.radius = 3;
+
+// ===== SPOTLIGHT PLUGIN (option B) =====
+// Effet : sur hover, dim toutes les barres/arcs non survolés → focus sur l'élément actif.
+// Désactivable par chart via options.plugins.spotlight = { enabled:false }
+const spotlightPlugin = {
+  id: 'spotlight',
+  afterDraw(chart, _args, opts) {
+    if (opts && opts.enabled === false) return;
+    const type = chart.config.type;
+    if (type !== 'bar' && type !== 'doughnut' && type !== 'pie') return;
+    const active = chart._active;
+    if (!active || !active.length) return;
+    const activeIdx = active[0].index;
+    const { ctx } = chart;
+    const dim = 'rgba(11,16,32,0.72)'; // --bg + opacité
+
+    chart.data.datasets.forEach((_, di) => {
+      const meta = chart.getDatasetMeta(di);
+      if (!meta.visible) return;
+      meta.data.forEach((el, i) => {
+        if (i === activeIdx) return;
+        ctx.save();
+        ctx.fillStyle = dim;
+        try {
+          if (type === 'doughnut' || type === 'pie') {
+            const p = el.getProps(['startAngle','endAngle','innerRadius','outerRadius','x','y'], true);
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.outerRadius, p.startAngle, p.endAngle);
+            ctx.arc(p.x, p.y, p.innerRadius, p.endAngle, p.startAngle, true);
+            ctx.closePath();
+            ctx.fill();
+          } else {
+            const p = el.getProps(['x','y','base','width','height'], true);
+            if (chart.options.indexAxis === 'y') {
+              // Barre horizontale
+              ctx.fillRect(
+                Math.min(p.x, p.base),
+                p.y - Math.abs(p.height) / 2,
+                Math.abs(p.x - p.base),
+                Math.abs(p.height)
+              );
+            } else {
+              // Barre verticale
+              ctx.fillRect(
+                p.x - Math.abs(p.width) / 2,
+                Math.min(p.y, p.base),
+                Math.abs(p.width),
+                Math.abs(p.y - p.base)
+              );
+            }
+          }
+        } catch(e) {}
+        ctx.restore();
+      });
+    });
+  }
+};
+Chart.register(spotlightPlugin);
 
 // ===== HELPERS =====
 function renderBars(containerId, data){
@@ -864,6 +924,10 @@ function buildAtelYearCharts(){
   makeOrUpdateAtelHBar('chartAtelYears', years, ateliersVals.map(v=>v??0), colors);
   makeOrUpdateAtelHBar('chartAtelPartYears', years, participantsVals.map(v=>v??0), colors);
 
+  // Sparklines ateliers : trend 2024→2025→2026 (barres, 3 points)
+  renderSpark('spark-atel-nb', ateliersVals.map(v=>v??0), '#10b981');
+  renderSpark('spark-atel-part', participantsVals.map(v=>v??0), '#a855f7');
+
   const ratioBars = years.map((y,i) => ({
     label: y,
     val: ratios[i] ?? 0,
@@ -978,6 +1042,43 @@ function getFilteredMonthly(year){
 
 let chartMonthly, chartEvolutionFull;
 
+// ===== SPARKLINES =====
+const sparkRegistry = {};
+function renderSpark(canvasId, values, color){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const data = values.filter(v => v > 0);
+  if(!data.length) return;
+  if(sparkRegistry[canvasId]) sparkRegistry[canvasId].destroy();
+  sparkRegistry[canvasId] = new Chart(canvas.getContext('2d'), {
+    type:'line',
+    data:{
+      labels: data.map((_,i)=>i),
+      datasets:[{
+        data,
+        borderColor: color,
+        borderWidth: 1.5,
+        backgroundColor: color.replace(')',',0.15)').replace('rgb','rgba'),
+        fill: true,
+        tension: 0.4,
+        pointRadius: 0,
+        pointHoverRadius: 0
+      }]
+    },
+    options:{
+      animation:{ duration:600, easing:'easeOutQuart' },
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{enabled:false}, spotlight:{enabled:false} },
+      scales:{
+        x:{display:false},
+        y:{display:false, beginAtZero:true}
+      },
+      elements:{ line:{borderCapStyle:'round'} }
+    }
+  });
+}
+
 function updateKPIs(year){
   const data = getFilteredMonthly(year);
   const total = data.values.reduce((a,b)=>a+b,0);
@@ -989,6 +1090,15 @@ function updateKPIs(year){
   const avg = nonZero.length ? (total / nonZero.length).toFixed(1) : '0';
   document.getElementById('kpi-avg').textContent = avg;
   document.getElementById('kpi-avg-sub').textContent = `${nonZero.length} mois (données)`;
+
+  // Sparklines : courbe cumulative pour total, valeurs brutes pour moyenne
+  renderSpark('spark-total', data.values, '#3b82f6');
+  // Moyenne glissante 3 mois pour le sparkline "Moyenne mensuelle"
+  const mavg = data.values.map((_,i,arr)=>{
+    const sl = arr.slice(Math.max(0,i-2), i+1).filter(v=>v>0);
+    return sl.length ? +(sl.reduce((a,b)=>a+b)/sl.length).toFixed(1) : 0;
+  });
+  renderSpark('spark-avg', mavg, '#ec4899');
 }
 
 function buildMonthlyChart(year){
@@ -1004,7 +1114,7 @@ function buildMonthlyChart(year){
 
   const colors = data.values.map((v,i) => {
     if(v === 0) return 'rgba(139,149,184,0.2)';
-    if(v === maxVal) return '#eab308'; // gold for best month
+    if(v === maxVal) return '#06b6d4'; // cyan for best month
     if(v === minVal) return '#ef4444'; // red for worst month
     const y = '20'+data.labels[i].split('/')[1];
     return baseColors[y] || '#a855f7';
