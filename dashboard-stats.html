@@ -583,6 +583,39 @@
     .csv-btn,.print-btn,.pdf-btn{display:none!important;}
   }
 
+  /* ===== TABLEAU COMPARAISON ===== */
+  .cmp-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .cmp-table thead th{
+    padding:10px 12px;font-size:10px;font-weight:800;text-transform:uppercase;
+    letter-spacing:1px;color:var(--muted);border-bottom:2px solid var(--border);
+    text-align:left;
+  }
+  .cmp-table thead th.num{text-align:right;}
+  .cmp-table tbody tr{border-bottom:1px solid rgba(36,49,84,.5);transition:background .12s;}
+  .cmp-table tbody tr:hover{background:rgba(255,255,255,.03);}
+  .cmp-table tbody tr.section-header td{
+    padding:14px 12px 6px;font-size:10px;font-weight:800;text-transform:uppercase;
+    letter-spacing:1.5px;color:var(--blue);background:rgba(59,130,246,.05);
+  }
+  .cmp-table tbody tr.section-header.orange td{color:var(--orange);background:rgba(245,158,11,.05);}
+  .cmp-table td{padding:10px 12px;vertical-align:middle;}
+  .cmp-table td.num{text-align:right;font-weight:700;font-size:15px;}
+  .cmp-table td.label{color:var(--muted);font-size:12px;}
+  .cmp-table td.delta-cell{text-align:right;width:80px;}
+  .cmp-table td .bar-mini{
+    height:3px;border-radius:2px;margin-top:4px;background:rgba(255,255,255,.06);
+  }
+  .cmp-table td .bar-mini-fill{height:100%;border-radius:2px;}
+  .cmp-winner{font-size:10px;margin-left:4px;opacity:.6;}
+
+  /* Résumé texte */
+  .resume-box{
+    background:var(--panel2);border:1px solid var(--border);border-radius:10px;
+    padding:16px;font-size:13px;line-height:1.8;color:var(--text);
+    white-space:pre-wrap;font-family:monospace;margin-top:14px;
+  }
+  .resume-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+
   /* ===== SÉLECTEUR DE SLIDES ===== */
   .slide-picker-modal{
     background:var(--panel);border:1px solid var(--border);border-radius:14px;
@@ -1089,8 +1122,16 @@
         <option value="2026" selected>2026</option>
       </select>
       <button class="modal-btn primary" id="runCompareBtn" style="padding:7px 14px;">Comparer</button>
+      <button class="modal-btn" id="runResumeBtn" style="padding:7px 14px;">📝 Résumé texte</button>
     </div>
     <div id="compareResult"></div>
+    <div id="resumeResult" style="display:none;">
+      <div class="resume-box" id="resumeText"></div>
+      <div class="resume-actions">
+        <button class="modal-btn primary" id="copyResumeBtn">📋 Copier</button>
+        <button class="modal-btn" id="closeResumeBtn">Fermer</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -3002,53 +3043,126 @@ function renderCompare(yA, yB){
     return;
   }
   const tA = dA.totals, tB = dB.totals;
+  const cA = '#3b82f6', cB = '#f59e0b';
 
-  const metrics = [
-    ['Accompagnements', tA.accompagnements, tB.accompagnements],
-    ['Individuels', tA.individuelsVal, tB.individuelsVal],
-    ['Ateliers collectifs', tA.ateliersVal, tB.ateliersVal],
-    ['Participants ateliers', tA.participants, tB.participants],
-    ['Bénéficiaires', tA.beneficiaires, tB.beneficiaires],
-    ['Nouveaux bénéficiaires', tA.nouveaux, tB.nouveaux],
-    ['Suivis', tA.suivis, tB.suivis],
-    ['Ratio ateliers (%)', tA.ateliersPct, tB.ateliersPct],
-  ];
+  function row(label, vA, vB, unit=''){
+    const dlt = delta(vA||0, vB||0);
+    const maxV = Math.max(vA||0, vB||0) || 1;
+    const pA = ((vA||0)/maxV*100).toFixed(1);
+    const pB = ((vB||0)/maxV*100).toFixed(1);
+    const winner = (vB||0) > (vA||0) ? `<span class="cmp-winner">▲</span>` : (vB||0) < (vA||0) ? `<span class="cmp-winner">▼</span>` : '';
+    return `<tr>
+      <td class="label">${label}</td>
+      <td class="num" style="color:${cA}">${(vA||0).toLocaleString('fr-FR')}${unit}</td>
+      <td class="num" style="color:${cB}">${(vB||0).toLocaleString('fr-FR')}${unit}${winner}</td>
+      <td class="delta-cell">${dlt}</td>
+    </tr>`;
+  }
 
-  const rows = metrics.map(([label, vA, vB]) => `
-    <div class="compare-kpi-row">
-      <span class="ck-label">${label}</span>
-      <span class="ck-val" style="color:#3b82f6">${(vA||0).toLocaleString('fr-FR')}</span>
-      <span class="ck-val" style="color:#f59e0b">${(vB||0).toLocaleString('fr-FR')}</span>
-      <span>${delta(vA||0, vB||0)}</span>
-    </div>`).join('');
+  function miniBarRow(label, vA, vB){
+    const maxV = Math.max(vA||0, vB||0) || 1;
+    const pA = ((vA||0)/maxV*100).toFixed(1);
+    const pB = ((vB||0)/maxV*100).toFixed(1);
+    const dlt = delta(vA||0, vB||0);
+    return `<tr>
+      <td class="label" style="font-size:12px;">${label}</td>
+      <td class="num" style="color:${cA};font-size:13px;">
+        ${(vA||0).toLocaleString('fr-FR')}
+        <div class="bar-mini"><div class="bar-mini-fill" style="width:${pA}%;background:${cA}"></div></div>
+      </td>
+      <td class="num" style="color:${cB};font-size:13px;">
+        ${(vB||0).toLocaleString('fr-FR')}
+        <div class="bar-mini"><div class="bar-mini-fill" style="width:${pB}%;background:${cB}"></div></div>
+      </td>
+      <td class="delta-cell">${dlt}</td>
+    </tr>`;
+  }
 
-  // Top thématiques
+  // Thématiques triées par valeur max
   const allThemes = [...new Set([...dA.themMed.map(x=>x.label), ...dB.themMed.map(x=>x.label)])];
-  const themRows = allThemes.slice(0,8).map(th => {
+  const themesWithVals = allThemes.map(th => {
     const a = (dA.themMed.find(x=>x.label===th)||{val:0}).val;
     const b = (dB.themMed.find(x=>x.label===th)||{val:0}).val;
-    return `<div class="compare-kpi-row">
-      <span class="ck-label" style="font-size:12px;">${th}</span>
-      <span style="color:#3b82f6;font-weight:700;">${a}</span>
-      <span style="color:#f59e0b;font-weight:700;">${b}</span>
-      <span>${delta(a,b)}</span>
-    </div>`;
-  }).join('');
+    return { label:th, a, b, max:Math.max(a,b) };
+  }).sort((x,y)=>y.max-x.max).slice(0,10);
 
   document.getElementById('compareResult').innerHTML = `
-    <div style="display:flex;gap:16px;margin-bottom:14px;">
-      <div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#3b82f6;">● ${yA}</div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#f59e0b;">● ${yB}</div>
-    </div>
-    <div class="compare-col" style="margin-bottom:14px;">
-      <div class="cc-title">KPIs principaux</div>
-      ${rows}
-    </div>
-    <div class="compare-col">
-      <div class="cc-title">Top thématiques</div>
-      ${themRows}
-    </div>
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>Indicateur</th>
+          <th class="num" style="color:${cA}">● ${yA}</th>
+          <th class="num" style="color:${cB}">● ${yB}</th>
+          <th class="num">Évolution</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="section-header"><td colspan="4">Activité</td></tr>
+        ${row('Accompagnements', tA.accompagnements, tB.accompagnements)}
+        ${row('Individuels', tA.individuelsVal, tB.individuelsVal)}
+        ${row('Ateliers collectifs', tA.ateliersVal, tB.ateliersVal)}
+        ${row('Participants ateliers', tA.participants, tB.participants)}
+        ${row('Ratio ateliers', tA.ateliersPct, tB.ateliersPct, '%')}
+        <tr class="section-header"><td colspan="4">Bénéficiaires</td></tr>
+        ${row('Total bénéficiaires', tA.beneficiaires, tB.beneficiaires)}
+        ${row('Nouveaux', tA.nouveaux, tB.nouveaux)}
+        ${row('Suivis', tA.suivis, tB.suivis)}
+        ${row('Anonymes', tA.anonymes, tB.anonymes)}
+        <tr class="section-header orange"><td colspan="4">Top thématiques</td></tr>
+        ${themesWithVals.map(t=>miniBarRow(t.label, t.a, t.b)).join('')}
+      </tbody>
+    </table>
   `;
+  document.getElementById('resumeResult').style.display = 'none';
+}
+
+// ===== RÉSUMÉ TEXTE =====
+function generateResume(yA, yB){
+  const dA = yearData[yA], dB = yearData[yB];
+  if(!dA || !dB){ showToast('Lance d\'abord la comparaison','warn'); return; }
+  const tA = dA.totals, tB = dB.totals;
+
+  const pct = (a,b) => a ? ((b-a)/a*100).toFixed(1)+'%' : 'N/A';
+  const sign = (a,b) => b > a ? '▲' : b < a ? '▼' : '=';
+  const fmt = v => (v||0).toLocaleString('fr-FR');
+
+  const topThA = dA.themMed.length ? [...dA.themMed].sort((a,b)=>b.val-a.val)[0] : null;
+  const topThB = dB.themMed.length ? [...dB.themMed].sort((a,b)=>b.val-a.val)[0] : null;
+
+  const now = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+
+  const txt = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BILAN COMPARATIF ${yA} / ${yB}
+Conseiller Numérique · CD47 · Lot-et-Garonne
+Généré le ${now}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 ACTIVITÉ GÉNÉRALE
+  Accompagnements   ${fmt(tA.accompagnements)} → ${fmt(tB.accompagnements)}   ${sign(tA.accompagnements,tB.accompagnements)} ${pct(tA.accompagnements,tB.accompagnements)}
+  Individuels       ${fmt(tA.individuelsVal)} → ${fmt(tB.individuelsVal)}   ${sign(tA.individuelsVal,tB.individuelsVal)} ${pct(tA.individuelsVal,tB.individuelsVal)}
+  Ateliers          ${fmt(tA.ateliersVal)} → ${fmt(tB.ateliersVal)}   ${sign(tA.ateliersVal,tB.ateliersVal)} ${pct(tA.ateliersVal,tB.ateliersVal)}
+  Participants      ${fmt(tA.participants)} → ${fmt(tB.participants)}   ${sign(tA.participants,tB.participants)} ${pct(tA.participants,tB.participants)}
+  Ratio ateliers    ${tA.ateliersPct}% → ${tB.ateliersPct}%
+
+👥 BÉNÉFICIAIRES
+  Total             ${fmt(tA.beneficiaires)} → ${fmt(tB.beneficiaires)}   ${sign(tA.beneficiaires,tB.beneficiaires)} ${pct(tA.beneficiaires,tB.beneficiaires)}
+  Nouveaux          ${fmt(tA.nouveaux)} → ${fmt(tB.nouveaux)}   ${sign(tA.nouveaux,tB.nouveaux)} ${pct(tA.nouveaux,tB.nouveaux)}
+  Suivis            ${fmt(tA.suivis)} → ${fmt(tB.suivis)}   ${sign(tA.suivis,tB.suivis)} ${pct(tA.suivis,tB.suivis)}
+
+🏷 THÉMATIQUES
+  ${yA} — Top : ${topThA ? topThA.label+' ('+topThA.val+')' : '—'}
+  ${yB} — Top : ${topThB ? topThB.label+' ('+topThB.val+')' : '—'}
+
+${dA.themMed.filter(x=>x.val>0).slice(0,6).map(th => {
+  const b = (dB.themMed.find(x=>x.label===th.label)||{val:0}).val;
+  return `  ${th.label.padEnd(35)} ${String(th.val).padStart(4)} → ${String(b).padStart(4)}   ${sign(th.val,b)} ${pct(th.val,b)}`;
+}).join('\n')}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+
+  document.getElementById('resumeText').textContent = txt;
+  document.getElementById('resumeResult').style.display = '';
+  document.getElementById('resumeResult').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 document.getElementById('runCompareBtn').addEventListener('click', ()=>{
@@ -3056,6 +3170,23 @@ document.getElementById('runCompareBtn').addEventListener('click', ()=>{
   const yB = document.getElementById('compareYearB').value;
   if(yA === yB){ showToast('Sélectionne deux années différentes','warn'); return; }
   renderCompare(yA, yB);
+});
+
+document.getElementById('runResumeBtn').addEventListener('click', ()=>{
+  const yA = document.getElementById('compareYearA').value;
+  const yB = document.getElementById('compareYearB').value;
+  if(yA === yB){ showToast('Sélectionne deux années différentes','warn'); return; }
+  if(!document.getElementById('compareResult').innerHTML.includes('cmp-table')) renderCompare(yA, yB);
+  generateResume(yA, yB);
+});
+
+document.getElementById('copyResumeBtn').addEventListener('click', ()=>{
+  fallbackCopy(document.getElementById('resumeText').textContent);
+  showToast('✓ Résumé copié dans le presse-papiers');
+});
+
+document.getElementById('closeResumeBtn').addEventListener('click', ()=>{
+  document.getElementById('resumeResult').style.display = 'none';
 });
 
 // ===== PERSONNALISATION SLIDES =====
