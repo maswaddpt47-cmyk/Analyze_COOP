@@ -616,7 +616,9 @@ const apexBase = {
     animations: { enabled: true, speed: 700, easing: 'easeOutQuart' }
   },
   grid: { borderColor: '#1a2444', strokeDashArray: 4 },
-  tooltip: { theme: 'dark' }
+  tooltip: { theme: 'dark' },
+  xaxis_crosshairs: { show: false, width: 0 },
+  yaxis_crosshairs: { show: false }
 };
 
 // ===== SPOTLIGHT (option B) =====
@@ -651,6 +653,13 @@ function apexDestroy(id) {
   }
 }
 function apexMake(id, opts) {
+  const chartType = opts.chart && opts.chart.type;
+  if (chartType !== 'donut' && chartType !== 'pie') {
+    if (!opts.xaxis) opts.xaxis = {};
+    if (!opts.xaxis.crosshairs) opts.xaxis.crosshairs = {};
+    opts.xaxis.crosshairs.show = false;
+    opts.xaxis.crosshairs.width = 0;
+  }
   apexDestroy(id);
   const el = document.getElementById(id);
   if (!el) return null;
@@ -686,6 +695,7 @@ function hexToRgba(hex, alpha){
 
 // ===== DONUT =====
 function makeOrUpdateDoughnut(id, labels, values, colors) {
+  const total = values.reduce((a,b)=>a+b,0);
   return apexMake(id, {
     chart: { ...apexBase.chartCfg, type: 'donut', height: 260, events: spotlightHandlers },
     theme: { mode: 'dark' },
@@ -700,8 +710,6 @@ function makeOrUpdateDoughnut(id, labels, values, colors) {
     },
     plotOptions: { pie: { donut: { size: '62%' }, expandOnClick: false } },
     stroke: { colors: ['#121a32'], width: 2 },
-    states: { hover: { filter: { type: 'none' } }, active: { filter: { type: 'none' } } },
-    grid: apexBase.grid,
     tooltip: { theme: 'dark', y: { formatter: v => v.toLocaleString('fr-FR') } }
   });
 }
@@ -781,6 +789,19 @@ function renderAggregates(ds, periodLabel){
   const dedupNote = periodLabel.startsWith('cumul') ? ' · non dédoublonné' : '';
   document.getElementById('kpi-benef-sub').textContent = `${t.suivis} suivis · ${t.anonymes} anonymes (${periodLabel}${dedupNote})`;
 
+  const totalTracked = (t.nouveaux || 0) + (t.suivis || 0);
+  if (t.accompagnements > 0 && totalTracked > 0) {
+    const pctNouv = Math.round((t.nouveaux / totalTracked) * 100);
+    document.getElementById('kpi-retention').textContent = t.nouveaux + ' / ' + t.suivis;
+    document.getElementById('kpi-retention-sub').textContent = pctNouv + '% nouveaux · ' + (100 - pctNouv) + '% suivis (' + periodLabel + ')';
+  } else if (t.accompagnements > 0) {
+    document.getElementById('kpi-retention').textContent = t.nouveaux + ' / ' + t.suivis;
+    document.getElementById('kpi-retention-sub').textContent = 'nouveaux vs suivis (' + periodLabel + ')';
+  } else {
+    document.getElementById('kpi-retention').textContent = '—';
+    document.getElementById('kpi-retention-sub').textContent = 'nouveaux vs suivis';
+  }
+
   const topTheme = ds.themMed.length ? [...ds.themMed].sort((a,b)=>b.val-a.val)[0] : {label:'—', val:0, pct:0};
   document.getElementById('kpi-theme').textContent = topTheme.label;
   document.getElementById('kpi-theme-sub').textContent = `${topTheme.val} accompagnements · ${topTheme.pct}% (${periodLabel})`;
@@ -820,6 +841,8 @@ function renderAggregates(ds, periodLabel){
   const ratio = t.ateliersVal ? (t.participants / t.ateliersVal) : 0;
   document.getElementById('kpi-atel-ratio').textContent = ratio.toFixed(1);
   document.getElementById('kpi-atel-ratio-sub').textContent = `${t.participants} participants / ${t.ateliersVal} ateliers`;
+  document.getElementById('kpi-atel-multiplier').textContent = ratio.toFixed(1) + '×';
+  document.getElementById('kpi-atel-multiplier-sub').textContent = `${t.participants} participants / ${t.ateliersVal} séances`;
   document.getElementById('kpi-atel-equiv').textContent = t.participants.toLocaleString('fr-FR');
   document.getElementById('kpi-atel-equiv-sub').textContent = `vs ${t.ateliersVal} séances réalisées`;
 
@@ -879,7 +902,7 @@ function buildThemYearChart(){
     data: topThemes.map(th => { const f = (yearData[y].themMed||[]).find(x=>x.label===th); return f ? f.val : 0; })
   }));
   apexMake('chartThemYear', {
-    chart: { ...apexBase.chartCfg, type: 'bar', height: 300 },
+    chart: { ...apexBase.chartCfg, type: 'bar', height: 300 , events: spotlightHandlers },
     theme: { mode: 'dark' },
     series,
     xaxis: { categories: topThemes, labels: { rotate: -30, style: { colors: '#8b95b8', fontSize: '11px' } }, axisBorder:{show:false} },
@@ -922,7 +945,29 @@ function buildDureesYearChart(){
     })
   }));
   apexMake('chartDureesYear', {
-    chart: { ...apexBase.chartCfg, type: 'bar', height: 200 },
+    chart: { ...apexBase.chartCfg, type: 'bar', height: 200, events: {
+      dataPointMouseEnter(event, ctx, config){
+        const bars = ctx.el.querySelectorAll('.apexcharts-bar-area');
+        const perSeries = Math.ceil(bars.length / (ctx.w.globals.series.length || 1));
+        bars.forEach((b, i) => {
+          const groupIdx = i % perSeries;
+          if(groupIdx === config.dataPointIndex){
+            b.style.filter = 'drop-shadow(0 0 6px ' + (ctx.w.globals.colors[Math.floor(i/perSeries)] || '#fff') + ')';
+            b.style.opacity = '1';
+          } else {
+            b.style.filter = 'none';
+            b.style.opacity = '0.35';
+          }
+          b.style.transition = 'opacity .15s, filter .15s';
+        });
+      },
+      dataPointMouseLeave(event, ctx){
+        ctx.el.querySelectorAll('.apexcharts-bar-area').forEach(b => {
+          b.style.filter = 'none';
+          b.style.opacity = '1';
+        });
+      }
+    }},
     theme: { mode: 'dark' },
     series,
     xaxis: { categories: dureesLabels, labels: { style: { colors:'#8b95b8', fontSize:'11px' } }, axisBorder:{show:false} },
@@ -932,6 +977,7 @@ function buildDureesYearChart(){
     dataLabels: { enabled: false },
     legend: { position:'top', labels:{ colors:'#8b95b8' } },
     grid: apexBase.grid,
+    states: { hover: { filter: { type: 'none' } }, active: { filter: { type: 'none' } } },
     tooltip: { theme:'dark', shared:true, intersect:false }
   });
 }
@@ -950,18 +996,51 @@ function renderSpark(divId, values, color){
   const el = document.getElementById(divId);
   if(!el) return;
   const data = values.filter(v => v > 0);
-  if(!data.length) return;
-  if(apexSparkRegistry[divId]){ try{ apexSparkRegistry[divId].destroy(); }catch(e){} }
-  const chart = new ApexCharts(el, {
-    chart: { type:'area', sparkline:{ enabled:true }, height:36, animations:{ enabled:false } },
-    series: [{ data }],
-    stroke: { curve:'smooth', width:2 },
-    fill: { type:'gradient', gradient:{ opacityFrom:0.4, opacityTo:0, stops:[0,100] } },
-    colors: [color],
-    tooltip: { enabled: false }
-  });
-  chart.render();
-  apexSparkRegistry[divId] = chart;
+  if(!data.length){ el.innerHTML=''; return; }
+
+  const W = el.closest('.pages') && !el.closest('.pages').classList.contains('active') ? 160 : (el.offsetWidth || 160), H = 36, pad = 2;
+  const min = Math.min(...data), max = Math.max(...data);
+  const range = max - min || 1;
+  const pts = data.map((v,i) => [
+    pad + (i / (data.length - 1 || 1)) * (W - pad * 2),
+    H - pad - ((v - min) / range) * (H - pad * 2)
+  ]);
+
+  let d = 'M ' + pts[0][0] + ' ' + pts[0][1];
+  for(let i = 1; i < pts.length; i++){
+    const [x0,y0] = pts[i-1], [x1,y1] = pts[i];
+    const cx = (x0 + x1) / 2;
+    d += ' C ' + cx + ' ' + y0 + ' ' + cx + ' ' + y1 + ' ' + x1 + ' ' + y1;
+  }
+  const fillPath = d + ' L ' + pts[pts.length-1][0] + ' ' + H + ' L ' + pts[0][0] + ' ' + H + ' Z';
+  const uid = divId.replace(/-/g,'_');
+
+  // Créer le SVG
+  el.innerHTML = '<svg width="100%" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="visibility:hidden">'
+    + '<defs>'
+    + '<linearGradient id="sg' + uid + '" x1="0" y1="0" x2="0" y2="1">'
+    + '<stop offset="0%" stop-color="' + color + '" stop-opacity="0.45"/>'
+    + '<stop offset="100%" stop-color="' + color + '" stop-opacity="0"/>'
+    + '</linearGradient>'
+    + '<clipPath id="sc' + uid + '"><rect id="sr' + uid + '" x="0" y="0" width="0" height="' + H + '"/></clipPath>'
+    + '</defs>'
+    + '<path d="' + fillPath + '" fill="url(#sg' + uid + ')" clip-path="url(#sc' + uid + ')"/>'
+    + '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" clip-path="url(#sc' + uid + ')"/>'
+    + '</svg>';
+  // Animer la rect du clipPath via JS requestAnimationFrame
+  const rectEl = document.getElementById('sr' + uid);
+  if(rectEl){
+    let start = null;
+    const dur = 1400;
+    function step(ts){
+      if(!start){ start = ts; rectEl.closest('svg').style.visibility='visible'; }
+      const p = Math.min((ts - start) / dur, 1);
+      const ease = p < 0.5 ? 2*p*p : -1+(4-2*p)*p;
+      rectEl.setAttribute('width', (ease * W).toFixed(1));
+      if(p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
 }
 
 function updateKPIs(year){
@@ -1026,7 +1105,11 @@ function buildMonthlyChart(year){
 function buildEvolutionChart(year){
   const data = getFilteredMonthly(year);
   apexMake('chartEvolutionFull', {
-    chart: { ...apexBase.chartCfg, type:'area', height:260 },
+    chart: { ...apexBase.chartCfg, type:'area', height:260,
+      zoom: { enabled: true, type: 'x', autoScaleYaxis: true },
+      toolbar: { show: true, tools: { download:false, selection:true, zoom:true, zoomin:true, zoomout:true, pan:true, reset:true },
+        theme: 'dark' },
+      events: spotlightHandlers },
     theme: { mode:'dark' },
     series: [{ name:'Accompagnements / mois', data: data.values }],
     xaxis: {
@@ -1101,8 +1184,17 @@ function recomputeYearSeries(){
   yearSeries = { '2024':[], '2025':[], '2026':[] };
   monthOrder.forEach(m=>{
     ['2024','2025','2026'].forEach(y=>{
-      const idx = monthly.labels.indexOf(m+'/'+y.slice(2));
-      yearSeries[y].push(idx>=0 ? monthly.values[idx] : null);
+      const lbl = m+'/'+y.slice(2);
+      const idx = monthly.labels.indexOf(lbl);
+      if(idx >= 0){
+        yearSeries[y].push(monthly.values[idx]);
+      } else if(yearData[y]){
+        // Année importée mais mois sans activité → 0
+        yearSeries[y].push(0);
+      } else {
+        // Année non importée → null
+        yearSeries[y].push(null);
+      }
     });
   });
 }
@@ -1110,7 +1202,11 @@ recomputeYearSeries();
 
 function buildYearOverlayChart(){
   apexMake('chartYearOverlay', {
-    chart: { ...apexBase.chartCfg, type:'area', height:260 },
+    chart: { ...apexBase.chartCfg, type:'area', height:260,
+      zoom: { enabled: true, type: 'x', autoScaleYaxis: true },
+      toolbar: { show: true, tools: { download:false, selection:true, zoom:true, zoomin:true, zoomout:true, pan:true, reset:true },
+        theme: 'dark' },
+      events: spotlightHandlers },
     theme: { mode:'dark' },
     series: [
       { name:'2024', data: yearSeries['2024'] },
@@ -1120,7 +1216,8 @@ function buildYearOverlayChart(){
     xaxis: {
       categories: monthOrder.map(m=>monthNames[m]),
       labels: { style:{ colors:'#8b95b8', fontSize:'11px' } },
-      axisBorder:{show:false}
+      axisBorder:{show:false},
+      tickAmount: 12
     },
     yaxis: { labels:{ style:{ colors:['#8b95b8'] } } },
     colors: [yearCompareColors['2024'], yearCompareColors['2025'], yearCompareColors['2026']],
@@ -1137,7 +1234,17 @@ buildYearOverlayChart();
 
 function buildYearCompareChart(){
   apexMake('chartYearCompare', {
-    chart: { ...apexBase.chartCfg, type:'bar', height:260 },
+    chart: { ...apexBase.chartCfg, type:'bar', height:260, events: {
+      dataPointMouseEnter(event, ctx, config){
+        ctx.el.querySelectorAll('.apexcharts-bar-area').forEach((b,i) => {
+          b.style.opacity = i === config.dataPointIndex + config.seriesIndex * (ctx.w.globals.dataPoints||12) ? '1' : '0.25';
+          b.style.transition = 'opacity .12s';
+        });
+      },
+      dataPointMouseLeave(event, ctx){
+        ctx.el.querySelectorAll('.apexcharts-bar-area').forEach(b => { b.style.opacity = '1'; });
+      }
+    }},
     theme: { mode:'dark' },
     series: [
       { name:'2024', data: yearSeries['2024'].map(v=>v??0) },
@@ -1503,6 +1610,19 @@ document.querySelectorAll('.tab').forEach(tab=>{
     document.getElementById('page-'+tab.dataset.page).classList.add('active');
     document.getElementById('globalKpis').style.display = (tab.dataset.page === 'ateliers') ? 'none' : '';
     document.getElementById('dataBanner').style.display = (tab.dataset.page === 'ateliers') ? 'none' : '';
+    // Recharger les KPIs et charts de la page activée
+    const activeYear = (document.querySelector('.year-btn.active') || {}).dataset?.year || 'all';
+    // Vider tous les sparks avant rebuild
+    ['spark-total','spark-avg','spark-atel-nb','spark-atel-part'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.innerHTML = '';
+    });
+    setTimeout(() => {
+      updateKPIs(activeYear);
+      applyYearAggregates(activeYear);
+      if(tab.dataset.page === 'evolution'){ buildEvolutionChart(activeYear); }
+      if(tab.dataset.page === 'ateliers'){ buildAtelYearCharts(); }
+    }, 80);
   }
   tab.addEventListener('click', activateTab);
   tab.addEventListener('keydown', (e)=>{
