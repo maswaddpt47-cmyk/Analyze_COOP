@@ -2753,15 +2753,6 @@ function checkDataFreshness(){
   }
 }
 
-// Enregistrer la date d'import à chaque chargement de fichier
-const _origSave = saveYearDataToStorage;
-function saveYearDataToStorage(){
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(yearData));
-    localStorage.setItem('coopDashboard_lastImport', Date.now().toString());
-  } catch(err){ console.error('Erreur sauvegarde localStorage', err); }
-}
-
 // ===== EXPORT CSV =====
 document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
   const ds = getActiveDataset();
@@ -3158,20 +3149,29 @@ function buildCommuneMap(communes){
   leafletMap.fitBounds(bounds.pad(0.15));
 }
 
-// Reconstruire la carte quand les données agrégées changent
-const _origRenderAggregates = renderAggregates;
-function renderAggregates(ds, periodLabel){
-  _origRenderAggregates(ds, periodLabel);
-  // Rebuild map si l'onglet bénéficiaires est visible ou en lazy
-  setTimeout(()=> buildCommuneMap(ds.communes), 100);
-}
+// Hook carte sur renderAggregates sans redéclaration (évite conflit hoisting)
+const _renderAggregatesOrig = renderAggregates;
+window._renderAggregatesPatched = function(ds, periodLabel){
+  _renderAggregatesOrig(ds, periodLabel);
+  setTimeout(()=> buildCommuneMap(ds && ds.communes), 100);
+};
+// Remplacer via wrapper non-hoistable
+(function(){
+  const orig = renderAggregates;
+  renderAggregates = function(ds, periodLabel){
+    orig(ds, periodLabel);
+    setTimeout(()=> buildCommuneMap(ds && ds.communes), 100);
+  };
+})();
 
 // ===== PERSISTANCE LOCALSTORAGE =====
 const STORAGE_KEY = 'coopDashboard_yearData';
 
 function saveYearDataToStorage(){
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(yearData)); }
-  catch(err){ console.error('Erreur sauvegarde localStorage', err); }
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(yearData));
+    localStorage.setItem('coopDashboard_lastImport', Date.now().toString());
+  } catch(err){ console.error('Erreur sauvegarde localStorage', err); }
 }
 
 function loadYearDataFromStorage(){
@@ -3179,7 +3179,20 @@ function loadYearDataFromStorage(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if(!raw) return;
     const data = JSON.parse(raw);
-    Object.keys(data).forEach(y => { yearData[y] = data[y]; });
+    let valid = true;
+    Object.keys(data).forEach(y => {
+      // Valider la structure minimale
+      if(!data[y] || typeof data[y] !== 'object' || !data[y].totals){
+        valid = false; return;
+      }
+      yearData[y] = data[y];
+    });
+    if(!valid){
+      console.warn('Données localStorage invalides — réinitialisation');
+      localStorage.removeItem(STORAGE_KEY);
+      Object.keys(yearData).forEach(y => delete yearData[y]);
+      return;
+    }
     Object.keys(yearData).forEach(y=>{
       const statusEl = document.getElementById('status-'+y);
       if(statusEl && yearData[y]){
@@ -3187,7 +3200,10 @@ function loadYearDataFromStorage(){
         statusEl.className = 'import-status ok';
       }
     });
-  } catch(err){ console.error('Erreur lecture localStorage', err); }
+  } catch(err){
+    console.error('Erreur lecture localStorage — réinitialisation', err);
+    localStorage.removeItem(STORAGE_KEY);
+  }
 }
 
 // ===== FOOTER DYNAMIQUE =====
