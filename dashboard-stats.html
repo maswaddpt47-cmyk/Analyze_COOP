@@ -426,6 +426,41 @@
   </div>
 </div>
 
+<!-- DRAWER (menu hamburger) -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="drawer" id="mainDrawer">
+  <div class="drawer-header">
+    <span class="dh-title">Navigation</span>
+    <button class="drawer-close" id="closeDrawerBtn" aria-label="Fermer">×</button>
+  </div>
+  <div class="drawer-body">
+    <div class="drawer-section-label">Sections</div>
+    <div class="drawer-section">
+      <button class="drawer-item active-item" data-page="global"><span class="di-icon">📊</span><span class="di-label">Vue globale</span></button>
+      <button class="drawer-item" data-page="evolution"><span class="di-icon">📈</span><span class="di-label">Évolution</span></button>
+      <button class="drawer-item" data-page="thematiques"><span class="di-icon">🏷️</span><span class="di-label">Thématiques</span></button>
+      <button class="drawer-item" data-page="beneficiaires"><span class="di-icon">👥</span><span class="di-label">Bénéficiaires</span></button>
+      <button class="drawer-item" data-page="lieux"><span class="di-icon">📍</span><span class="di-label">Lieux & canaux</span></button>
+      <button class="drawer-item" data-page="ateliers"><span class="di-icon">🎓</span><span class="di-label">Ateliers</span></button>
+      <button class="drawer-item" data-page="rapport"><span class="di-icon">📝</span><span class="di-label">Rapport</span></button>
+    </div>
+    <div class="drawer-divider"></div>
+    <div class="drawer-section-label">Période</div>
+    <div class="drawer-section">
+      <button class="drawer-item" data-year-drawer="all"><span class="di-icon">🗂️</span><span class="di-label">Tout (24-26)</span></button>
+      <button class="drawer-item" data-year-drawer="2024"><span class="di-icon">📅</span><span class="di-label">2024</span></button>
+      <button class="drawer-item" data-year-drawer="2025"><span class="di-icon">📅</span><span class="di-label">2025</span></button>
+      <button class="drawer-item" data-year-drawer="2026"><span class="di-icon">📅</span><span class="di-label">2026</span></button>
+    </div>
+    <div class="drawer-divider"></div>
+    <div class="drawer-section-label">Actions</div>
+    <div class="drawer-section">
+      <button class="drawer-item" id="drawerImportBtn"><span class="di-icon">⭱</span><span class="di-label">Importer données</span></button>
+      <button class="drawer-item" id="drawerPdfBtn"><span class="di-icon">📄</span><span class="di-label">Exporter PDF</span><span class="di-badge">nouveau</span></button>
+    </div>
+  </div>
+</div>
+
 <div class="tabs" role="tablist">
   <div class="tab active" role="tab" tabindex="0" data-page="global">Vue globale</div>
   <div class="tab" role="tab" tabindex="0" data-page="evolution">Évolution</div>
@@ -1979,6 +2014,76 @@ window.addEventListener('afterprint',()=>{
   document.querySelectorAll('.pages').forEach(p=>p.classList.remove('active'));
   if(printPrevActive) printPrevActive.classList.add('active');
 });
+
+// ===== DRAWER (menu hamburger) =====
+(function(){
+  const drawerEl = document.getElementById('mainDrawer');
+  const overlayEl = document.getElementById('drawerOverlay');
+
+  function openDrawer(){
+    drawerEl.classList.add('open');
+    overlayEl.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDrawer(){
+    drawerEl.classList.remove('open');
+    overlayEl.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('openDrawerBtn').addEventListener('click', openDrawer);
+  document.getElementById('closeDrawerBtn').addEventListener('click', closeDrawer);
+  overlayEl.addEventListener('click', closeDrawer);
+
+  // Navigation depuis le drawer
+  drawerEl.querySelectorAll('[data-page]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const page = btn.dataset.page;
+      // Activer l'onglet correspondant
+      document.querySelectorAll('.tab').forEach(t => {
+        const isActive = t.dataset.page === page;
+        t.classList.toggle('active', isActive);
+        t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      document.querySelectorAll('.pages').forEach(p => p.classList.remove('active'));
+      const pageEl = document.getElementById('page-' + page);
+      if(pageEl) pageEl.classList.add('active');
+      const isSpecial = page === 'ateliers' || page === 'rapport';
+      document.getElementById('globalKpis').style.display = isSpecial ? 'none' : '';
+      document.getElementById('dataBanner').style.display = isSpecial ? 'none' : '';
+      if(page === 'rapport') generateRapport();
+      // Mettre à jour les items actifs du drawer
+      drawerEl.querySelectorAll('[data-page]').forEach(i => i.classList.toggle('active-item', i.dataset.page === page));
+      closeDrawer();
+    });
+  });
+
+  // Filtres d'année depuis le drawer
+  drawerEl.querySelectorAll('[data-year-drawer]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const year = btn.dataset.yearDrawer;
+      document.querySelectorAll('.year-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.year === year);
+      });
+      updateKPIs(year);
+      buildMonthlyChart(year);
+      buildEvolutionChart(year);
+      highlightYearCompare(year);
+      applyYearAggregates(year);
+      closeDrawer();
+    });
+  });
+
+  // Boutons d'action dans le drawer
+  document.getElementById('drawerImportBtn').addEventListener('click', () => {
+    document.getElementById('importModalOverlay').classList.add('active');
+    closeDrawer();
+  });
+  document.getElementById('drawerPdfBtn').addEventListener('click', () => {
+    closeDrawer();
+    exportPDF();
+  });
+})();
 
 // ===== INIT =====
 loadYearDataFromStorage();
