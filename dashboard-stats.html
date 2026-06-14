@@ -10,204 +10,89 @@
 <script>if(typeof XLSX==='undefined')document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/xlsx\/0.18.5\/xlsx.full.min.js"><\/script>');</script>
 <style>
   :root{
-    --bg:#0b1020;
-    --panel:#121a32;
-    --panel2:#0e1530;
-    --border:#243154;
-    --text:#e8ecf7;
-    --muted:#8b95b8;
-    --blue:#3b82f6;
-    --green:#10b981;
-    --orange:#f59e0b;
-    --purple:#a855f7;
-    --pink:#ec4899;
-    --cyan:#06b6d4;
-    --red:#ef4444;
-    --yellow:#eab308;
+    --bg:#0b1020;--panel:#121a32;--panel2:#0e1530;--border:#243154;
+    --text:#e8ecf7;--muted:#8b95b8;--blue:#3b82f6;--green:#10b981;
+    --orange:#f59e0b;--purple:#a855f7;--pink:#ec4899;--cyan:#06b6d4;
+    --red:#ef4444;--yellow:#eab308;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{
-    font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
-    background:var(--bg);
-    color:var(--text);
-    padding:20px;
-  }
-  .header{
-    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-    margin-bottom:18px;
-    position:sticky;top:0;z-index:40;
-    background:var(--bg);
-    padding:14px 0 10px;
-    border-bottom:1px solid var(--border);
-  }
-  .badge{
-    background:var(--blue);color:#fff;font-weight:700;
-    padding:6px 12px;border-radius:6px;font-size:13px;letter-spacing:1px;
-  }
+  body{font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);padding:20px;}
+  .header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px;position:sticky;top:0;z-index:40;background:var(--bg);padding:14px 0 10px;border-bottom:1px solid var(--border);}
+  .badge{background:var(--blue);color:#fff;font-weight:700;padding:6px 12px;border-radius:6px;font-size:13px;letter-spacing:1px;}
   .title{font-size:20px;font-weight:700;}
   .subtitle{color:var(--muted);font-size:13px;}
   .spacer{flex:1;}
   .years{display:flex;gap:8px;flex-wrap:wrap;}
-  .year-btn{
-    border:1px solid var(--border);background:var(--panel);color:var(--text);
-    padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
-    transition:.15s;
-  }
+  .year-btn{border:1px solid var(--border);background:var(--panel);color:var(--text);padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;}
   .year-btn.active{border-color:transparent;color:#fff;}
   .year-btn[data-year="2024"].active{background:var(--blue);}
   .year-btn[data-year="2025"].active{background:var(--orange);}
   .year-btn[data-year="2026"].active{background:var(--purple);}
   .year-btn[data-year="all"].active{background:var(--green);}
-  .year-btn.mc-btn.active{background:var(--orange);}
   .year-btn:hover{border-color:#3a4a78;}
-
-  .tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--border);
-    padding-bottom:0;flex-wrap:wrap;
-    position:sticky;top:62px;z-index:39;background:var(--bg);padding-top:10px;}
-  @media (max-width:700px){
-    .header{position:relative;}
-    .tabs{position:sticky;top:0;z-index:39;}
-  }
-  .tab{
-    padding:10px 16px;color:var(--muted);font-weight:600;font-size:14px;cursor:pointer;
-    border-bottom:2px solid transparent;
-  }
+  .tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--border);padding-bottom:0;flex-wrap:wrap;position:sticky;top:62px;z-index:39;background:var(--bg);padding-top:10px;}
+  @media(max-width:700px){.header{position:relative;}.tabs{position:sticky;top:0;z-index:39;}}
+  .tab{padding:10px 16px;color:var(--muted);font-weight:600;font-size:14px;cursor:pointer;border-bottom:2px solid transparent;}
   .tab.active{color:var(--blue);border-color:var(--blue);}
-
-  .kpis{
-    display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-    gap:14px;margin-bottom:18px;
-  }
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px;}
   .kpi-label{font-size:11px;color:var(--muted);letter-spacing:1px;font-weight:700;text-transform:uppercase;margin-bottom:8px;}
   .kpi-value{font-size:30px;font-weight:800;}
   .kpi-sub{font-size:12px;color:var(--muted);margin-top:4px;}
-
   .grid2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:16px;}
   .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px;}
   .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;}
-  @media (max-width:900px){.grid2,.grid3,.grid4{grid-template-columns:1fr;}}
-
-  .card{
-    background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;
-    transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
-  }
-  .card:hover{
-    transform:translateY(-3px);
-    border-color:#3a4a78;
-    box-shadow:0 8px 24px rgba(0,0,0,.35);
-  }
-  .kpi{
-    background:var(--panel);border:1px solid var(--border);border-radius:12px;
-    padding:16px 18px;border-top:3px solid var(--blue);
-    transition:transform .25s ease, box-shadow .25s ease;
-  }
-  .kpi:hover{
-    transform:translateY(-3px) scale(1.02);
-    box-shadow:0 8px 20px rgba(0,0,0,.35);
-  }
-  .kpi.k2{border-top-color:var(--green);}
-  .kpi.k3{border-top-color:var(--orange);}
-  .kpi.k4{border-top-color:var(--purple);}
-  .kpi.k5{border-top-color:var(--pink);}
-  .kpi.k6{border-top-color:var(--cyan);}
+  @media(max-width:900px){.grid2,.grid3,.grid4{grid-template-columns:1fr;}}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;transition:transform .25s,box-shadow .25s,border-color .25s;}
+  .card:hover{transform:translateY(-3px);border-color:#3a4a78;box-shadow:0 8px 24px rgba(0,0,0,.35);}
+  .kpi{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px 18px;border-top:3px solid var(--blue);transition:transform .25s,box-shadow .25s;}
+  .kpi:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 8px 20px rgba(0,0,0,.35);}
+  .kpi.k2{border-top-color:var(--green);}.kpi.k3{border-top-color:var(--orange);}
+  .kpi.k4{border-top-color:var(--purple);}.kpi.k5{border-top-color:var(--pink);}.kpi.k6{border-top-color:var(--cyan);}
   .bar-row{margin-bottom:10px;cursor:default;}
-  .bar-row:hover .bar-fill{
-    filter:brightness(1.35);
-    box-shadow:0 0 10px currentColor;
-  }
+  .bar-row:hover .bar-fill{filter:brightness(1.35);box-shadow:0 0 10px currentColor;}
   .bar-row:hover .top span{color:var(--text);}
-  .card-title{
-    font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;
-    display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.5px;
-  }
+  .card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.5px;}
   .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);}
-  .card-title.green .dot{background:var(--green);}
-  .card-title.orange .dot{background:var(--orange);}
-  .card-title.purple .dot{background:var(--purple);}
-  .card-title.cyan .dot{background:var(--cyan);}
-
+  .card-title.green .dot{background:var(--green);}.card-title.orange .dot{background:var(--orange);}
+  .card-title.purple .dot{background:var(--purple);}.card-title.cyan .dot{background:var(--cyan);}
   .bar-row .top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;}
   .bar-row .top .val{color:var(--muted);}
   .bar-track{height:6px;background:#1a2444;border-radius:4px;overflow:hidden;}
   .bar-fill{height:100%;border-radius:4px;width:0%;transition:width 1s cubic-bezier(.22,1,.36,1);}
-
-  .pages{display:none;}
-  .pages.active{display:block;}
-
-  canvas{max-width:100%;transition:transform .3s ease;}
+  .pages{display:none;}.pages.active{display:block;}
+  canvas{max-width:100%;transition:transform .3s;}
   .chart-wrap{overflow:visible;position:relative;height:260px;}
   .chart-wrap canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important;}
   .chart-wrap:hover canvas{transform:scale(1.03);}
-
-  .legend-list{display:flex;flex-direction:column;gap:6px;font-size:13px;}
-  .legend-list .item{display:flex;align-items:center;gap:8px;}
-  .legend-list .sq{width:10px;height:10px;border-radius:2px;}
-  .legend-list .val{margin-left:auto;color:var(--muted);}
-
   .footer-note{color:var(--muted);font-size:12px;text-align:center;margin-top:24px;}
-
-  .import-btn{
-    border:1px solid var(--border);background:var(--panel);color:var(--text);
-    padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
-    display:flex;align-items:center;gap:6px;transition:.15s;
-  }
+  .import-btn{border:1px solid var(--border);background:var(--panel);color:var(--text);padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.15s;}
   .import-btn:hover{border-color:var(--blue);color:var(--blue);}
-
-  .modal-overlay{
-    display:none;position:fixed;inset:0;background:rgba(5,8,20,.65);
-    align-items:center;justify-content:center;z-index:50;
-  }
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(5,8,20,.65);align-items:center;justify-content:center;z-index:50;}
   .modal-overlay.active{display:flex;}
-  .modal{
-    background:var(--panel);border:1px solid var(--border);border-radius:14px;
-    padding:24px;width:100%;max-width:520px;max-height:85vh;overflow:auto;
-  }
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:24px;width:100%;max-width:520px;max-height:85vh;overflow:auto;}
   .modal h2{font-size:17px;margin-bottom:6px;}
   .modal .modal-desc{color:var(--muted);font-size:13px;margin-bottom:18px;line-height:1.5;}
-  .import-row{
-    display:flex;align-items:center;justify-content:space-between;gap:12px;
-    border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px;
-  }
+  .import-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px;}
   .import-row .yr{font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;}
   .import-row .yr-dot{width:10px;height:10px;border-radius:50%;}
   .import-row input[type=file]{display:none;}
-  .import-row label.file-btn{
-    border:1px solid var(--border);background:var(--panel2);color:var(--text);
-    padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;
-  }
+  .import-row label.file-btn{border:1px solid var(--border);background:var(--panel2);color:var(--text);padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;}
   .import-row label.file-btn:hover{border-color:var(--blue);}
   .import-status{font-size:11px;color:var(--muted);margin-top:2px;}
-  .import-status.ok{color:var(--green);}
-  .import-status.err{color:var(--red);}
-  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
-  .modal-btn{
-    border:1px solid var(--border);background:var(--panel2);color:var(--text);
-    padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
-  }
+  .import-status.ok{color:var(--green);}.import-status.err{color:var(--red);}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;flex-wrap:wrap;}
+  .modal-btn{border:1px solid var(--border);background:var(--panel2);color:var(--text);padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
   .modal-btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;}
   .modal-btn:hover{border-color:#3a4a78;}
-  .data-banner{
-    font-size:12px;color:var(--orange);background:rgba(245,158,11,.1);
-    border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:8px 12px;margin-bottom:14px;
-    display:none;
-  }
+  .data-banner{font-size:12px;color:var(--orange);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:8px 12px;margin-bottom:14px;display:none;}
   .data-banner.show{display:block;}
-
   /* Growth badges */
-  .growth-badge{
-    display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;
-    border-radius:20px;margin-left:6px;vertical-align:middle;
-  }
+  .growth-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle;}
   .growth-badge.up{background:rgba(16,185,129,.18);color:var(--green);}
   .growth-badge.down{background:rgba(239,68,68,.18);color:var(--red);}
   .growth-badge.flat{background:rgba(139,149,184,.15);color:var(--muted);}
-
   /* Insight box */
-  .insight-box{
-    background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.25);
-    border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6;
-    color:var(--text);margin-bottom:16px;
-  }
+  .insight-box{background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6;color:var(--text);margin-bottom:16px;}
   .insight-box b{color:var(--blue);}
   .insight-box.green{background:rgba(16,185,129,.07);border-color:rgba(16,185,129,.25);}
   .insight-box.green b{color:var(--green);}
@@ -215,24 +100,36 @@
   .insight-box.orange b{color:var(--orange);}
   .insight-box.purple{background:rgba(168,85,247,.07);border-color:rgba(168,85,247,.25);}
   .insight-box.purple b{color:var(--purple);}
-
-  /* Stat inline row */
-  .stat-row{display:flex;align-items:baseline;gap:8px;margin-bottom:6px;}
-  .stat-row .stat-val{font-size:22px;font-weight:800;}
-  .stat-row .stat-label{font-size:13px;color:var(--muted);}
-
-  /* ===== IMPRESSION (bilan d'activité) ===== */
+  /* Toggle button */
+  .toggle-btn{border:1px solid var(--border);background:transparent;color:var(--muted);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;transition:.15s;}
+  .toggle-btn.on{border-color:var(--cyan);color:var(--cyan);background:rgba(6,182,212,.1);}
+  .toggle-btn:hover{border-color:#3a4a78;color:var(--text);}
+  /* Rapport */
+  .rapport-body{font-size:13px;line-height:1.8;white-space:pre-wrap;font-family:'Courier New',monospace;color:var(--text);background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:20px;max-height:55vh;overflow-y:auto;}
+  .rapport-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  .action-btn{border:1px solid var(--border);background:var(--panel);color:var(--text);padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:6px;}
+  .action-btn:hover{border-color:var(--blue);color:var(--blue);}
+  .action-btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .action-btn.primary:hover{background:#2563eb;}
+  /* Lieu insight cards */
+  .lieu-insight{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+  @media(max-width:600px){.lieu-insight{grid-template-columns:1fr;}}
+  .lieu-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+  .lieu-card .lc-label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+  .lieu-card .lc-name{font-size:16px;font-weight:700;margin-bottom:4px;}
+  .lieu-card .lc-val{font-size:13px;color:var(--muted);}
+  /* Annot dot on chart */
+  .annot-hint{font-size:11px;color:var(--cyan);margin-top:6px;}
+  /* PDF loader */
+  .pdf-loading{display:none;font-size:12px;color:var(--muted);margin-left:8px;}
   @media print{
-    :root{ --bg:#ffffff; --panel:#ffffff; --panel2:#f5f7fb; --border:#c9d2e6; --text:#111827; --muted:#4b5563; }
-    body{ background:#fff; color:#111827; padding:0; }
-    .header{ position:static; border-bottom:1px solid #c9d2e6; }
-    .years, .import-btn, .tabs, .data-banner, .modal-overlay{ display:none !important; }
-    .pages{ display:block !important; }
-    .pages + .pages{ page-break-before:always; }
-    .card, .kpi{ break-inside:avoid; box-shadow:none !important; transform:none !important; }
-    .card:hover, .kpi:hover{ transform:none; box-shadow:none; }
-    .bar-fill{ transition:none; }
-    canvas{ max-height:240px; }
+    :root{--bg:#fff;--panel:#fff;--panel2:#f5f7fb;--border:#c9d2e6;--text:#111827;--muted:#4b5563;}
+    body{background:#fff;color:#111827;padding:0;}
+    .header{position:static;border-bottom:1px solid #c9d2e6;}
+    .years,.import-btn,.tabs,.data-banner,.modal-overlay,.rapport-actions,.annot-hint,.toggle-btn{display:none!important;}
+    .pages{display:block!important;}.pages+.pages{page-break-before:always;}
+    .card,.kpi{break-inside:avoid;box-shadow:none!important;transform:none!important;}
+    canvas{max-height:240px;}
   }
 </style>
 </head>
@@ -251,62 +148,50 @@
     <button class="year-btn" data-year="2025">2025</button>
     <button class="year-btn" data-year="2026">2026</button>
   </div>
-  <button class="import-btn" id="openImportModal">⭱ Importer données</button>
+  <button class="import-btn" id="openImportModal">⭱ Importer</button>
+  <button class="import-btn" id="pdfExportBtn" title="Exporter un PDF structuré (connexion internet requise pour jsPDF)">📄 PDF</button>
+  <span class="pdf-loading" id="pdfLoading">Génération…</span>
 </div>
 
+<!-- MODAL IMPORT -->
 <div class="modal-overlay" id="importModalOverlay">
   <div class="modal">
     <h2>Importer les exports annuels</h2>
-    <div class="modal-desc">
-      Pour chaque année, exporte depuis La Coop un fichier .xlsx filtré sur la période
-      01/01 → 31/12 (ou jusqu'à aujourd'hui pour l'année en cours), puis charge-le ici.
-      Les thématiques, bénéficiaires, lieux, canaux, durées et matériel seront recalculés
-      pour cette année et pour "Tout".
-    </div>
-
+    <div class="modal-desc">Pour chaque année, exporte depuis La Coop un fichier .xlsx filtré sur la période 01/01 → 31/12 (ou jusqu'à aujourd'hui pour l'année en cours), puis charge-le ici.</div>
     <div class="import-row">
-      <div>
-        <div class="yr"><span class="yr-dot" style="background:#3b82f6"></span>2024</div>
-        <div class="import-status" id="status-2024">Aucun fichier chargé</div>
-      </div>
+      <div><div class="yr"><span class="yr-dot" style="background:#3b82f6"></span>2024</div><div class="import-status" id="status-2024">Aucun fichier chargé</div></div>
       <label class="file-btn">Choisir un fichier<input type="file" accept=".xlsx" data-year="2024"></label>
     </div>
     <div class="import-row">
-      <div>
-        <div class="yr"><span class="yr-dot" style="background:#f59e0b"></span>2025</div>
-        <div class="import-status" id="status-2025">Aucun fichier chargé</div>
-      </div>
+      <div><div class="yr"><span class="yr-dot" style="background:#f59e0b"></span>2025</div><div class="import-status" id="status-2025">Aucun fichier chargé</div></div>
       <label class="file-btn">Choisir un fichier<input type="file" accept=".xlsx" data-year="2025"></label>
     </div>
     <div class="import-row">
-      <div>
-        <div class="yr"><span class="yr-dot" style="background:#a855f7"></span>2026</div>
-        <div class="import-status" id="status-2026">Aucun fichier chargé</div>
-      </div>
+      <div><div class="yr"><span class="yr-dot" style="background:#a855f7"></span>2026</div><div class="import-status" id="status-2026">Aucun fichier chargé</div></div>
       <label class="file-btn">Choisir un fichier<input type="file" accept=".xlsx" data-year="2026"></label>
     </div>
-
     <div class="modal-actions">
       <label class="modal-btn" style="cursor:pointer;">Importer JSON<input type="file" accept=".json" id="jsonImportInput" style="display:none;"></label>
       <button class="modal-btn" id="jsonExportBtn">Exporter JSON</button>
-      <button class="modal-btn" id="resetDataBtn" title="Efface toutes les données importées (sauvegarde locale comprise).">↺ Réinitialiser</button>
+      <button class="modal-btn" id="resetDataBtn">↺ Réinitialiser</button>
       <button class="modal-btn" id="closeImportModal">Fermer</button>
     </div>
   </div>
 </div>
 
-<div class="tabs" role="tablist" aria-label="Sections du tableau de bord">
-  <div class="tab active" role="tab" tabindex="0" aria-selected="true" data-page="global">Vue globale</div>
-  <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="evolution">Évolution</div>
-  <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="thematiques">Thématiques</div>
-  <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="beneficiaires">Bénéficiaires</div>
-  <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="lieux">Lieux & canaux</div>
-  <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="ateliers">Ateliers</div>
+<div class="tabs" role="tablist">
+  <div class="tab active" role="tab" tabindex="0" data-page="global">Vue globale</div>
+  <div class="tab" role="tab" tabindex="0" data-page="evolution">Évolution</div>
+  <div class="tab" role="tab" tabindex="0" data-page="thematiques">Thématiques</div>
+  <div class="tab" role="tab" tabindex="0" data-page="beneficiaires">Bénéficiaires</div>
+  <div class="tab" role="tab" tabindex="0" data-page="lieux">Lieux & canaux</div>
+  <div class="tab" role="tab" tabindex="0" data-page="ateliers">Ateliers</div>
+  <div class="tab" role="tab" tabindex="0" data-page="rapport">Rapport</div>
 </div>
 
 <div class="data-banner" id="dataBanner"></div>
 
-<!-- KPI cards (always visible, recalculated) -->
+<!-- KPIs globaux -->
 <div class="kpis" id="globalKpis">
   <div class="kpi">
     <div class="kpi-label">Accompagnements</div>
@@ -333,7 +218,7 @@
     <div class="kpi-value" id="kpi-avg">—</div>
     <div class="kpi-sub" id="kpi-avg-sub">sur la période</div>
   </div>
-  <div class="kpi k6" title="Ratio nouveaux bénéficiaires sur total accompagnés (hors anonymes). Mesure l'attraction vs la fidélisation.">
+  <div class="kpi k6" title="Ratio nouveaux / (nouveaux + suivis). Mesure l'attraction vs la fidélisation.">
     <div class="kpi-label">Nouveaux bénéf.</div>
     <div class="kpi-value" id="kpi-retention">—</div>
     <div class="kpi-sub" id="kpi-retention-sub">nouveaux vs suivis</div>
@@ -345,8 +230,12 @@
   <div id="globalInsightBox" class="insight-box" style="display:none;"></div>
   <div class="grid2">
     <div class="card">
-      <div class="card-title"><span class="dot"></span>Accompagnements par mois</div>
+      <div class="card-title" style="justify-content:space-between;">
+        <span style="display:flex;align-items:center;gap:8px;"><span class="dot"></span>Accompagnements par mois</span>
+        <button class="toggle-btn" id="toggleMA" title="Afficher/masquer la moyenne glissante sur 3 mois">Moy. 3 mois</button>
+      </div>
       <div class="chart-wrap"><canvas id="chartMonthly" height="110"></canvas></div>
+      <div class="annot-hint">💡 Cliquez sur une barre pour ajouter une annotation (📌)</div>
     </div>
     <div class="card">
       <div class="card-title green"><span class="dot"></span>Répartition par type</div>
@@ -376,16 +265,13 @@
     <div class="chart-wrap"><canvas id="chartEvolutionFull" height="90"></canvas></div>
   </div>
   <div class="card" style="margin-bottom:16px;">
-    <div class="card-title purple"><span class="dot"></span>Superposition des années (courbes Jan → Déc)</div>
+    <div class="card-title purple"><span class="dot"></span>Superposition des années (Jan → Déc)</div>
     <div class="chart-wrap"><canvas id="chartYearOverlay" height="90"></canvas></div>
   </div>
-
   <div class="card" style="margin-bottom:16px;">
-    <div class="card-title"><span class="dot"></span>Comparaison calendaire par mois (2024 vs 2025 vs 2026)</div>
+    <div class="card-title"><span class="dot"></span>Comparaison calendaire par mois</div>
     <div class="chart-wrap"><canvas id="chartYearCompare" height="90"></canvas></div>
   </div>
-
-  <!-- Totaux annuels avec delta YoY -->
   <div class="grid3" style="margin-bottom:16px;">
     <div class="card">
       <div class="card-title green"><span class="dot"></span>Total 2024</div>
@@ -400,33 +286,29 @@
       <div id="delta2025" style="margin-top:8px;font-size:12px;"></div>
     </div>
     <div class="card">
-      <div class="card-title purple"><span class="dot"></span>Total 2026 (jan–jun)</div>
+      <div class="card-title purple"><span class="dot"></span>Total 2026 (jan–juin)</div>
       <div class="kpi-value" id="tot2026" style="font-size:28px;">—</div>
       <div class="kpi-sub">accompagnements</div>
       <div id="delta2026" style="margin-top:8px;font-size:12px;"></div>
     </div>
   </div>
-
-  <!-- Projection + croissance H1 -->
   <div class="grid3" id="projectionCards">
-    <div class="card" title="Extrapolation du rythme actuel sur 12 mois. Basé sur les mois déjà saisis.">
+    <div class="card" title="Extrapolation du rythme actuel 2026 sur 12 mois.">
       <div class="card-title cyan"><span class="dot"></span>Projection 2026 (12 mois)</div>
       <div class="kpi-value" id="proj2026" style="font-size:28px;color:var(--cyan);">—</div>
-      <div class="kpi-sub" id="proj2026-sub">sur la base des mois disponibles</div>
+      <div class="kpi-sub" id="proj2026-sub">estimation sur la base des mois disponibles</div>
     </div>
-    <div class="card" title="Croissance du 1er semestre 2025 vs 2024.">
-      <div class="card-title orange"><span class="dot"></span>Croissance H1 2025 / 2024</div>
+    <div class="card">
+      <div class="card-title orange"><span class="dot"></span>Croissance H1 2025/2024</div>
       <div class="kpi-value" id="growthH1_2025" style="font-size:28px;">—</div>
-      <div class="kpi-sub" id="growthH1_2025-sub">jan–juin 2025 vs jan–juin 2024</div>
+      <div class="kpi-sub" id="growthH1_2025-sub">jan–juin</div>
     </div>
-    <div class="card" title="Croissance du 1er semestre 2026 vs 2025.">
-      <div class="card-title purple"><span class="dot"></span>Croissance H1 2026 / 2025</div>
+    <div class="card">
+      <div class="card-title purple"><span class="dot"></span>Croissance H1 2026/2025</div>
       <div class="kpi-value" id="growthH1_2026" style="font-size:28px;">—</div>
-      <div class="kpi-sub" id="growthH1_2026-sub">jan–juin 2026 vs jan–juin 2025</div>
+      <div class="kpi-sub" id="growthH1_2026-sub">jan–juin</div>
     </div>
   </div>
-
-  <!-- Insight projection -->
   <div id="evolutionInsightBox" class="insight-box" style="display:none;"></div>
 </div>
 
@@ -446,18 +328,15 @@
     <div class="card-title green"><span class="dot"></span>Détail thématiques médiation numérique</div>
     <div id="themMedBars"></div>
   </div>
-  <!-- Évolution thématiques par année -->
   <div class="card" style="margin-bottom:16px;">
     <div class="card-title cyan"><span class="dot"></span>Top thématiques — évolution par année</div>
     <div class="chart-wrap" style="height:300px;"><canvas id="chartThemYear" height="130"></canvas></div>
   </div>
-  <!-- Thème en plus forte croissance -->
   <div id="themGrowthBox" class="insight-box green" style="display:none;"></div>
 </div>
 
 <!-- PAGE: BENEFICIAIRES -->
 <div class="pages" id="page-beneficiaires">
-  <!-- Insight fidélisation -->
   <div id="benefInsightBox" class="insight-box" style="display:none;margin-bottom:16px;"></div>
   <div class="grid3">
     <div class="card">
@@ -481,6 +360,7 @@
 
 <!-- PAGE: LIEUX -->
 <div class="pages" id="page-lieux">
+  <div class="lieu-insight" id="lieuxInsightCards"></div>
   <div class="grid2">
     <div class="card">
       <div class="card-title"><span class="dot"></span>Accompagnements par lieu</div>
@@ -491,9 +371,8 @@
       <div class="chart-wrap"><canvas id="chartCanaux" height="220"></canvas></div>
     </div>
   </div>
-  <!-- Lieux par année -->
   <div class="card" style="margin-bottom:16px;">
-    <div class="card-title orange"><span class="dot"></span>Durée des activités — répartition</div>
+    <div class="card-title orange"><span class="dot"></span>Durée des activités — comparaison par année</div>
     <div class="chart-wrap" style="height:200px;"><canvas id="chartDureesYear" height="90"></canvas></div>
   </div>
 </div>
@@ -501,113 +380,133 @@
 <!-- PAGE: ATELIERS -->
 <div class="pages" id="page-ateliers">
   <div class="kpis">
-    <div class="kpi" title="Nombre de séances collectives réalisées sur la période, et leur poids par rapport au total de tes accompagnements (individuel + collectif).">
+    <div class="kpi" title="Nombre de séances collectives réalisées.">
       <div class="kpi-label">Ateliers collectifs</div>
       <div class="kpi-value" id="kpi-atel-nb">—</div>
-      <div class="kpi-sub" id="kpi-atel-nb-sub">part du total accompagnements</div>
+      <div class="kpi-sub" id="kpi-atel-nb-sub">part du total</div>
     </div>
-    <div class="kpi k2" title="Somme des présences cumulées sur tous les ateliers de la période (une même personne venue 3 fois compte 3 fois).">
+    <div class="kpi k2" title="Présences cumulées (même personne = autant de fois qu'elle est venue).">
       <div class="kpi-label">Participants ateliers</div>
       <div class="kpi-value" id="kpi-atel-part">—</div>
       <div class="kpi-sub" id="kpi-atel-part-sub">total cumulé</div>
     </div>
-    <div class="kpi k3" title="Participants ateliers ÷ nombre d'ateliers. Indique le taux de remplissage moyen d'une séance.">
+    <div class="kpi k3" title="Participants ÷ nombre d'ateliers.">
       <div class="kpi-label">Moy. participants / atelier</div>
       <div class="kpi-value" id="kpi-atel-ratio">—</div>
-      <div class="kpi-sub" id="kpi-atel-ratio-sub">indicateur de remplissage</div>
+      <div class="kpi-sub" id="kpi-atel-ratio-sub">taux de remplissage</div>
     </div>
-    <div class="kpi k4" title="Séances individuelles économisées grâce au format collectif. (participants − ateliers)">
+    <div class="kpi k4" title="participants − ateliers = séances individuelles évitées grâce au collectif.">
       <div class="kpi-label">Séances économisées</div>
       <div class="kpi-value" id="kpi-atel-equiv" style="color:var(--purple);">—</div>
       <div class="kpi-sub" id="kpi-atel-equiv-sub">gain du format collectif</div>
     </div>
-    <div class="kpi k5" title="Taux d'efficacité : combien de bénéficiaires un atelier touche-t-il en comparaison d'une séance individuelle ?">
+    <div class="kpi k5" title="participants ÷ ateliers : combien de bénéficiaires par séance collective.">
       <div class="kpi-label">Multiplicateur d'impact</div>
       <div class="kpi-value" id="kpi-atel-multiplier" style="color:var(--pink);">—×</div>
-      <div class="kpi-sub" id="kpi-atel-multiplier-sub">participants / séance</div>
+      <div class="kpi-sub" id="kpi-atel-multiplier-sub">vs 1× en individuel</div>
     </div>
   </div>
-
-  <div class="card" id="atelInsightCard" style="margin-bottom:16px;" title="Synthèse calculée automatiquement à partir des chiffres ci-dessus.">
+  <div class="card" id="atelInsightCard" style="margin-bottom:16px;">
     <div class="card-title purple"><span class="dot"></span>Lecture rapide — gain du format collectif</div>
-    <div id="atelInsightText" style="font-size:14px;line-height:1.6;color:var(--text);"></div>
+    <div id="atelInsightText" style="font-size:14px;line-height:1.6;"></div>
   </div>
-
   <div class="grid2">
-    <div class="card" title="Poids de l'atelier collectif face à l'accompagnement individuel.">
+    <div class="card">
       <div class="card-title purple"><span class="dot"></span>Ateliers vs accompagnements individuels</div>
       <div class="chart-wrap"><canvas id="chartAtelTypes" height="200"></canvas></div>
     </div>
-    <div class="card" title="Nombre de séances d'atelier collectif réalisées chaque année.">
+    <div class="card">
       <div class="card-title green"><span class="dot"></span>Nb d'ateliers par année</div>
       <div class="chart-wrap"><canvas id="chartAtelYears" height="200"></canvas></div>
     </div>
   </div>
-
   <div class="grid2">
-    <div class="card" title="Somme des présences cumulées en atelier collectif, par année.">
+    <div class="card">
       <div class="card-title orange"><span class="dot"></span>Participants aux ateliers par année</div>
       <div class="chart-wrap"><canvas id="chartAtelPartYears" height="200"></canvas></div>
     </div>
-    <div class="card" title="Participants ÷ nombre d'ateliers, par année.">
+    <div class="card">
       <div class="card-title"><span class="dot"></span>Ratio participants / atelier par année</div>
       <div id="atelRatioBars"></div>
       <div class="kpi-sub" style="margin-top:10px;">Plus le ratio est élevé, plus les ateliers attirent de monde.</div>
     </div>
   </div>
-
-  <div class="card" title="Part des ateliers collectifs dans l'ensemble de tes accompagnements, année par année.">
+  <div class="card">
     <div class="card-title green"><span class="dot"></span>Poids des ateliers dans l'activité globale (%)</div>
     <div id="atelShareBars"></div>
   </div>
 </div>
 
-<div class="footer-note">Données issues de l'export La Coop de la médiation numérique — export du 12/06/2026 · Période couverte : 01/2024 → 06/2026</div>
+<!-- PAGE: RAPPORT -->
+<div class="pages" id="page-rapport">
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title green" style="justify-content:space-between;">
+      <span style="display:flex;align-items:center;gap:8px;"><span class="dot"></span>Rapport d'activité automatique</span>
+      <span style="font-size:11px;color:var(--muted);font-weight:400;text-transform:none;">Basé sur la période sélectionnée</span>
+    </div>
+    <div class="rapport-body" id="rapportContent">Importez des données pour générer le rapport.</div>
+    <div class="rapport-actions">
+      <button class="action-btn primary" id="copyRapportBtn">📋 Copier le texte</button>
+      <button class="action-btn" id="pdfRapportBtn">📄 Exporter PDF <span style="font-size:10px;color:var(--muted);">(internet requis)</span></button>
+      <button class="action-btn" id="refreshRapportBtn">↺ Régénérer</button>
+    </div>
+  </div>
+</div>
+
+<div class="footer-note">Données issues de l'export La Coop — export du 12/06/2026 · Période couverte : 01/2024 → 06/2026</div>
 
 <script>
-// ===== DATA =====
+// ===== DONNÉES =====
 let monthly = {
-  labels: ['01/24','02/24','03/24','04/24','05/24','06/24','07/24','08/24','09/24','10/24','11/24','12/24',
-           '01/25','02/25','03/25','04/25','05/25','06/25','07/25','08/25','09/25','10/25','11/25','12/25',
-           '01/26','02/26','03/26','04/26','05/26','06/26'],
+  labels:['01/24','02/24','03/24','04/24','05/24','06/24','07/24','08/24','09/24','10/24','11/24','12/24',
+          '01/25','02/25','03/25','04/25','05/25','06/25','07/25','08/25','09/25','10/25','11/25','12/25',
+          '01/26','02/26','03/26','04/26','05/26','06/26'],
   values: Array(30).fill(0)
 };
 
 const palette = ["#3b82f6","#10b981","#f59e0b","#a855f7","#ec4899","#06b6d4","#ef4444","#eab308",
-                  "#22c55e","#6366f1","#f97316","#14b8a6","#d946ef","#84cc16","#0ea5e9","#f43f5e",
-                  "#8b5cf6","#fb923c","#64748b"];
+                 "#22c55e","#6366f1","#f97316","#14b8a6","#d946ef","#84cc16","#0ea5e9","#f43f5e",
+                 "#8b5cf6","#fb923c","#64748b"];
 
 const colorMaps = {
-  materiel: {"Ordinateur":"#3b82f6","Téléphone":"#10b981","Tablette":"#f59e0b","Autre":"#a855f7","Pas de matériel":"#ec4899"},
-  canaux: {"Lieu d'activité":"#3b82f6","Autre lieu":"#10b981","À distance":"#f59e0b","À domicile":"#a855f7"},
-  durees: {"Moins de 30 min":"#3b82f6","30 min à 1 h":"#10b981","1 h à 2 h":"#f59e0b","2 h et plus":"#a855f7"},
-  genre: {"Féminin":"#ec4899","Masculin":"#3b82f6","Non communiqué":"#475569"},
-  statut: {"Sans emploi":"#ef4444","Non communiqué ou hétérogène":"#475569","Scolarisé":"#3b82f6","Retraité":"#10b981","En emploi":"#f59e0b"},
-  types: {"Accompagnement individuel":"#3b82f6","Accompagnements individuels":"#3b82f6","Atelier collectif":"#a855f7","Ateliers collectifs":"#a855f7"}
+  materiel:{"Ordinateur":"#3b82f6","Téléphone":"#10b981","Tablette":"#f59e0b","Autre":"#a855f7","Pas de matériel":"#ec4899"},
+  canaux:{"Lieu d'activité":"#3b82f6","Autre lieu":"#10b981","À distance":"#f59e0b","À domicile":"#a855f7"},
+  durees:{"Moins de 30 min":"#3b82f6","30 min à 1 h":"#10b981","1 h à 2 h":"#f59e0b","2 h et plus":"#a855f7"},
+  genre:{"Féminin":"#ec4899","Masculin":"#3b82f6","Non communiqué":"#475569"},
+  statut:{"Sans emploi":"#ef4444","Non communiqué ou hétérogène":"#475569","Scolarisé":"#3b82f6","Retraité":"#10b981","En emploi":"#f59e0b"},
+  types:{"Accompagnement individuel":"#3b82f6","Accompagnements individuels":"#3b82f6","Atelier collectif":"#a855f7","Ateliers collectifs":"#a855f7"}
 };
 
 const defaultDataset = {
-  totals: {
-    accompagnements: 0, beneficiaires: 0, nouveaux: 0, suivis: 0, anonymes: 0,
-    individuelsVal: 0, individuelsPct: 0, ateliersVal: 0, ateliersPct: 0,
-    participants: 0, activites: 0
-  },
-  themMed: [], themAdmin: [], materiel: [], canaux: [], durees: [], lieux: [], genre: [], age: [], statut: [], communes: [],
-  types: [
-    { label:'Accompagnement individuel', val: 0, pct: 0 },
-    { label:'Atelier collectif', val: 0, pct: 0 }
-  ]
+  totals:{accompagnements:0,beneficiaires:0,nouveaux:0,suivis:0,anonymes:0,
+          individuelsVal:0,individuelsPct:0,ateliersVal:0,ateliersPct:0,participants:0,activites:0},
+  themMed:[],themAdmin:[],materiel:[],canaux:[],durees:[],lieux:[],genre:[],age:[],statut:[],communes:[],
+  types:[{label:'Accompagnement individuel',val:0,pct:0},{label:'Atelier collectif',val:0,pct:0}]
 };
 
-const sourceLabels = { all: 'cumul 24-26' };
+// ===== ANNOTATIONS =====
+const ANNOT_KEY = 'coopDashboard_annotations';
+let monthAnnotations = {};
+function saveAnnotations(){ try{ localStorage.setItem(ANNOT_KEY, JSON.stringify(monthAnnotations)); }catch(e){} }
+function loadAnnotations(){ try{ const r = localStorage.getItem(ANNOT_KEY); if(r) monthAnnotations = JSON.parse(r); }catch(e){} }
 
+// ===== MOYENNE GLISSANTE =====
+let showMA = false;
+function computeMA3(values){
+  return values.map((v,i) => {
+    const slice = [values[i-1], values[i], values[i+1]].filter(x => x != null && x > 0);
+    if(slice.length < 2) return null;
+    return Math.round(slice.reduce((a,b)=>a+b,0)/slice.length * 10)/10;
+  });
+}
+
+// ===== CHART CONFIG =====
 Chart.defaults.color = '#8b95b8';
 Chart.defaults.borderColor = '#243154';
 Chart.defaults.maintainAspectRatio = false;
-Chart.defaults.font.family = "-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-Chart.defaults.animation = { duration: 900, easing: 'easeOutQuart' };
-Chart.defaults.animations.colors = { type:'color', duration: 900 };
-Chart.defaults.animations.tension = { duration: 900, easing: 'easeOutQuart', from: 0.4, to: 0.3 };
+Chart.defaults.font.family = "-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+Chart.defaults.animation = {duration:900,easing:'easeOutQuart'};
+Chart.defaults.animations.colors = {type:'color',duration:900};
 Chart.defaults.transitions.active.animation.duration = 300;
 Chart.defaults.plugins.tooltip.padding = 10;
 Chart.defaults.plugins.tooltip.cornerRadius = 8;
@@ -618,51 +517,57 @@ Chart.defaults.elements.line.hoverBorderWidth = 4;
 Chart.defaults.elements.point.hoverRadius = 7;
 Chart.defaults.elements.point.radius = 3;
 
+// Plugin annotations sur barres mensuelles
+const annotPlugin = {
+  id:'monthAnnot',
+  afterDatasetsDraw(chart){
+    if(!chart.canvas.id || chart.canvas.id !== 'chartMonthly') return;
+    const {ctx} = chart;
+    const meta = chart.getDatasetMeta(0);
+    chart.data.labels.forEach((lbl,i)=>{
+      if(!monthAnnotations[lbl]) return;
+      const bar = meta.data[i];
+      if(!bar) return;
+      ctx.save();
+      ctx.fillStyle = '#06b6d4';
+      ctx.font = '13px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText('📌', bar.x, bar.y - 10);
+      ctx.restore();
+    });
+  }
+};
+
 // ===== HELPERS =====
 function renderBars(containerId, data){
   const c = document.getElementById(containerId);
-  c.innerHTML = data.map(d => `
+  if(!c) return;
+  c.innerHTML = data.map(d=>`
     <div class="bar-row">
       <div class="top"><span>${d.label}</span><span class="val">${d.val} · ${d.pct}%</span></div>
       <div class="bar-track"><div class="bar-fill" data-width="${d.pct}" style="background:${d.color||'#3b82f6'}"></div></div>
-    </div>
-  `).join('');
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(()=>{
-      c.querySelectorAll('.bar-fill').forEach(el=>{
-        el.style.width = el.dataset.width + '%';
-      });
-    });
-  });
+    </div>`).join('');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    c.querySelectorAll('.bar-fill').forEach(el=>{ el.style.width = el.dataset.width+'%'; });
+  }));
 }
 
 const chartRegistry = {};
-function makeOrUpdateDoughnut(canvasId, labels, values, colors){
-  if(chartRegistry[canvasId]) chartRegistry[canvasId].destroy();
-  const ch = new Chart(document.getElementById(canvasId).getContext('2d'), {
+function makeOrUpdateDoughnut(id, labels, values, colors){
+  if(chartRegistry[id]) chartRegistry[id].destroy();
+  chartRegistry[id] = new Chart(document.getElementById(id).getContext('2d'),{
     type:'doughnut',
-    data:{ labels, datasets:[{ data: values, backgroundColor: colors, borderColor:'#121a32', borderWidth:2 }] },
-    options:{
-      plugins:{ legend:{ position:'right', labels:{ boxWidth:12, font:{size:11} } } },
-      cutout:'60%'
-    }
+    data:{labels,datasets:[{data:values,backgroundColor:colors,borderColor:'#121a32',borderWidth:2}]},
+    options:{plugins:{legend:{position:'right',labels:{boxWidth:12,font:{size:11}}}},cutout:'60%'}
   });
-  chartRegistry[canvasId] = ch;
-  return ch;
 }
-function makeOrUpdateHBar(canvasId, labels, values, color){
-  if(chartRegistry[canvasId]) chartRegistry[canvasId].destroy();
-  const ch = new Chart(document.getElementById(canvasId).getContext('2d'), {
+function makeOrUpdateHBar(id, labels, values, color){
+  if(chartRegistry[id]) chartRegistry[id].destroy();
+  chartRegistry[id] = new Chart(document.getElementById(id).getContext('2d'),{
     type:'bar',
-    data:{ labels, datasets:[{ data: values, backgroundColor: color, borderRadius:4 }] },
-    options:{
-      indexAxis:'y',
-      plugins:{legend:{display:false}},
-      scales:{ x:{grid:{color:'#1a2444'}}, y:{grid:{display:false}} }
-    }
+    data:{labels,datasets:[{data:values,backgroundColor:color,borderRadius:4}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'#1a2444'}},y:{grid:{display:false}}}}
   });
-  chartRegistry[canvasId] = ch;
-  return ch;
 }
 
 const valueLabelPlugin = {
@@ -670,497 +575,752 @@ const valueLabelPlugin = {
   afterDatasetsDraw(chart){
     const {ctx} = chart;
     chart.data.datasets.forEach((ds,di)=>{
-      const meta = chart.getDatasetMeta(di);
-      meta.data.forEach((bar,i)=>{
+      chart.getDatasetMeta(di).data.forEach((bar,i)=>{
         const v = ds.data[i];
-        if(v===null||v===undefined) return;
+        if(v==null) return;
         ctx.save();
-        ctx.fillStyle = '#e8ecf7';
-        ctx.font = '600 13px system-ui';
-        ctx.textBaseline = 'middle';
-        ctx.textAlign = 'left';
-        ctx.fillText(typeof v==='number' ? v.toLocaleString('fr-FR') : v, bar.x + 10, bar.y);
+        ctx.fillStyle='#e8ecf7';ctx.font='600 13px system-ui';
+        ctx.textBaseline='middle';ctx.textAlign='left';
+        ctx.fillText(typeof v==='number'?v.toLocaleString('fr-FR'):v, bar.x+10, bar.y);
         ctx.restore();
       });
     });
   }
 };
 
-function makeOrUpdateAtelHBar(canvasId, labels, values, colors){
-  if(chartRegistry[canvasId]) chartRegistry[canvasId].destroy();
-  const ctx = document.getElementById(canvasId).getContext('2d');
+function makeOrUpdateAtelHBar(id, labels, values, colors){
+  if(chartRegistry[id]) chartRegistry[id].destroy();
+  const ctx = document.getElementById(id).getContext('2d');
   const grads = colors.map(c=>{
     const g = ctx.createLinearGradient(0,0,400,0);
-    g.addColorStop(0, hexToRgba(c,0.35));
-    g.addColorStop(1, c);
+    g.addColorStop(0,hexToRgba(c,0.35)); g.addColorStop(1,c);
     return g;
   });
-  const ch = new Chart(ctx, {
+  chartRegistry[id] = new Chart(ctx,{
     type:'bar',
-    data:{ labels, datasets:[{ data: values, backgroundColor: grads, borderRadius:10, borderSkipped:false, barThickness:28 }] },
-    options:{
-      indexAxis:'y',
-      plugins:{ legend:{display:false} },
-      layout:{ padding:{ right:50 } },
-      scales:{
-        x:{ grid:{color:'#1a2444', drawBorder:false}, ticks:{color:'#7d8aad'} },
-        y:{ grid:{display:false}, ticks:{color:'#cfd6ee', font:{weight:'600', size:14}} }
-      }
-    },
+    data:{labels,datasets:[{data:values,backgroundColor:grads,borderRadius:10,borderSkipped:false,barThickness:28}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},layout:{padding:{right:50}},
+      scales:{x:{grid:{color:'#1a2444',drawBorder:false},ticks:{color:'#7d8aad'}},
+              y:{grid:{display:false},ticks:{color:'#cfd6ee',font:{weight:'600',size:14}}}}},
     plugins:[valueLabelPlugin]
   });
-  chartRegistry[canvasId] = ch;
-  return ch;
 }
 
-function colorKey(label){
-  return norm(label).toLowerCase().replace(/\s/g,'');
+function hexToRgba(hex,alpha){
+  const h=hex.replace('#','');
+  const r=parseInt(h.substring(0,2),16),g=parseInt(h.substring(2,4),16),b=parseInt(h.substring(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
 }
+
+function colorKey(label){ return norm(label).toLowerCase().replace(/\s/g,''); }
 const colorIndex = {};
 Object.keys(colorMaps).forEach(cat=>{
-  colorIndex[cat] = {};
-  Object.keys(colorMaps[cat]).forEach(k=>{ colorIndex[cat][colorKey(k)] = colorMaps[cat][k]; });
+  colorIndex[cat]={};
+  Object.keys(colorMaps[cat]).forEach(k=>{ colorIndex[cat][colorKey(k)]=colorMaps[cat][k]; });
 });
-function colorFor(category, label, i){
-  return (colorIndex[category] && colorIndex[category][colorKey(label)]) || palette[i % palette.length];
+function colorFor(cat,label,i){
+  return (colorIndex[cat]&&colorIndex[cat][colorKey(label)])||palette[i%palette.length];
 }
-
-// ===== GROWTH BADGE HTML =====
 function growthBadge(pct){
-  if(pct === null) return '';
-  const sign = pct >= 0 ? '+' : '';
-  const cls = pct > 2 ? 'up' : pct < -2 ? 'down' : 'flat';
+  if(pct===null||isNaN(pct)) return '';
+  const sign=pct>=0?'+':'';
+  const cls=pct>2?'up':pct<-2?'down':'flat';
   return `<span class="growth-badge ${cls}">${sign}${pct.toFixed(1)}%</span>`;
 }
 
-function renderAggregates(ds, periodLabel){
-  document.getElementById('agentSubtitle').textContent =
-    (ds.agentName ? ds.agentName + ' · ' : '') + 'Conseiller Numérique · Lot-et-Garonne';
+// ===== RENDU AGRÉGATS =====
+let currentDS = defaultDataset;
 
+function renderAggregates(ds, periodLabel){
+  currentDS = ds;
+  document.getElementById('agentSubtitle').textContent =
+    (ds.agentName?ds.agentName+' · ':'')+' Conseiller Numérique · Lot-et-Garonne';
   const t = ds.totals;
+
   document.getElementById('kpi-types').textContent = `${t.individuelsVal} / ${t.ateliersVal}`;
   document.getElementById('kpi-types-sub').textContent = `${t.participants} participants · ${t.activites} activités (${periodLabel})`;
   document.getElementById('kpi-benef').textContent = t.beneficiaires.toLocaleString('fr-FR');
-  const dedupNote = periodLabel.startsWith('cumul') ? ' · non dédoublonné' : '';
+  const dedupNote = periodLabel.startsWith('cumul')?' · non dédoublonné':'';
   document.getElementById('kpi-benef-sub').textContent = `${t.suivis} suivis · ${t.anonymes} anonymes (${periodLabel}${dedupNote})`;
 
-  // Fidélisation KPI
+  // Fidélisation
   const identified = t.nouveaux + t.suivis;
   if(identified > 0){
-    const newPct = Math.round((t.nouveaux / identified) * 100);
-    document.getElementById('kpi-retention').textContent = newPct + '%';
-    document.getElementById('kpi-retention-sub').textContent = `${t.nouveaux} nouveaux · ${t.suivis} suivis (identifiés)`;
+    const pct = Math.round((t.nouveaux/identified)*100);
+    document.getElementById('kpi-retention').textContent = pct+'%';
+    document.getElementById('kpi-retention-sub').textContent = `${t.nouveaux} nouveaux · ${t.suivis} suivis`;
   } else {
     document.getElementById('kpi-retention').textContent = '—';
     document.getElementById('kpi-retention-sub').textContent = 'nouveaux vs suivis';
   }
 
-  const topTheme = ds.themMed.length ? [...ds.themMed].sort((a,b)=>b.val-a.val)[0] : {label:'—', val:0, pct:0};
+  const topTheme = ds.themMed.length?[...ds.themMed].sort((a,b)=>b.val-a.val)[0]:{label:'—',val:0,pct:0};
   document.getElementById('kpi-theme').textContent = topTheme.label;
   document.getElementById('kpi-theme-sub').textContent = `${topTheme.val} accompagnements · ${topTheme.pct}% (${periodLabel})`;
 
-  // Global insight box
-  const insightBox = document.getElementById('globalInsightBox');
+  // Insight global
+  const ib = document.getElementById('globalInsightBox');
   if(t.accompagnements > 0){
-    const sharePct = (t.individuelsVal + t.ateliersVal) ?
-      Math.round((t.ateliersVal/(t.individuelsVal+t.ateliersVal))*1000)/10 : 0;
-    insightBox.innerHTML = `Sur <b>${periodLabel}</b>, <b>${t.accompagnements.toLocaleString('fr-FR')} accompagnements</b> ont été réalisés —
-      dont <b>${t.individuelsVal} individuels</b> et <b>${t.ateliersVal} ateliers</b> (${sharePct}% collectif).
-      Thème dominant : <b>${topTheme.label}</b> (${topTheme.pct}% des accompagnements).`;
-    insightBox.style.display = '';
-  } else {
-    insightBox.style.display = 'none';
-  }
+    const sharePct = (t.individuelsVal+t.ateliersVal)?Math.round((t.ateliersVal/(t.individuelsVal+t.ateliersVal))*1000)/10:0;
+    ib.innerHTML = `Sur <b>${periodLabel}</b>, <b>${t.accompagnements.toLocaleString('fr-FR')} accompagnements</b> réalisés —
+      <b>${t.individuelsVal} individuels</b> et <b>${t.ateliersVal} ateliers</b> (${sharePct}% collectif).
+      Thème dominant : <b>${topTheme.label}</b> (${topTheme.pct}%).`;
+    ib.style.display='';
+  } else { ib.style.display='none'; }
 
-  // Beneficiaires insight
-  const benefBox = document.getElementById('benefInsightBox');
+  // Insight bénéficiaires
+  const bb = document.getElementById('benefInsightBox');
   if(identified > 0){
-    const retainPct = Math.round((t.suivis / identified) * 100);
-    benefBox.innerHTML = `<b>${t.nouveaux} nouveaux bénéficiaires</b> ont été accompagnés pour la première fois (${100-retainPct}% des identifiés),
-      et <b>${t.suivis} bénéficiaires connus</b> sont revenus (${retainPct}%).
-      ${retainPct > 40 ? 'Le taux de retour est <b>élevé</b> — signe d\'un suivi de qualité.' : 'La majorité du public est <b>nouveau</b> — fort pouvoir d\'attraction du service.'}`;
-    benefBox.style.display = '';
-  } else {
-    benefBox.style.display = 'none';
-  }
+    const rPct = Math.round((t.suivis/identified)*100);
+    bb.innerHTML = `<b>${t.nouveaux} nouveaux bénéficiaires</b> accompagnés pour la 1ère fois (${100-rPct}% des identifiés),
+      et <b>${t.suivis} bénéficiaires connus</b> de retour (${rPct}%).
+      ${rPct>40?'Taux de retour <b>élevé</b> — signe d\'un suivi de qualité.':'Majorité de <b>nouveaux</b> — fort pouvoir d\'attraction du service.'}`;
+    bb.style.display='';
+  } else { bb.style.display='none'; }
 
   // Charts
-  const types = ds.types.map((tt,i)=>({...tt, color: tt.color || colorFor('types', tt.label, i)}));
-  makeOrUpdateDoughnut('chartTypes', types.map(x=>x.label), types.map(x=>x.val), types.map(x=>x.color));
+  const types = ds.types.map((tt,i)=>({...tt,color:tt.color||colorFor('types',tt.label,i)}));
+  makeOrUpdateDoughnut('chartTypes',types.map(x=>x.label),types.map(x=>x.val),types.map(x=>x.color));
 
-  const themMedNZ = ds.themMed.filter(x=>x.val>0);
-  const themAdminNZ = ds.themAdmin.filter(x=>x.val>0);
-  makeOrUpdateDoughnut('chartThemMed', themMedNZ.map(x=>x.label), themMedNZ.map(x=>x.val), palette);
-  makeOrUpdateDoughnut('chartThemAdmin', themAdminNZ.map(x=>x.label), themAdminNZ.map(x=>x.val), palette);
-  renderBars('themMedBars', ds.themMed.map((x,i)=>({...x, color: palette[i%palette.length]})));
+  const tmNZ=ds.themMed.filter(x=>x.val>0), taNZ=ds.themAdmin.filter(x=>x.val>0);
+  makeOrUpdateDoughnut('chartThemMed',tmNZ.map(x=>x.label),tmNZ.map(x=>x.val),palette);
+  makeOrUpdateDoughnut('chartThemAdmin',taNZ.map(x=>x.label),taNZ.map(x=>x.val),palette);
+  renderBars('themMedBars',ds.themMed.map((x,i)=>({...x,color:palette[i%palette.length]})));
 
-  const genreC = ds.genre.map((x,i)=>({...x, color: x.color || colorFor('genre', x.label, i)}));
-  const statutC = ds.statut.map((x,i)=>({...x, color: x.color || colorFor('statut', x.label, i)}));
-  makeOrUpdateDoughnut('chartGenre', genreC.map(x=>x.label), genreC.map(x=>x.val), genreC.map(x=>x.color));
-  makeOrUpdateDoughnut('chartAge', ds.age.map(x=>x.label), ds.age.map(x=>x.val), palette);
-  makeOrUpdateDoughnut('chartStatut', statutC.map(x=>x.label), statutC.map(x=>x.val), statutC.map(x=>x.color));
+  const genreC=ds.genre.map((x,i)=>({...x,color:x.color||colorFor('genre',x.label,i)}));
+  const statutC=ds.statut.map((x,i)=>({...x,color:x.color||colorFor('statut',x.label,i)}));
+  makeOrUpdateDoughnut('chartGenre',genreC.map(x=>x.label),genreC.map(x=>x.val),genreC.map(x=>x.color));
+  makeOrUpdateDoughnut('chartAge',ds.age.map(x=>x.label),ds.age.map(x=>x.val),palette);
+  makeOrUpdateDoughnut('chartStatut',statutC.map(x=>x.label),statutC.map(x=>x.val),statutC.map(x=>x.color));
 
-  makeOrUpdateHBar('chartLieux', ds.lieux.map(x=>x.label), ds.lieux.map(x=>x.val), '#3b82f6');
+  makeOrUpdateHBar('chartLieux',ds.lieux.map(x=>x.label),ds.lieux.map(x=>x.val),'#3b82f6');
+  const canauxC=ds.canaux.map((x,i)=>({...x,color:x.color||colorFor('canaux',x.label,i)}));
+  makeOrUpdateDoughnut('chartCanaux',canauxC.map(x=>x.label),canauxC.map(x=>x.val),canauxC.map(x=>x.color));
 
-  const canauxC = ds.canaux.map((x,i)=>({...x, color: x.color || colorFor('canaux', x.label, i)}));
-  makeOrUpdateDoughnut('chartCanaux', canauxC.map(x=>x.label), canauxC.map(x=>x.val), canauxC.map(x=>x.color));
+  renderBars('durees',ds.durees.map((x,i)=>({...x,color:x.color||colorFor('durees',x.label,i)})));
+  renderBars('canaux',canauxC);
+  renderBars('materiel',ds.materiel.map((x,i)=>({...x,color:x.color||colorFor('materiel',x.label,i)})));
+  renderBars('communes',ds.communes);
 
-  const dureesC = ds.durees.map((x,i)=>({...x, color: x.color || colorFor('durees', x.label, i)}));
-  const materielC = ds.materiel.map((x,i)=>({...x, color: x.color || colorFor('materiel', x.label, i)}));
-  renderBars('durees', dureesC);
-  renderBars('canaux', canauxC);
-  renderBars('materiel', materielC);
-  renderBars('communes', ds.communes);
+  // Lieux insights
+  buildLieuxInsights(ds);
 
-  // Durées chart (lieux tab)
-  buildDureesYearChart();
+  // Ateliers
+  const ratio = t.ateliersVal?(t.participants/t.ateliersVal):0;
+  const seancesEco = Math.max(0, t.participants-t.ateliersVal);
+  const sharePct = (t.individuelsVal+t.ateliersVal)?Math.round((t.ateliersVal/(t.individuelsVal+t.ateliersVal))*1000)/10:0;
+  const economyPct = t.participants?Math.round((seancesEco/t.participants)*100):0;
 
-  // ===== ATELIERS =====
   document.getElementById('kpi-atel-nb').textContent = t.ateliersVal.toLocaleString('fr-FR');
   document.getElementById('kpi-atel-nb-sub').textContent = `${t.ateliersPct}% du total (${periodLabel})`;
   document.getElementById('kpi-atel-part').textContent = t.participants.toLocaleString('fr-FR');
   document.getElementById('kpi-atel-part-sub').textContent = `sur ${periodLabel}`;
-  const ratio = t.ateliersVal ? (t.participants / t.ateliersVal) : 0;
   document.getElementById('kpi-atel-ratio').textContent = ratio.toFixed(1);
   document.getElementById('kpi-atel-ratio-sub').textContent = `${t.participants} participants / ${t.ateliersVal} ateliers`;
-
-  const seancesEco = Math.max(0, t.participants - t.ateliersVal);
   document.getElementById('kpi-atel-equiv').textContent = seancesEco.toLocaleString('fr-FR');
   document.getElementById('kpi-atel-equiv-sub').textContent = `${t.participants} participants − ${t.ateliersVal} ateliers`;
-
-  document.getElementById('kpi-atel-multiplier').textContent = ratio.toFixed(1) + '×';
-  document.getElementById('kpi-atel-multiplier-sub').textContent = `vs 1× pour une séance individuelle`;
-
-  const sharePct = (t.individuelsVal + t.ateliersVal) ? Math.round((t.ateliersVal/(t.individuelsVal+t.ateliersVal))*1000)/10 : 0;
-  const economyPct = t.participants ? Math.round((seancesEco / t.participants) * 100) : 0;
+  document.getElementById('kpi-atel-multiplier').textContent = ratio.toFixed(1)+'×';
+  document.getElementById('kpi-atel-multiplier-sub').textContent = 'vs 1× en séance individuelle';
   document.getElementById('atelInsightText').innerHTML = `
     Sur ${periodLabel}, <b>${t.ateliersVal} ateliers</b> ont rassemblé <b>${t.participants} participants</b>
-    (${ratio.toFixed(1)} en moyenne par séance), soit <b>${sharePct}%</b> de l'activité totale
-    (${t.individuelsVal} accompagnements individuels par ailleurs).<br><br>
+    (${ratio.toFixed(1)} en moyenne), soit <b>${sharePct}%</b> de l'activité totale.<br><br>
     Grâce au format collectif, <b>${seancesEco.toLocaleString('fr-FR')} séances individuelles ont été économisées</b>
-    — soit <b>${economyPct}% d'économie</b> par rapport à un service 100% individuel.
-    Chaque atelier a touché en moyenne <b>${ratio.toFixed(1)} personnes simultanément</b>,
-    un multiplicateur d'impact à valoriser dans tout bilan d'activité.
-  `;
+    — soit <b>${economyPct}% d'économie</b> vs un service 100% individuel.
+    Chaque atelier a touché <b>${ratio.toFixed(1)} personnes simultanément</b> : argument clé pour le bilan d'activité.`;
 
-  const atelTypesC = ds.types.map((x,i)=>({...x, color: x.color || colorFor('types', x.label, i)}));
-  makeOrUpdateDoughnut('chartAtelTypes', atelTypesC.map(x=>x.label), atelTypesC.map(x=>x.val), atelTypesC.map(x=>x.color));
+  const atelTypesC=ds.types.map((x,i)=>({...x,color:x.color||colorFor('types',x.label,i)}));
+  makeOrUpdateDoughnut('chartAtelTypes',atelTypesC.map(x=>x.label),atelTypesC.map(x=>x.val),atelTypesC.map(x=>x.color));
 
   buildAtelYearCharts();
   buildThemYearChart();
+  buildDureesYearChart();
+  generateRapport();
 }
 
 const yearData = {};
+const atelYearColors = {'2024':'#3b82f6','2025':'#f59e0b','2026':'#a855f7'};
 
-// ===== ATELIERS : comparaison par année =====
-const atelYearColors = { '2024':'#3b82f6', '2025':'#f59e0b', '2026':'#a855f7' };
+// ===== LIEUX INSIGHTS =====
+function buildLieuxInsights(ds){
+  const c = document.getElementById('lieuxInsightCards');
+  if(!ds.lieux || ds.lieux.length === 0){ c.innerHTML=''; return; }
+
+  const top = ds.lieux[0];
+  const y24lieux = yearData['2024']?.lieux || [];
+  const y25lieux = yearData['2025']?.lieux || [];
+
+  let growthHTML = '';
+  if(y24lieux.length && y25lieux.length){
+    // Trouver la plus forte croissance de lieu entre 2024 et 2025
+    let bestGrowth = null, bestPct = -Infinity;
+    y25lieux.forEach(l25=>{
+      const l24 = y24lieux.find(x=>x.label===l25.label);
+      if(l24 && l24.val > 0){
+        const g = (l25.val-l24.val)/l24.val*100;
+        if(g > bestPct){ bestPct=g; bestGrowth={label:l25.label,v24:l24.val,v25:l25.val,g}; }
+      }
+    });
+    if(bestGrowth){
+      const sign = bestGrowth.g>=0?'+':'';
+      growthHTML = `<div class="lieu-card">
+        <div class="lc-label">📈 Plus forte croissance 2024→2025</div>
+        <div class="lc-name">${bestGrowth.label}</div>
+        <div class="lc-val">${bestGrowth.v24} → ${bestGrowth.v25} activités · <span style="color:var(--green);font-weight:700;">${sign}${bestGrowth.g.toFixed(0)}%</span></div>
+      </div>`;
+    }
+  }
+
+  c.innerHTML = `
+    <div class="lieu-card">
+      <div class="lc-label">🏆 Lieu le plus actif</div>
+      <div class="lc-name">${top.label}</div>
+      <div class="lc-val">${top.val} activités · ${top.pct}% du total</div>
+    </div>
+    ${growthHTML || `<div class="lieu-card"><div class="lc-label">💡 Croissance par lieu</div><div class="lc-name" style="font-size:13px;color:var(--muted);">Importe 2024 + 2025 pour voir la croissance par lieu</div></div>`}
+  `;
+}
+
+// ===== ATELIERS PAR ANNÉE =====
 function buildAtelYearCharts(){
-  const years = ['2024','2025','2026'];
-  const ateliersVals = years.map(y => yearData[y] ? yearData[y].totals.ateliersVal : null);
-  const participantsVals = years.map(y => yearData[y] ? yearData[y].totals.participants : null);
-  const ratios = years.map((y,i) => (yearData[y] && ateliersVals[i]) ? +(participantsVals[i]/ateliersVals[i]).toFixed(1) : null);
-  const colors = years.map(y => atelYearColors[y]);
-
-  makeOrUpdateAtelHBar('chartAtelYears', years, ateliersVals.map(v=>v??0), colors);
-  makeOrUpdateAtelHBar('chartAtelPartYears', years, participantsVals.map(v=>v??0), colors);
-
-  const ratioBars = years.map((y,i) => ({
-    label: y,
-    val: ratios[i] ?? 0,
-    pct: ratios[i] ? Math.min(100, ratios[i]*10) : 0,
-    color: atelYearColors[y]
+  const years=['2024','2025','2026'];
+  const av=years.map(y=>yearData[y]?yearData[y].totals.ateliersVal:null);
+  const pv=years.map(y=>yearData[y]?yearData[y].totals.participants:null);
+  const ratios=years.map((y,i)=>(yearData[y]&&av[i])?(pv[i]/av[i]).toFixed(1):null);
+  const colors=years.map(y=>atelYearColors[y]);
+  makeOrUpdateAtelHBar('chartAtelYears',years,av.map(v=>v??0),colors);
+  makeOrUpdateAtelHBar('chartAtelPartYears',years,pv.map(v=>v??0),colors);
+  renderBars('atelRatioBars',years.map((y,i)=>({label:y,val:ratios[i]??0,pct:ratios[i]?Math.min(100,ratios[i]*10):0,color:atelYearColors[y]})));
+  renderBars('atelShareBars',years.map(y=>{
+    const d=yearData[y], tot=d?(d.totals.individuelsVal+d.totals.ateliersVal):0;
+    const pct=(d&&tot)?Math.round((d.totals.ateliersVal/tot)*1000)/10:0;
+    return {label:y,val:pct+'%',pct,color:atelYearColors[y]};
   }));
-  renderBars('atelRatioBars', ratioBars);
-
-  const shareBars = years.map(y => {
-    const d = yearData[y];
-    const tot = d ? (d.totals.individuelsVal + d.totals.ateliersVal) : 0;
-    const pct = (d && tot) ? Math.round((d.totals.ateliersVal/tot)*1000)/10 : 0;
-    return { label: y, val: pct, pct: pct, color: atelYearColors[y] };
-  });
-  renderBars('atelShareBars', shareBars.map(b=>({...b, val: b.val+'%'})));
 }
 
 // ===== THÉMATIQUES PAR ANNÉE =====
 function buildThemYearChart(){
-  const years = ['2024','2025','2026'].filter(y => yearData[y]);
-  if(years.length < 2){ if(chartRegistry['chartThemYear']) chartRegistry['chartThemYear'].destroy(); return; }
-
-  // Gather top 6 themes from the most recent loaded year
-  const lastYear = years[years.length-1];
-  const topThemes = [...(yearData[lastYear].themMed||[])].sort((a,b)=>b.val-a.val).slice(0,6).map(x=>x.label);
-
-  const yearColors = { '2024':'#3b82f6', '2025':'#f59e0b', '2026':'#a855f7' };
-  const datasets = years.map(y => {
-    const data = topThemes.map(th => {
-      const found = (yearData[y].themMed||[]).find(x=>x.label===th);
-      return found ? found.val : 0;
-    });
-    return {
-      label: y,
-      data,
-      backgroundColor: hexToRgba(yearColors[y], 0.8),
-      borderColor: yearColors[y],
-      borderWidth: 1,
-      borderRadius: 4,
-      maxBarThickness: 30
-    };
-  });
-
+  const years=['2024','2025','2026'].filter(y=>yearData[y]);
+  if(years.length<2){ if(chartRegistry['chartThemYear']) chartRegistry['chartThemYear'].destroy(); return; }
+  const lastY=years[years.length-1];
+  const topThemes=[...(yearData[lastY].themMed||[])].sort((a,b)=>b.val-a.val).slice(0,6).map(x=>x.label);
+  const ycol={'2024':'#3b82f6','2025':'#f59e0b','2026':'#a855f7'};
+  const datasets=years.map(y=>({
+    label:y,
+    data:topThemes.map(th=>(yearData[y].themMed||[]).find(x=>x.label===th)?.val||0),
+    backgroundColor:hexToRgba(ycol[y],0.8),borderColor:ycol[y],borderWidth:1,borderRadius:4,maxBarThickness:30
+  }));
   if(chartRegistry['chartThemYear']) chartRegistry['chartThemYear'].destroy();
-  chartRegistry['chartThemYear'] = new Chart(document.getElementById('chartThemYear').getContext('2d'), {
-    type:'bar',
-    data:{ labels: topThemes, datasets },
-    options:{
-      plugins:{ legend:{ position:'top', labels:{boxWidth:12} } },
-      scales:{
-        x:{ grid:{display:false}, ticks:{maxRotation:30} },
-        y:{ grid:{color:'#1a2444'}, beginAtZero:true }
-      }
-    }
+  chartRegistry['chartThemYear']=new Chart(document.getElementById('chartThemYear').getContext('2d'),{
+    type:'bar',data:{labels:topThemes,datasets},
+    options:{plugins:{legend:{position:'top',labels:{boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{maxRotation:30}},y:{grid:{color:'#1a2444'},beginAtZero:true}}}
   });
-
-  // Insight: thème en plus forte croissance
-  const growthBox = document.getElementById('themGrowthBox');
-  if(years.includes('2024') && years.includes('2025')){
-    let bestTheme = null, bestGrowth = -Infinity;
-    topThemes.forEach(th => {
-      const v24 = (yearData['2024'].themMed||[]).find(x=>x.label===th)?.val || 0;
-      const v25 = (yearData['2025'].themMed||[]).find(x=>x.label===th)?.val || 0;
-      if(v24 > 0){
-        const g = (v25-v24)/v24*100;
-        if(g > bestGrowth){ bestGrowth = g; bestTheme = {label:th, v24, v25, g}; }
-      }
+  // Thème en croissance
+  const gb=document.getElementById('themGrowthBox');
+  if(years.includes('2024')&&years.includes('2025')){
+    let best=null,bestG=-Infinity;
+    topThemes.forEach(th=>{
+      const v24=(yearData['2024'].themMed||[]).find(x=>x.label===th)?.val||0;
+      const v25=(yearData['2025'].themMed||[]).find(x=>x.label===th)?.val||0;
+      if(v24>0){const g=(v25-v24)/v24*100;if(g>bestG){bestG=g;best={label:th,v24,v25,g};}}
     });
-    if(bestTheme){
-      const sign = bestTheme.g >= 0 ? '+' : '';
-      growthBox.innerHTML = `📈 Thème en plus forte croissance (2024→2025) : <b>${bestTheme.label}</b> —
-        ${bestTheme.v24} → ${bestTheme.v25} accompagnements (<b>${sign}${bestTheme.g.toFixed(0)}%</b>).`;
-      growthBox.style.display = '';
+    if(best){
+      gb.innerHTML=`📈 Thème en plus forte croissance (2024→2025) : <b>${best.label}</b> — ${best.v24} → ${best.v25} accompagnements (<b>${best.g>=0?'+':''}${best.g.toFixed(0)}%</b>).`;
+      gb.style.display='';
     }
-  } else {
-    growthBox.style.display = 'none';
-  }
+  } else { gb.style.display='none'; }
 }
 
-// ===== DURÉES PAR ANNÉE (lieux tab) =====
+// ===== DURÉES PAR ANNÉE =====
 function buildDureesYearChart(){
-  const years = ['2024','2025','2026'].filter(y => yearData[y]);
-  if(years.length < 1){ if(chartRegistry['chartDureesYear']) chartRegistry['chartDureesYear'].destroy(); return; }
-  const dureesLabels = ['Moins de 30 min','30 min à 1 h','1 h à 2 h','2 h et plus'];
-  const yearColors = { '2024':'#3b82f6', '2025':'#f59e0b', '2026':'#a855f7' };
-  const datasets = years.map(y => {
-    const data = dureesLabels.map(dl => {
-      const found = (yearData[y].durees||[]).find(x => norm(x.label).toLowerCase().replace(/\s/g,'') === norm(dl).toLowerCase().replace(/\s/g,''));
-      return found ? found.val : 0;
-    });
-    return { label:y, data, backgroundColor: hexToRgba(yearColors[y],0.8), borderRadius:4, maxBarThickness:26 };
-  });
+  const years=['2024','2025','2026'].filter(y=>yearData[y]);
+  if(!years.length){ if(chartRegistry['chartDureesYear']) chartRegistry['chartDureesYear'].destroy(); return; }
+  const dls=['Moins de 30 min','30 min à 1 h','1 h à 2 h','2 h et plus'];
+  const ycol={'2024':'#3b82f6','2025':'#f59e0b','2026':'#a855f7'};
+  const datasets=years.map(y=>({
+    label:y,
+    data:dls.map(dl=>(yearData[y].durees||[]).find(x=>colorKey(x.label)===colorKey(dl))?.val||0),
+    backgroundColor:hexToRgba(ycol[y],0.8),borderRadius:4,maxBarThickness:26
+  }));
   if(chartRegistry['chartDureesYear']) chartRegistry['chartDureesYear'].destroy();
-  chartRegistry['chartDureesYear'] = new Chart(document.getElementById('chartDureesYear').getContext('2d'), {
-    type:'bar',
-    data:{ labels: dureesLabels, datasets },
-    options:{
-      plugins:{ legend:{ position:'top', labels:{boxWidth:12} } },
-      scales:{ x:{grid:{display:false}}, y:{grid:{color:'#1a2444'}, beginAtZero:true} }
-    }
+  chartRegistry['chartDureesYear']=new Chart(document.getElementById('chartDureesYear').getContext('2d'),{
+    type:'bar',data:{labels:dls,datasets},
+    options:{plugins:{legend:{position:'top',labels:{boxWidth:12}}},scales:{x:{grid:{display:false}},y:{grid:{color:'#1a2444'},beginAtZero:true}}}
   });
 }
 
-renderAggregates(defaultDataset, 'cumul 24-26');
-function monthYear(label){ return '20'+label.split('/')[1]; }
+// ===== RAPPORT AUTOMATIQUE =====
+function generateRapport(){
+  const activeBtn = document.querySelector('.year-btn.active');
+  const year = activeBtn?activeBtn.dataset.year:'all';
+  const loadedYears = Object.keys(yearData).sort();
+  let ds = currentDS;
+  const periodeLabel = year==='all'?`cumul ${loadedYears.join('+')}`:`année ${year}`;
 
+  if(ds.totals.accompagnements === 0){
+    document.getElementById('rapportContent').textContent = 'Importez des données via "Importer" pour générer le rapport.';
+    return;
+  }
+
+  const t = ds.totals;
+  const ratio = t.ateliersVal?(t.participants/t.ateliersVal):0;
+  const seancesEco = Math.max(0,t.participants-t.ateliersVal);
+  const sharePct = (t.individuelsVal+t.ateliersVal)?((t.ateliersVal/(t.individuelsVal+t.ateliersVal))*100).toFixed(1):0;
+  const identified = t.nouveaux+t.suivis;
+  const newPct = identified?Math.round((t.nouveaux/identified)*100):0;
+  const retPct = identified?Math.round((t.suivis/identified)*100):0;
+
+  const nonZero = monthly.values.filter(v=>v>0);
+  const avgMonth = nonZero.length?Math.round(monthly.values.reduce((a,b)=>a+b,0)/nonZero.length*10)/10:0;
+
+  const topThemes = [...ds.themMed].sort((a,b)=>b.val-a.val).slice(0,3);
+  const topAdmin = [...ds.themAdmin].sort((a,b)=>b.val-a.val).slice(0,3);
+  const topLieux = ds.lieux.slice(0,3);
+  const topGenre = [...ds.genre].sort((a,b)=>b.val-a.val)[0]||{label:'—',pct:0};
+  const topAge = [...ds.age].sort((a,b)=>b.val-a.val)[0]||{label:'—',pct:0};
+  const topStatut = [...ds.statut].filter(x=>!x.label.includes('hétérogène')&&!x.label.includes('communiqué')).sort((a,b)=>b.val-a.val)[0]||{label:'—',pct:0};
+  const topCanal = [...ds.canaux].sort((a,b)=>b.val-a.val)[0]||{label:'—',pct:0};
+  const topDuree = [...ds.durees].sort((a,b)=>b.val-a.val)[0]||{label:'—',pct:0};
+
+  // Croissance YoY
+  let growthLine='';
+  const y24t=sumYear('2024'),y25t=sumYear('2025');
+  if(y24t>0&&y25t>0){ const g=((y25t-y24t)/y24t*100); growthLine=`\nL'activité a progressé de ${g>=0?'+':''}${g.toFixed(0)}% entre 2024 (${y24t}) et 2025 (${y25t}).`; }
+  const h1_24=sumH1('2024'),h1_25=sumH1('2025'),h1_26=sumH1('2026');
+  if(h1_25>0&&h1_26>0){ const g=((h1_26-h1_25)/h1_25*100); growthLine+=`\nCroissance H1 2026/2025 : ${g>=0?'+':''}${g.toFixed(0)}% (${h1_25} → ${h1_26}).`; }
+
+  // Projection
+  const months26=monthly.labels.filter(l=>'20'+l.split('/')[1]==='2026'&&monthly.values[monthly.labels.indexOf(l)]>0).length;
+  const proj26 = months26>0?Math.round(h1_26/months26*12):0;
+  const projLine = proj26>0?`\nProjection 2026 (à ce rythme, 12 mois) : ~${proj26.toLocaleString('fr-FR')} accompagnements.`:'';
+
+  const dt = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+
+  const rapport = `RAPPORT D'ACTIVITÉ — CONSEILLER NUMÉRIQUE
+Département de Lot-et-Garonne${t.accompagnements>0&&ds.agentName?' · '+ds.agentName:''}
+Période : ${periodeLabel}
+Généré le : ${dt}
+
+${'═'.repeat(55)}
+
+1. ACTIVITÉ GÉNÉRALE
+${'─'.repeat(40)}
+
+Sur la période "${periodeLabel}", ${t.accompagnements.toLocaleString('fr-FR')} accompagnements
+ont été réalisés, dont :
+  • ${t.individuelsVal} accompagnements individuels (${t.individuelsPct}%)
+  • ${t.ateliersVal} ateliers collectifs (${t.ateliersPct}%)
+  • ${t.activites} activités au total
+
+Moyenne mensuelle : ${avgMonth} accompagnements / mois.${growthLine}${projLine}
+
+
+${'═'.repeat(55)}
+
+2. PUBLIC ACCOMPAGNÉ
+${'─'.repeat(40)}
+
+${t.beneficiaires.toLocaleString('fr-FR')} bénéficiaires accompagnés sur la période.
+${identified>0?`  • ${t.nouveaux} nouveaux (${newPct}% des identifiés)
+  • ${t.suivis} bénéficiaires de retour (${retPct}%)
+  • ${t.anonymes} anonymes`:'Données de suivi non disponibles.'}
+
+Profil démographique :
+  • Genre dominant       : ${topGenre.label} (${topGenre.pct}%)
+  • Tranche d'âge        : ${topAge.label} (${topAge.pct}%)
+  • Statut principal     : ${topStatut.label} (${topStatut.pct}%)
+${ds.communes.length>0?`\nPrincipales communes de résidence :
+${ds.communes.slice(0,5).map((c,i)=>`  ${i+1}. ${c.label} (${c.val})`).join('\n')}`:``}
+
+
+${'═'.repeat(55)}
+
+3. THÉMATIQUES
+${'─'.repeat(40)}
+
+Médiation numérique — Top 3 :
+${topThemes.map((th,i)=>`  ${i+1}. ${th.label} : ${th.val} accompagnements (${th.pct}%)`).join('\n')||'  (données non disponibles)'}
+
+Démarches administratives — Top 3 :
+${topAdmin.map((th,i)=>`  ${i+1}. ${th.label} : ${th.val} accompagnements (${th.pct}%)`).join('\n')||'  (données non disponibles)'}
+
+
+${'═'.repeat(55)}
+
+4. FORMAT ET CANAUX
+${'─'.repeat(40)}
+
+Canal principal    : ${topCanal.label} (${topCanal.pct}%)
+Durée typique      : ${topDuree.label} (${topDuree.pct}%)
+
+
+${'═'.repeat(55)}
+
+5. ATELIERS COLLECTIFS
+${'─'.repeat(40)}
+
+${t.ateliersVal} ateliers collectifs réalisés sur la période.
+  • ${t.participants} participants cumulés (moyenne : ${ratio.toFixed(1)} par séance)
+  • ${sharePct}% de l'activité totale
+  • ${seancesEco.toLocaleString('fr-FR')} séances individuelles économisées
+    grâce au format collectif (${t.participants>0?Math.round(seancesEco/t.participants*100):0}% d'économie)
+
+Le format collectif constitue un levier d'efficience
+à valoriser dans les bilans institutionnels.
+
+
+${'═'.repeat(55)}
+
+6. LIEUX D'ACTIVITÉ
+${'─'.repeat(40)}
+
+${topLieux.length>0?`Top ${topLieux.length} lieux :
+${topLieux.map((l,i)=>`  ${i+1}. ${l.label} : ${l.val} activités (${l.pct}%)`).join('\n')}`:'(données non disponibles)'}
+
+${'─'.repeat(55)}
+Rapport généré automatiquement depuis le Dashboard COOP
+Département de Lot-et-Garonne`;
+
+  document.getElementById('rapportContent').textContent = rapport;
+}
+
+// ===== EXPORT PDF =====
+async function exportPDF(){
+  const loader = document.getElementById('pdfLoading');
+  loader.style.display='inline';
+  try{
+    if(!window.jspdf){
+      await new Promise((resolve,reject)=>{
+        const s=document.createElement('script');
+        s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        s.onload=resolve; s.onerror=reject;
+        document.head.appendChild(s);
+      });
+    }
+  } catch(e){
+    loader.style.display='none';
+    alert('Impossible de charger jsPDF (connexion internet requise).\n\nAlternatif : utilisez Ctrl+P → "Enregistrer en PDF".');
+    return;
+  }
+
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({orientation:'p',unit:'mm',format:'a4'});
+  const W=210, H=297, M=14, CW=W-2*M;
+
+  const activeBtn=document.querySelector('.year-btn.active');
+  const year=activeBtn?activeBtn.dataset.year:'all';
+  const loadedYears=Object.keys(yearData).sort();
+  const periodeLabel=year==='all'?`Cumul ${loadedYears.join('+')||'2024-2026'}`:`Année ${year}`;
+  const ds=currentDS;
+  const t=ds.totals;
+
+  let py=M;
+  const nl=(n=5)=>{py+=n;};
+
+  const checkPage=(need=30)=>{
+    if(py+need>H-M){doc.addPage();py=M;drawPageHeader();}
+  };
+
+  const drawPageHeader=()=>{
+    doc.setFillColor(59,130,246);
+    doc.rect(0,0,W,18,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(12);doc.setFont(undefined,'bold');
+    doc.text('RAPPORT D\'ACTIVITÉ — CONSEILLER NUMÉRIQUE · CD47',M,11);
+    doc.setFontSize(9);doc.setFont(undefined,'normal');
+    doc.text(`${periodeLabel}  ·  ${ds.agentName||''}`,M,16);
+    doc.text(`${new Date().toLocaleDateString('fr-FR')}`,W-M,16,{align:'right'});
+    doc.setTextColor(0,0,0);
+    py=24;
+  };
+
+  const addSection=(title,r,g,b)=>{
+    checkPage(16);
+    doc.setFillColor(r,g,b);
+    doc.roundedRect(M,py,CW,8,1.5,1.5,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(10);doc.setFont(undefined,'bold');
+    doc.text(title,M+4,py+5.5);
+    doc.setTextColor(30,40,80);
+    py+=11;
+  };
+
+  const addKPIRow=(kpis)=>{
+    checkPage(22);
+    const w=CW/kpis.length;
+    kpis.forEach((k,i)=>{
+      const x=M+i*w;
+      doc.setFillColor(240,244,255);
+      doc.roundedRect(x,py,w-2,18,1.5,1.5,'F');
+      doc.setFontSize(7);doc.setTextColor(100,120,160);doc.setFont(undefined,'normal');
+      doc.text((k.label||'').toUpperCase().slice(0,22),x+3,py+5);
+      doc.setFontSize(15);doc.setTextColor(...(k.color||[30,60,140]));doc.setFont(undefined,'bold');
+      doc.text(String(k.value).slice(0,12),x+3,py+14);
+    });
+    py+=22;
+  };
+
+  const addText=(text,size=9,bold=false,color=[40,50,80])=>{
+    doc.setFontSize(size);doc.setFont(undefined,bold?'bold':'normal');doc.setTextColor(...color);
+    const lines=doc.splitTextToSize(text,CW);
+    lines.forEach(line=>{checkPage(6);doc.text(line,M,py);py+=5;});
+  };
+
+  const addChart=(chartObj,w=CW,h=52)=>{
+    if(!chartObj) return;
+    checkPage(h+4);
+    try{
+      const img=chartObj.toBase64Image('image/jpeg',0.88);
+      doc.addImage(img,'JPEG',M,py,w,h);
+      py+=h+4;
+    }catch(e){console.warn('Chart export skip',e);}
+  };
+
+  // === PAGE 1 ===
+  drawPageHeader();
+
+  addSection('ACTIVITÉ GÉNÉRALE',59,130,246);
+  addKPIRow([
+    {label:'Accompagnements',value:t.accompagnements.toLocaleString('fr-FR'),color:[59,130,246]},
+    {label:'Individuels',value:t.individuelsVal.toLocaleString('fr-FR'),color:[16,185,129]},
+    {label:'Ateliers collectifs',value:t.ateliersVal.toLocaleString('fr-FR'),color:[168,85,247]},
+    {label:'Bénéficiaires',value:t.beneficiaires.toLocaleString('fr-FR'),color:[245,158,11]}
+  ]);
+  nl(2);
+
+  addSection('ÉVOLUTION MENSUELLE',168,85,247);
+  let chartEvo=chartEvolutionFull||chartMonthly;
+  addChart(chartEvo,CW,48);
+
+  const y24t=sumYear('2024'),y25t=sumYear('2025'),h1_25=sumH1('2025'),h1_26=sumH1('2026');
+  if(y24t>0&&y25t>0){
+    const g=((y25t-y24t)/y24t*100);
+    addText(`Progression 2024→2025 : ${g>=0?'+':''}${g.toFixed(0)}%  (${y24t} → ${y25t} accompagnements)`,9);
+  }
+  if(h1_25>0&&h1_26>0){
+    const g=((h1_26-h1_25)/h1_25*100);
+    addText(`Croissance H1 2025→2026 : ${g>=0?'+':''}${g.toFixed(0)}%  (${h1_25} → ${h1_26})`,9);
+  }
+  nl(3);
+
+  addSection('THÉMATIQUES DOMINANTES',16,185,129);
+  const tmChart=chartRegistry['chartThemMed'];
+  if(tmChart) addChart(tmChart,CW*0.55,48);
+  const topT=[...ds.themMed].sort((a,b)=>b.val-a.val).slice(0,5);
+  topT.forEach((th,i)=>addText(`${i+1}. ${th.label} : ${th.val} accompagnements (${th.pct}%)`,9));
+
+  // === PAGE 2 ===
+  doc.addPage(); py=M; drawPageHeader();
+
+  addSection('PUBLIC ACCOMPAGNÉ',245,158,11);
+  const identified=t.nouveaux+t.suivis;
+  if(identified>0){
+    addKPIRow([
+      {label:'Nouveaux',value:t.nouveaux.toLocaleString('fr-FR'),color:[59,130,246]},
+      {label:'Suivis',value:t.suivis.toLocaleString('fr-FR'),color:[16,185,129]},
+      {label:'Anonymes',value:t.anonymes.toLocaleString('fr-FR'),color:[100,116,139]},
+      {label:'% Nouveaux',value:Math.round(t.nouveaux/identified*100)+'%',color:[168,85,247]}
+    ]);
+  }
+  // Genre + Âge côte à côte
+  const gW=CW/2-2;
+  checkPage(50);
+  if(chartRegistry['chartGenre']) try{doc.addImage(chartRegistry['chartGenre'].toBase64Image('image/jpeg',0.88),'JPEG',M,py,gW,44);}catch(e){}
+  if(chartRegistry['chartAge']) try{doc.addImage(chartRegistry['chartAge'].toBase64Image('image/jpeg',0.88),'JPEG',M+gW+4,py,gW,44);}catch(e){}
+  py+=48;
+
+  const topG=[...ds.genre].sort((a,b)=>b.val-a.val)[0];
+  const topA=[...ds.age].sort((a,b)=>b.val-a.val)[0];
+  const topSt=[...ds.statut].filter(x=>!x.label.includes('hétérogène')&&!x.label.includes('communiqué')).sort((a,b)=>b.val-a.val)[0];
+  if(topG) addText(`Genre dominant : ${topG.label} (${topG.pct}%)`,9);
+  if(topA) addText(`Tranche d'âge : ${topA.label} (${topA.pct}%)`,9);
+  if(topSt) addText(`Statut : ${topSt.label} (${topSt.pct}%)`,9);
+  nl(3);
+
+  addSection('ATELIERS COLLECTIFS',168,85,247);
+  const ratio=t.ateliersVal?(t.participants/t.ateliersVal):0;
+  const seancesEco=Math.max(0,t.participants-t.ateliersVal);
+  const sharePct=((t.individuelsVal+t.ateliersVal)?t.ateliersVal/(t.individuelsVal+t.ateliersVal)*100:0).toFixed(1);
+  addKPIRow([
+    {label:'Ateliers',value:t.ateliersVal,color:[168,85,247]},
+    {label:'Participants',value:t.participants,color:[59,130,246]},
+    {label:'Moy./atelier',value:ratio.toFixed(1),color:[245,158,11]},
+    {label:'Séances économisées',value:seancesEco.toLocaleString('fr-FR'),color:[16,185,129]}
+  ]);
+  addText(`Format collectif : ${sharePct}% de l'activité totale.`,9);
+  addText(`Multiplicateur d'impact : ${ratio.toFixed(1)}× (vs 1× en individuel).`,9);
+  nl(3);
+
+  addSection('LIEUX D\'ACTIVITÉ',6,182,212);
+  if(chartRegistry['chartLieux']) addChart(chartRegistry['chartLieux'],CW,44);
+  ds.lieux.slice(0,5).forEach((l,i)=>addText(`${i+1}. ${l.label} : ${l.val} activités (${l.pct}%)`,9));
+
+  const fname=`rapport-conum-${periodeLabel.replace(/\s+/g,'-').toLowerCase()}-${new Date().toISOString().slice(0,10)}.pdf`;
+  doc.save(fname);
+  loader.style.display='none';
+}
+
+// ===== CHARTS MENSUELS =====
+function monthYear(label){ return '20'+label.split('/')[1]; }
 function getFilteredMonthly(year){
   if(year==='all') return monthly;
-  const idx = monthly.labels.map((l,i)=>i).filter(i=>monthYear(monthly.labels[i])===year);
-  return { labels: idx.map(i=>monthly.labels[i]), values: idx.map(i=>monthly.values[i]) };
+  const idx=monthly.labels.map((l,i)=>i).filter(i=>monthYear(monthly.labels[i])===year);
+  return {labels:idx.map(i=>monthly.labels[i]),values:idx.map(i=>monthly.values[i])};
 }
 
 let chartMonthly, chartEvolutionFull;
 
 function updateKPIs(year){
-  const data = getFilteredMonthly(year);
-  const total = data.values.reduce((a,b)=>a+b,0);
-  const nonZero = data.values.filter(v=>v>0);
-
-  document.getElementById('kpi-total').textContent = total.toLocaleString('fr-FR');
-  document.getElementById('kpi-total-sub').textContent = year==='all' ? 'période 01/2024 → 06/2026' : `année ${year}`;
-
-  const avg = nonZero.length ? (total / nonZero.length).toFixed(1) : '0';
-  document.getElementById('kpi-avg').textContent = avg;
-  document.getElementById('kpi-avg-sub').textContent = `${nonZero.length} mois (données)`;
+  const data=getFilteredMonthly(year);
+  const total=data.values.reduce((a,b)=>a+b,0);
+  const nonZero=data.values.filter(v=>v>0);
+  document.getElementById('kpi-total').textContent=total.toLocaleString('fr-FR');
+  document.getElementById('kpi-total-sub').textContent=year==='all'?'période 01/2024 → 06/2026':`année ${year}`;
+  document.getElementById('kpi-avg').textContent=nonZero.length?(total/nonZero.length).toFixed(1):'0';
+  document.getElementById('kpi-avg-sub').textContent=`${nonZero.length} mois (données)`;
 }
 
 function buildMonthlyChart(year){
-  const data = getFilteredMonthly(year);
-  const ctx = document.getElementById('chartMonthly').getContext('2d');
+  const data=getFilteredMonthly(year);
+  const ctx=document.getElementById('chartMonthly').getContext('2d');
   if(chartMonthly) chartMonthly.destroy();
-  const baseColors = { '2024':'#3b82f6', '2025':'#f59e0b', '2026':'#a855f7' };
 
-  // Find min/max indexes for annotation
-  const nonZeroVals = data.values.filter(v=>v>0);
-  const maxVal = nonZeroVals.length ? Math.max(...nonZeroVals) : 0;
-  const minVal = nonZeroVals.length ? Math.min(...nonZeroVals) : 0;
+  const baseColors={'2024':'#3b82f6','2025':'#f59e0b','2026':'#a855f7'};
+  const nonZeroVals=data.values.filter(v=>v>0);
+  const maxVal=nonZeroVals.length?Math.max(...nonZeroVals):0;
+  const minVal=nonZeroVals.length?Math.min(...nonZeroVals):0;
 
-  const colors = data.values.map((v,i) => {
-    if(v === 0) return 'rgba(139,149,184,0.2)';
-    if(v === maxVal) return '#eab308'; // gold for best month
-    if(v === minVal) return '#ef4444'; // red for worst month
-    const y = '20'+data.labels[i].split('/')[1];
-    return baseColors[y] || '#a855f7';
+  const colors=data.values.map((v,i)=>{
+    if(v===0) return 'rgba(139,149,184,0.15)';
+    if(v===maxVal) return '#eab308'; // meilleur mois = or
+    if(v===minVal) return '#ef4444'; // pire mois = rouge
+    const y='20'+data.labels[i].split('/')[1];
+    return baseColors[y]||'#a855f7';
   });
 
-  chartMonthly = new Chart(ctx, {
+  const datasets=[{
+    type:'bar',label:'Accompagnements',data:data.values,
+    backgroundColor:colors,borderRadius:4,maxBarThickness:28,order:2
+  }];
+
+  if(showMA){
+    const ma=computeMA3(data.values);
+    datasets.push({
+      type:'line',label:'Moy. 3 mois',data:ma,
+      borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,0.08)',
+      borderWidth:2.5,pointRadius:2,pointBackgroundColor:'#06b6d4',
+      spanGaps:true,tension:0.35,order:1
+    });
+  }
+
+  chartMonthly=new Chart(ctx,{
     type:'bar',
-    data:{
-      labels: data.labels,
-      datasets:[{
-        label:'Accompagnements',
-        data: data.values,
-        backgroundColor: colors,
-        borderRadius: 4,
-        maxBarThickness: 28
-      }]
-    },
+    data:{labels:data.labels,datasets},
     options:{
       plugins:{
-        legend:{display:false},
-        tooltip:{
-          callbacks:{
-            label: ctx => {
-              const v = ctx.parsed.y;
-              const suffix = v === maxVal ? ' 🏆 meilleur mois' : v === minVal && v > 0 ? ' ⚠ plus faible' : '';
-              return ` ${v} accompagnements${suffix}`;
-            }
+        legend:{display:showMA},
+        tooltip:{callbacks:{label:ctx=>{
+          const v=ctx.parsed.y;
+          const suffix=v===maxVal?' 🏆 meilleur mois':v===minVal&&v>0?' ⚠ plus faible':'';
+          const annot=monthAnnotations[ctx.label];
+          const lines=[` ${v} accompagnements${suffix}`];
+          if(annot) lines.push(` 📌 ${annot}`);
+          return lines;
+        }}}
+      },
+      scales:{x:{grid:{display:false}},y:{grid:{color:'#1a2444'},beginAtZero:true}},
+      onClick:(evt,elements)=>{
+        if(elements.length>0){
+          const idx=elements[0].index;
+          const lbl=chartMonthly.data.labels[idx];
+          const existing=monthAnnotations[lbl]||'';
+          const note=prompt(`📌 Annotation pour ${lbl} :\n(laisser vide pour supprimer)`,existing);
+          if(note!==null){
+            if(note.trim()) monthAnnotations[lbl]=note.trim();
+            else delete monthAnnotations[lbl];
+            saveAnnotations();
+            buildMonthlyChart(year);
           }
         }
-      },
-      scales:{
-        x:{grid:{display:false}},
-        y:{grid:{color:'#1a2444'}, beginAtZero:true}
       }
-    }
+    },
+    plugins:[annotPlugin]
   });
 }
 
 function buildEvolutionChart(year){
-  const data = getFilteredMonthly(year);
-  const ctx = document.getElementById('chartEvolutionFull').getContext('2d');
+  const data=getFilteredMonthly(year);
+  const ctx=document.getElementById('chartEvolutionFull').getContext('2d');
   if(chartEvolutionFull) chartEvolutionFull.destroy();
-  chartEvolutionFull = new Chart(ctx, {
+  chartEvolutionFull=new Chart(ctx,{
     type:'line',
-    data:{
-      labels: data.labels,
-      datasets:[{
-        label:'Accompagnements / mois',
-        data: data.values,
-        borderColor:'#a855f7',
-        backgroundColor:'rgba(168,85,247,0.15)',
-        fill:true,
-        tension:.3,
-        pointRadius:3,
-        pointBackgroundColor:'#a855f7'
-      }]
-    },
+    data:{labels:data.labels,datasets:[{
+      label:'Accompagnements / mois',data:data.values,
+      borderColor:'#a855f7',backgroundColor:'rgba(168,85,247,0.15)',
+      fill:true,tension:.3,pointRadius:3,pointBackgroundColor:'#a855f7'
+    }]},
     options:{
       plugins:{legend:{display:false}},
-      interaction:{ mode:'index', intersect:false, axis:'x' },
-      scales:{ x:{grid:{display:false}}, y:{grid:{color:'#1a2444'}, beginAtZero:true} }
+      interaction:{mode:'index',intersect:false,axis:'x'},
+      scales:{x:{grid:{display:false}},y:{grid:{color:'#1a2444'},beginAtZero:true}}
     }
   });
 }
 buildEvolutionChart('all');
 
-function sumYear(y){
-  return monthly.labels.reduce((acc,l,i)=> monthYear(l)===y ? acc+monthly.values[i] : acc, 0);
-}
-
+function sumYear(y){ return monthly.labels.reduce((acc,l,i)=>monthYear(l)===y?acc+monthly.values[i]:acc,0); }
 function sumH1(y){
   return monthly.labels.reduce((acc,l,i)=>{
-    const [mm] = l.split('/');
-    const yy = '20'+l.split('/')[1];
-    return (yy===y && parseInt(mm)<=6) ? acc+monthly.values[i] : acc;
-  }, 0);
+    const mm=l.split('/')[0];
+    return ('20'+l.split('/')[1]===y&&parseInt(mm)<=6)?acc+monthly.values[i]:acc;
+  },0);
 }
 
 function updateEvolutionCards(){
-  const y24 = sumYear('2024'), y25 = sumYear('2025'), y26 = sumYear('2026');
-  document.getElementById('tot2024').textContent = y24.toLocaleString('fr-FR');
-  document.getElementById('tot2025').textContent = y25.toLocaleString('fr-FR');
-  document.getElementById('tot2026').textContent = y26.toLocaleString('fr-FR');
+  const y24=sumYear('2024'),y25=sumYear('2025'),y26=sumYear('2026');
+  document.getElementById('tot2024').textContent=y24.toLocaleString('fr-FR');
+  document.getElementById('tot2025').textContent=y25.toLocaleString('fr-FR');
+  document.getElementById('tot2026').textContent=y26.toLocaleString('fr-FR');
+  document.getElementById('delta2024').textContent='Année de référence';
+  if(y24>0&&y25>0){const d=(y25-y24)/y24*100;document.getElementById('delta2025').innerHTML=`vs 2024 ${growthBadge(d)}`;}
+  if(y25>0&&y26>0){const h1_25=sumH1('2025'),h1_26=sumH1('2026'),d=h1_25?(h1_26-h1_25)/h1_25*100:null;document.getElementById('delta2026').innerHTML=`vs H1 2025 ${d!==null?growthBadge(d):''}`;}
 
-  // YoY deltas
-  document.getElementById('delta2024').textContent = 'Année de référence';
-  if(y24 > 0 && y25 > 0){
-    const d = ((y25-y24)/y24*100);
-    document.getElementById('delta2025').innerHTML = `vs 2024 ${growthBadge(d)}`;
+  const h1_24=sumH1('2024'),h1_25=sumH1('2025'),h1_26=sumH1('2026');
+  const months26=monthly.labels.filter(l=>'20'+l.split('/')[1]==='2026'&&monthly.values[monthly.labels.indexOf(l)]>0).length;
+  if(months26>0){
+    const proj=Math.round(h1_26/months26*12);
+    document.getElementById('proj2026').textContent=proj.toLocaleString('fr-FR');
+    document.getElementById('proj2026-sub').textContent=`basé sur ${months26} mois renseignés en 2026`;
   }
-  if(y25 > 0 && y26 > 0){
-    const h1_25 = sumH1('2025'), h1_26 = sumH1('2026');
-    const d = h1_25 ? ((h1_26-h1_25)/h1_25*100) : null;
-    document.getElementById('delta2026').innerHTML = `vs H1 2025 ${d !== null ? growthBadge(d) : ''}`;
-  }
+  if(h1_24>0){const g=(h1_25-h1_24)/h1_24*100;document.getElementById('growthH1_2025').innerHTML=(g>=0?'+':'')+g.toFixed(1)+'%'+growthBadge(g);document.getElementById('growthH1_2025-sub').textContent=`${h1_24} → ${h1_25} (jan–juin)`;}
+  if(h1_25>0){const g=(h1_26-h1_25)/h1_25*100;document.getElementById('growthH1_2026').innerHTML=(g>=0?'+':'')+g.toFixed(1)+'%'+growthBadge(g);document.getElementById('growthH1_2026-sub').textContent=`${h1_25} → ${h1_26} (jan–juin)`;}
 
-  // Projection 2026
-  const h1_26 = sumH1('2026');
-  const monthsLoaded = monthly.labels.filter(l=>'20'+l.split('/')[1]==='2026' && monthly.values[monthly.labels.indexOf(l)]>0).length;
-  if(monthsLoaded > 0){
-    const proj = Math.round(h1_26 / monthsLoaded * 12);
-    document.getElementById('proj2026').textContent = proj.toLocaleString('fr-FR');
-    document.getElementById('proj2026-sub').textContent = `basé sur ${monthsLoaded} mois renseignés en 2026`;
-  }
-
-  // H1 growths
-  const h1_24 = sumH1('2024'), h1_25 = sumH1('2025');
-  const h1_26b = sumH1('2026');
-
-  if(h1_24 > 0){
-    const g25 = ((h1_25-h1_24)/h1_24*100);
-    document.getElementById('growthH1_2025').innerHTML = (g25>=0?'+':'')+g25.toFixed(1)+'%' + growthBadge(g25);
-    document.getElementById('growthH1_2025-sub').textContent = `${h1_24} → ${h1_25} (jan–juin)`;
-  }
-  if(h1_25 > 0){
-    const g26 = ((h1_26b-h1_25)/h1_25*100);
-    document.getElementById('growthH1_2026').innerHTML = (g26>=0?'+':'')+g26.toFixed(1)+'%' + growthBadge(g26);
-    document.getElementById('growthH1_2026-sub').textContent = `${h1_25} → ${h1_26b} (jan–juin)`;
-  }
-
-  // Evolution insight box
-  const ebox = document.getElementById('evolutionInsightBox');
-  if(y24 > 0 && y25 > 0){
-    const g = ((y25-y24)/y24*100);
-    const h1_25b = sumH1('2025'), h1_26c = sumH1('2026');
-    const projLine = (h1_25b > 0 && monthsLoaded > 0) ?
-      ` La projection 2026 à ce rythme est de <b>~${Math.round(h1_26c/monthsLoaded*12).toLocaleString('fr-FR')} accompagnements</b>.` : '';
-    ebox.innerHTML = `L'activité a progressé de <b>${g.toFixed(0)}%</b> entre 2024 (${y24}) et 2025 (${y25}).${projLine}`;
-    ebox.style.display = '';
-  } else {
-    ebox.style.display = 'none';
-  }
+  const ebox=document.getElementById('evolutionInsightBox');
+  const y24t=sumYear('2024'),y25t=sumYear('2025');
+  if(y24t>0&&y25t>0){
+    const g=((y25t-y24t)/y24t*100);
+    const months26n=monthly.labels.filter(l=>'20'+l.split('/')[1]==='2026'&&monthly.values[monthly.labels.indexOf(l)]>0).length;
+    const h1_26b=sumH1('2026'),h1_25b=sumH1('2025');
+    const projL=months26n>0?` Projection 2026 (rythme actuel) : <b>~${Math.round(h1_26b/months26n*12).toLocaleString('fr-FR')}</b> accompagnements.`:'';
+    ebox.innerHTML=`Progression <b>${g>=0?'+':''}${g.toFixed(0)}%</b> entre 2024 (${y24t}) et 2025 (${y25t}).${projL}`;
+    ebox.style.display='';
+  } else { ebox.style.display='none'; }
 }
 updateEvolutionCards();
 
-// ===== CALENDAR YEAR-OVER-YEAR =====
-const monthNames = {'01':'Jan','02':'Fév','03':'Mar','04':'Avr','05':'Mai','06':'Juin',
-                     '07':'Juil','08':'Août','09':'Sep','10':'Oct','11':'Nov','12':'Déc'};
-const monthOrder = ['01','02','03','04','05','06','07','08','09','10','11','12'];
-const yearCompareColors = { '2024':'#3b82f6', '2025':'#f59e0b', '2026':'#a855f7' };
-
-function hexToRgba(hex, alpha){
-  const h = hex.replace('#','');
-  const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
+// ===== YEAR OVERLAY / COMPARE =====
+const monthNames={'01':'Jan','02':'Fév','03':'Mar','04':'Avr','05':'Mai','06':'Juin','07':'Juil','08':'Août','09':'Sep','10':'Oct','11':'Nov','12':'Déc'};
+const monthOrder=['01','02','03','04','05','06','07','08','09','10','11','12'];
+const yearCompareColors={'2024':'#3b82f6','2025':'#f59e0b','2026':'#a855f7'};
 
 let chartYearOverlay, chartYearCompare;
-let yearSeries = { '2024':[], '2025':[], '2026':[] };
+let yearSeries={'2024':[],'2025':[],'2026':[]};
 
 function recomputeYearSeries(){
-  yearSeries = { '2024':[], '2025':[], '2026':[] };
+  yearSeries={'2024':[],'2025':[],'2026':[]};
   monthOrder.forEach(m=>{
     ['2024','2025','2026'].forEach(y=>{
-      const idx = monthly.labels.indexOf(m+'/'+y.slice(2));
-      yearSeries[y].push(idx>=0 ? monthly.values[idx] : null);
+      const idx=monthly.labels.indexOf(m+'/'+y.slice(2));
+      yearSeries[y].push(idx>=0?monthly.values[idx]:null);
     });
   });
 }
@@ -1168,425 +1328,353 @@ recomputeYearSeries();
 
 function buildYearOverlayChart(){
   if(chartYearOverlay) chartYearOverlay.destroy();
-  chartYearOverlay = new Chart(document.getElementById('chartYearOverlay').getContext('2d'), {
+  chartYearOverlay=new Chart(document.getElementById('chartYearOverlay').getContext('2d'),{
     type:'line',
-    data:{
-      labels: monthOrder.map(m=>monthNames[m]),
-      datasets:[
-        { label:'2024', data: yearSeries['2024'], borderColor:yearCompareColors['2024'], backgroundColor:hexToRgba(yearCompareColors['2024'],0.35), fill:true, tension:.35, pointRadius:3, pointBackgroundColor:yearCompareColors['2024'], spanGaps:true },
-        { label:'2025', data: yearSeries['2025'], borderColor:yearCompareColors['2025'], backgroundColor:hexToRgba(yearCompareColors['2025'],0.35), fill:true, tension:.35, pointRadius:3, pointBackgroundColor:yearCompareColors['2025'], spanGaps:true },
-        { label:'2026', data: yearSeries['2026'], borderColor:yearCompareColors['2026'], backgroundColor:hexToRgba(yearCompareColors['2026'],0.35), fill:true, tension:.35, pointRadius:3, pointBackgroundColor:yearCompareColors['2026'], spanGaps:true }
-      ]
-    },
-    options:{
-      plugins:{ legend:{ position:'top', labels:{boxWidth:12} } },
-      interaction:{ mode:'index', intersect:false, axis:'x' },
-      scales:{ x:{grid:{display:false}}, y:{ grid:{color:'#1a2444'}, beginAtZero:true } },
-      elements:{ line:{ borderWidth:2 } }
-    }
+    data:{labels:monthOrder.map(m=>monthNames[m]),datasets:[
+      {label:'2024',data:yearSeries['2024'],borderColor:yearCompareColors['2024'],backgroundColor:hexToRgba(yearCompareColors['2024'],0.35),fill:true,tension:.35,pointRadius:3,pointBackgroundColor:yearCompareColors['2024'],spanGaps:true},
+      {label:'2025',data:yearSeries['2025'],borderColor:yearCompareColors['2025'],backgroundColor:hexToRgba(yearCompareColors['2025'],0.35),fill:true,tension:.35,pointRadius:3,pointBackgroundColor:yearCompareColors['2025'],spanGaps:true},
+      {label:'2026',data:yearSeries['2026'],borderColor:yearCompareColors['2026'],backgroundColor:hexToRgba(yearCompareColors['2026'],0.35),fill:true,tension:.35,pointRadius:3,pointBackgroundColor:yearCompareColors['2026'],spanGaps:true}
+    ]},
+    options:{plugins:{legend:{position:'top',labels:{boxWidth:12}}},interaction:{mode:'index',intersect:false,axis:'x'},scales:{x:{grid:{display:false}},y:{grid:{color:'#1a2444'},beginAtZero:true}},elements:{line:{borderWidth:2}}}
   });
 }
 buildYearOverlayChart();
 
 function buildYearCompareChart(){
   if(chartYearCompare) chartYearCompare.destroy();
-  chartYearCompare = new Chart(document.getElementById('chartYearCompare').getContext('2d'), {
+  chartYearCompare=new Chart(document.getElementById('chartYearCompare').getContext('2d'),{
     type:'bar',
-    data:{
-      labels: monthOrder.map(m=>monthNames[m]),
-      datasets:[
-        { label:'2024', data: yearSeries['2024'], backgroundColor:yearCompareColors['2024'], borderRadius:4, maxBarThickness:22 },
-        { label:'2025', data: yearSeries['2025'], backgroundColor:yearCompareColors['2025'], borderRadius:4, maxBarThickness:22 },
-        { label:'2026', data: yearSeries['2026'], backgroundColor:yearCompareColors['2026'], borderRadius:4, maxBarThickness:22 }
-      ]
-    },
-    options:{
-      plugins:{ legend:{ position:'top', labels:{boxWidth:12} } },
-      scales:{ x:{grid:{display:false}}, y:{grid:{color:'#1a2444'}, beginAtZero:true} }
-    }
+    data:{labels:monthOrder.map(m=>monthNames[m]),datasets:[
+      {label:'2024',data:yearSeries['2024'],backgroundColor:yearCompareColors['2024'],borderRadius:4,maxBarThickness:22},
+      {label:'2025',data:yearSeries['2025'],backgroundColor:yearCompareColors['2025'],borderRadius:4,maxBarThickness:22},
+      {label:'2026',data:yearSeries['2026'],backgroundColor:yearCompareColors['2026'],borderRadius:4,maxBarThickness:22}
+    ]},
+    options:{plugins:{legend:{position:'top',labels:{boxWidth:12}}},scales:{x:{grid:{display:false}},y:{grid:{color:'#1a2444'},beginAtZero:true}}}
   });
 }
 buildYearCompareChart();
 
-function rebuildMonthlyAndEvolution(){
-  monthly.values = monthly.labels.map(lbl => {
-    const y = '20'+lbl.split('/')[1];
-    const d = yearData[y];
-    if(!d || !d.monthly) return 0;
-    const idx = d.monthly.labels.indexOf(lbl);
-    return idx>=0 ? d.monthly.values[idx] : 0;
+function highlightYearCompare(year){
+  chartYearCompare.data.datasets.forEach(ds=>{
+    ds.backgroundColor=(year==='all'||(ds.label===year))?yearCompareColors[ds.label]:'#2a3454';
   });
+  chartYearCompare.update();
+}
 
+function rebuildMonthlyAndEvolution(){
+  monthly.values=monthly.labels.map(lbl=>{
+    const y='20'+lbl.split('/')[1];
+    const d=yearData[y];
+    if(!d||!d.monthly) return 0;
+    const idx=d.monthly.labels.indexOf(lbl);
+    return idx>=0?d.monthly.values[idx]:0;
+  });
   recomputeYearSeries();
   buildYearOverlayChart();
   buildYearCompareChart();
   updateEvolutionCards();
-
-  const activeBtn = document.querySelector('.year-btn.active');
-  const year = activeBtn ? activeBtn.dataset.year : 'all';
+  const activeBtn=document.querySelector('.year-btn.active');
+  const year=activeBtn?activeBtn.dataset.year:'all';
   updateKPIs(year);
   buildMonthlyChart(year);
   buildEvolutionChart(year);
   highlightYearCompare(year);
   buildThemYearChart();
   buildDureesYearChart();
+  generateRapport();
 }
 
-function highlightYearCompare(year){
-  chartYearCompare.data.datasets.forEach(ds=>{
-    const isSelected = (year==='all') || (ds.label===year);
-    ds.backgroundColor = isSelected ? yearCompareColors[ds.label] : '#2a3454';
-  });
-  chartYearCompare.update();
-}
-
-// ===== IMPORT / PARSING xlsx EXPORTS =====
+// ===== PARSING XLSX =====
 function norm(s){
   return String(s==null?'':s)
-    .replace(/[‘’ʼ]/g, "'")
-    .replace(/ /g, ' ')
-    .replace(/\s+/g, ' ')
+    .replace(/[‘’ʼ＇]/g,"'")
+    .replace(/ /g,' ')
+    .replace(/\s+/g,' ')
     .trim();
 }
 function parsePct(v){
   if(v==null) return 0;
-  const c = String(v).replace(/ /g,' ').replace('%','').replace(',','.').trim();
-  const n = parseFloat(c);
-  return isNaN(n) ? 0 : n;
+  const c=String(v).replace(/ /g,' ').replace('%','').replace(',','.').trim();
+  const n=parseFloat(c);
+  return isNaN(n)?0:n;
 }
-function parseNum(v){
-  const n = parseFloat(v);
-  return isNaN(n) ? 0 : n;
-}
+function parseNum(v){ const n=parseFloat(v); return isNaN(n)?0:n; }
 
-const SECTION_ORDER = [
-  "Statistiques générales",
-  "Statistiques sur vos accompagnements",
-  "Thématiques Médiation numérique",
-  "Thématiques Démarches administratives",
-  "Tags",
-  "Matériel utilisés",
-  "Canaux des activités",
-  "Durées des activités",
-  "Nombre d'activités par lieux",
-  "Statistiques sur vos bénéficiaires",
-  "Genre",
-  "Tranches d'âge",
-  "Statuts",
-  "Commune de résidence des bénéficiaires"
-];
-const SECTION_ORDER_N = SECTION_ORDER.map(norm);
+const SECTION_ORDER=["Statistiques générales","Statistiques sur vos accompagnements","Thématiques Médiation numérique","Thématiques Démarches administratives","Tags","Matériel utilisés","Canaux des activités","Durées des activités","Nombre d'activités par lieux","Statistiques sur vos bénéficiaires","Genre","Tranches d'âge","Statuts","Commune de résidence des bénéficiaires"];
+const SECTION_ORDER_N=SECTION_ORDER.map(norm);
 
-function rowsBetween(rows, header){
-  const h = norm(header);
-  const idx = rows.findIndex(r => norm(r[0]) === h);
-  if(idx === -1) return [];
-  let endIdx = rows.length;
-  for(let j=idx+1;j<rows.length;j++){
-    const label = norm(rows[j][0]);
-    if(SECTION_ORDER_N.includes(label)){ endIdx = j; break; }
-  }
-  const out = [];
+function rowsBetween(rows,header){
+  const h=norm(header);
+  const idx=rows.findIndex(r=>norm(r[0])===h);
+  if(idx===-1) return [];
+  let endIdx=rows.length;
+  for(let j=idx+1;j<rows.length;j++){if(SECTION_ORDER_N.includes(norm(rows[j][0]))){endIdx=j;break;}}
+  const out=[];
   for(let j=idx+1;j<endIdx;j++){
-    const r = rows[j];
-    const label = norm(r[0]);
+    const r=rows[j];const label=norm(r[0]);
     if(!label) continue;
-    if(typeof r[1] !== 'number' && isNaN(parseFloat(r[1]))) continue;
-    out.push({ label, val: parseNum(r[1]), pct: parsePct(r[2]) });
+    if(typeof r[1]!=='number'&&isNaN(parseFloat(r[1]))) continue;
+    out.push({label,val:parseNum(r[1]),pct:parsePct(r[2])});
   }
   return out;
 }
-
-function getValue(rows, label){
-  const l = norm(label);
-  const r = rows.find(r => norm(r[0]) === l);
-  return r ? parseNum(r[1]) : 0;
+function getValue(rows,label){
+  const l=norm(label);const r=rows.find(r=>norm(r[0])===l);return r?parseNum(r[1]):0;
 }
 
 function parseWorkbookToDataset(wb){
-  const sheet = wb.Sheets['Statistiques'] || wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(sheet, { header:1, raw:true, defval:null });
-
-  const totals = {
-    accompagnements: getValue(rows, 'Accompagnements au total'),
-    beneficiaires: getValue(rows, 'Bénéficiaires accompagnés'),
-    nouveaux: getValue(rows, 'Nouveaux bénéficiaires'),
-    suivis: getValue(rows, 'Bénéficiaires suivis'),
-    anonymes: getValue(rows, 'Bénéficiaires anonymes'),
-    participants: getValue(rows, 'Nombre total de participants aux ateliers'),
-    activites: getValue(rows, 'Nombre total d’activités')
+  const sheet=wb.Sheets['Statistiques']||wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(sheet,{header:1,raw:true,defval:null});
+  const totals={
+    accompagnements:getValue(rows,'Accompagnements au total'),
+    beneficiaires:getValue(rows,'Bénéficiaires accompagnés'),
+    nouveaux:getValue(rows,'Nouveaux bénéficiaires'),
+    suivis:getValue(rows,'Bénéficiaires suivis'),
+    anonymes:getValue(rows,'Bénéficiaires anonymes'),
+    participants:getValue(rows,'Nombre total de participants aux ateliers'),
+    activites:getValue(rows,'Nombre total d’activités')
   };
-  const indivRow = rows.find(r => norm(r[0]) === 'Accompagnements individuels');
-  const atelRow = rows.find(r => norm(r[0]) === 'Ateliers collectifs');
-  totals.individuelsVal = indivRow ? parseNum(indivRow[1]) : 0;
-  totals.individuelsPct = indivRow ? parsePct(indivRow[2]) : 0;
-  totals.ateliersVal = atelRow ? parseNum(atelRow[1]) : 0;
-  totals.ateliersPct = atelRow ? parsePct(atelRow[2]) : 0;
-
-  const types = [
-    { label:'Accompagnement individuel', val: totals.individuelsVal, pct: totals.individuelsPct },
-    { label:'Atelier collectif', val: totals.ateliersVal, pct: totals.ateliersPct }
-  ];
-
-  const nomRow = rows.find(r => norm(r[0]) === 'Nom');
-  const prenomRow = rows.find(r => norm(r[0]) === 'Prénom');
-  const agentName = [prenomRow && prenomRow[1], nomRow && nomRow[1]].filter(Boolean).join(' ');
-
-  const monthRow = rows.find(r => norm(r[0]) === 'Accompagnements sur les 12 derniers mois');
-  const monthRowIdx = monthRow ? rows.indexOf(monthRow) : -1;
-  const monthValuesRow = monthRowIdx>=0 ? rows[monthRowIdx+1] : null;
-  let monthlyData = { labels:[], values:[] };
-  if(monthRow && monthValuesRow){
+  const indivRow=rows.find(r=>norm(r[0])==='Accompagnements individuels');
+  const atelRow=rows.find(r=>norm(r[0])==='Ateliers collectifs');
+  totals.individuelsVal=indivRow?parseNum(indivRow[1]):0;
+  totals.individuelsPct=indivRow?parsePct(indivRow[2]):0;
+  totals.ateliersVal=atelRow?parseNum(atelRow[1]):0;
+  totals.ateliersPct=atelRow?parsePct(atelRow[2]):0;
+  const nomRow=rows.find(r=>norm(r[0])==='Nom');
+  const prenomRow=rows.find(r=>norm(r[0])==='Prénom');
+  const agentName=[prenomRow&&prenomRow[1],nomRow&&nomRow[1]].filter(Boolean).join(' ');
+  const monthRow=rows.find(r=>norm(r[0])==='Accompagnements sur les 12 derniers mois');
+  const monthRowIdx=monthRow?rows.indexOf(monthRow):-1;
+  const monthValuesRow=monthRowIdx>=0?rows[monthRowIdx+1]:null;
+  let monthlyData={labels:[],values:[]};
+  if(monthRow&&monthValuesRow){
     for(let i=1;i<monthRow.length;i++){
       if(monthRow[i]==null) continue;
       monthlyData.labels.push(monthRow[i].toString().trim());
       monthlyData.values.push(parseNum(monthValuesRow[i]));
     }
   }
-
   return {
     totals,
-    types,
-    agentName,
-    monthly: monthlyData,
-    themMed: rowsBetween(rows, 'Thématiques Médiation numérique'),
-    themAdmin: rowsBetween(rows, 'Thématiques Démarches administratives'),
-    materiel: rowsBetween(rows, 'Matériel utilisés'),
-    canaux: rowsBetween(rows, 'Canaux des activités'),
-    durees: rowsBetween(rows, 'Durées des activités'),
-    lieux: rowsBetween(rows, 'Nombre d’activités par lieux'),
-    genre: rowsBetween(rows, 'Genre'),
-    age: rowsBetween(rows, 'Tranches d’âge'),
-    statut: rowsBetween(rows, 'Statuts'),
-    communes: rowsBetween(rows, 'Commune de résidence des bénéficiaires').filter(c=>c.label!=='Non communiqué').slice(0,10)
+    types:[{label:'Accompagnement individuel',val:totals.individuelsVal,pct:totals.individuelsPct},{label:'Atelier collectif',val:totals.ateliersVal,pct:totals.ateliersPct}],
+    agentName,monthly:monthlyData,
+    themMed:rowsBetween(rows,'Thématiques Médiation numérique'),
+    themAdmin:rowsBetween(rows,'Thématiques Démarches administratives'),
+    materiel:rowsBetween(rows,'Matériel utilisés'),
+    canaux:rowsBetween(rows,'Canaux des activités'),
+    durees:rowsBetween(rows,'Durées des activités'),
+    lieux:rowsBetween(rows,'Nombre d’activités par lieux'),
+    genre:rowsBetween(rows,'Genre'),
+    age:rowsBetween(rows,'Tranches d’âge'),
+    statut:rowsBetween(rows,'Statuts'),
+    communes:rowsBetween(rows,'Commune de résidence des bénéficiaires').filter(c=>c.label!=='Non communiqué').slice(0,10)
   };
 }
 
 function mergeArraysSum(arrays){
-  const map = new Map();
-  arrays.forEach(arr=>{
-    arr.forEach(item=>{
-      const cur = map.get(item.label) || { label:item.label, val:0, color:item.color };
-      cur.val += item.val;
-      map.set(item.label, cur);
-    });
-  });
-  const merged = [...map.values()];
-  const total = merged.reduce((a,b)=>a+b.val,0) || 1;
-  merged.forEach(m=> m.pct = Math.round((m.val/total)*1000)/10);
+  const map=new Map();
+  arrays.forEach(arr=>arr.forEach(item=>{
+    const cur=map.get(item.label)||{label:item.label,val:0,color:item.color};
+    cur.val+=item.val; map.set(item.label,cur);
+  }));
+  const merged=[...map.values()];
+  const total=merged.reduce((a,b)=>a+b.val,0)||1;
+  merged.forEach(m=>m.pct=Math.round((m.val/total)*1000)/10);
   return merged.sort((a,b)=>b.val-a.val);
 }
 
 function sumDatasets(list){
-  const t = list.reduce((acc, ds)=>{
-    Object.keys(ds.totals).forEach(k=>{
-      if(k.endsWith('Pct')) return;
-      acc[k] = (acc[k]||0) + ds.totals[k];
-    });
+  const t=list.reduce((acc,ds)=>{
+    Object.keys(ds.totals).forEach(k=>{if(k.endsWith('Pct')) return;acc[k]=(acc[k]||0)+ds.totals[k];});
     return acc;
-  }, {});
-  const indivTotal = (t.individuelsVal||0) + (t.ateliersVal||0) || 1;
-  t.individuelsPct = Math.round((t.individuelsVal/indivTotal)*1000)/10;
-  t.ateliersPct = Math.round((t.ateliersVal/indivTotal)*1000)/10;
-
+  },{});
+  const indivTotal=(t.individuelsVal||0)+(t.ateliersVal||0)||1;
+  t.individuelsPct=Math.round((t.individuelsVal/indivTotal)*1000)/10;
+  t.ateliersPct=Math.round((t.ateliersVal/indivTotal)*1000)/10;
   return {
-    totals: t,
-    agentName: list[0] && list[0].agentName,
-    types: mergeArraysSum(list.map(d=>d.types)),
-    themMed: mergeArraysSum(list.map(d=>d.themMed)),
-    themAdmin: mergeArraysSum(list.map(d=>d.themAdmin)),
-    materiel: mergeArraysSum(list.map(d=>d.materiel)),
-    canaux: mergeArraysSum(list.map(d=>d.canaux)),
-    durees: mergeArraysSum(list.map(d=>d.durees)),
-    lieux: mergeArraysSum(list.map(d=>d.lieux)).slice(0,10),
-    genre: mergeArraysSum(list.map(d=>d.genre)),
-    age: mergeArraysSum(list.map(d=>d.age)),
-    statut: mergeArraysSum(list.map(d=>d.statut)),
-    communes: mergeArraysSum(list.map(d=>d.communes)).slice(0,10)
+    totals:t,agentName:list[0]&&list[0].agentName,
+    types:mergeArraysSum(list.map(d=>d.types)),
+    themMed:mergeArraysSum(list.map(d=>d.themMed)),
+    themAdmin:mergeArraysSum(list.map(d=>d.themAdmin)),
+    materiel:mergeArraysSum(list.map(d=>d.materiel)),
+    canaux:mergeArraysSum(list.map(d=>d.canaux)),
+    durees:mergeArraysSum(list.map(d=>d.durees)),
+    lieux:mergeArraysSum(list.map(d=>d.lieux)).slice(0,10),
+    genre:mergeArraysSum(list.map(d=>d.genre)),
+    age:mergeArraysSum(list.map(d=>d.age)),
+    statut:mergeArraysSum(list.map(d=>d.statut)),
+    communes:mergeArraysSum(list.map(d=>d.communes)).slice(0,10)
   };
 }
 
 function setBanner(text){
-  const b = document.getElementById('dataBanner');
-  if(!text){ b.classList.remove('show'); b.textContent=''; return; }
-  b.textContent = text;
-  b.classList.add('show');
+  const b=document.getElementById('dataBanner');
+  if(!text){b.classList.remove('show');b.textContent='';return;}
+  b.textContent=text;b.classList.add('show');
 }
 
 function applyYearAggregates(year){
-  if(year === 'all'){
-    const loadedYears = Object.keys(yearData).sort();
-    const loaded = loadedYears.map(y=>yearData[y]);
-    if(loaded.length >= 1){
-      renderAggregates(sumDatasets(loaded), 'cumul ' + loadedYears.join('+'));
-      const missing = ['2024','2025','2026'].filter(y=>!yearData[y]);
-      setBanner(missing.length
-        ? `Cumul partiel (${loadedYears.join(', ')}) — importe ${missing.join(', ')} pour le cumul complet. NB : les bénéficiaires cumulés ne sont pas dédoublonnés entre années.`
-        : '');
+  if(year==='all'){
+    const ly=Object.keys(yearData).sort();
+    if(ly.length>=1){
+      renderAggregates(sumDatasets(ly.map(y=>yearData[y])),'cumul '+ly.join('+'));
+      const missing=['2024','2025','2026'].filter(y=>!yearData[y]);
+      setBanner(missing.length?`Cumul partiel (${ly.join(', ')}) — importe ${missing.join(', ')} pour le cumul complet. Les bénéficiaires cumulés ne sont pas dédoublonnés.`:'');
     } else {
-      renderAggregates(defaultDataset, 'cumul 24-26');
-      setBanner('Aucune donnée — importe les exports annuels via "Importer données".');
+      renderAggregates(defaultDataset,'cumul 24-26');
+      setBanner('Aucune donnée — importe les exports annuels via "Importer".');
     }
     return;
   }
-  if(yearData[year]){
-    renderAggregates(yearData[year], `année ${year}`);
-    setBanner('');
-  } else {
-    renderAggregates(defaultDataset, 'cumul 24-26 — non filtré');
-    setBanner(`Aucune donnée importée pour ${year} : thématiques/bénéficiaires/lieux affichent le cumul global. Importe l'export ${year} via "Importer données".`);
-  }
+  if(yearData[year]){renderAggregates(yearData[year],`année ${year}`);setBanner('');}
+  else{renderAggregates(defaultDataset,'cumul 24-26 — non filtré');setBanner(`Aucune donnée pour ${year} — importe l'export ${year}.`);}
 }
 
-// ===== MODAL & FILE HANDLING =====
-const overlay = document.getElementById('importModalOverlay');
-document.getElementById('openImportModal').addEventListener('click', ()=> overlay.classList.add('active'));
-document.getElementById('closeImportModal').addEventListener('click', ()=> overlay.classList.remove('active'));
-overlay.addEventListener('click', (e)=>{ if(e.target===overlay) overlay.classList.remove('active'); });
+// ===== MODAL =====
+const overlay=document.getElementById('importModalOverlay');
+document.getElementById('openImportModal').addEventListener('click',()=>overlay.classList.add('active'));
+document.getElementById('closeImportModal').addEventListener('click',()=>overlay.classList.remove('active'));
+overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('active');});
 
 document.querySelectorAll('.import-row input[type=file]').forEach(input=>{
-  input.addEventListener('change', (e)=>{
-    const year = input.dataset.year;
-    const file = e.target.files[0];
-    const statusEl = document.getElementById('status-'+year);
+  input.addEventListener('change',e=>{
+    const year=input.dataset.year,file=e.target.files[0];
+    const statusEl=document.getElementById('status-'+year);
     if(!file) return;
-    statusEl.textContent = 'Lecture en cours…';
-    statusEl.className = 'import-status';
-    const reader = new FileReader();
-    reader.onload = (evt)=>{
+    statusEl.textContent='Lecture en cours…';statusEl.className='import-status';
+    const reader=new FileReader();
+    reader.onload=evt=>{
       try{
-        const wb = XLSX.read(evt.target.result, { type:'array' });
-        const ds = parseWorkbookToDataset(wb);
-        yearData[year] = ds;
-        saveYearDataToStorage();
-        statusEl.textContent = `✓ ${file.name} — ${ds.totals.accompagnements} accompagnements`;
-        statusEl.className = 'import-status ok';
-        const activeBtn = document.querySelector('.year-btn.active');
+        const wb=XLSX.read(evt.target.result,{type:'array'});
+        const ds=parseWorkbookToDataset(wb);
+        yearData[year]=ds; saveYearDataToStorage();
+        statusEl.textContent=`✓ ${file.name} — ${ds.totals.accompagnements} accompagnements`;
+        statusEl.className='import-status ok';
+        const activeBtn=document.querySelector('.year-btn.active');
         applyYearAggregates(activeBtn.dataset.year);
         rebuildMonthlyAndEvolution();
-      } catch(err){
-        statusEl.textContent = 'Erreur de lecture : format inattendu';
-        statusEl.className = 'import-status err';
-        console.error(err);
+      }catch(err){
+        statusEl.textContent='Erreur de lecture : format inattendu';
+        statusEl.className='import-status err';console.error(err);
       }
     };
     reader.readAsArrayBuffer(file);
   });
 });
 
-// ===== JSON EXPORT / IMPORT =====
-document.getElementById('jsonExportBtn').addEventListener('click', ()=>{
-  const blob = new Blob([JSON.stringify(yearData, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'dashboard-data-' + new Date().toISOString().slice(0,10) + '.json';
-  a.click();
+document.getElementById('jsonExportBtn').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(yearData,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download='dashboard-data-'+new Date().toISOString().slice(0,10)+'.json';a.click();
   URL.revokeObjectURL(url);
 });
 
-document.getElementById('jsonImportInput').addEventListener('change', (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (evt)=>{
+document.getElementById('jsonImportInput').addEventListener('change',e=>{
+  const file=e.target.files[0];if(!file) return;
+  const reader=new FileReader();
+  reader.onload=evt=>{
     try{
-      const data = JSON.parse(evt.target.result);
+      const data=JSON.parse(evt.target.result);
       Object.keys(data).forEach(year=>{
-        yearData[year] = data[year];
-        saveYearDataToStorage();
-        const statusEl = document.getElementById('status-'+year);
-        if(statusEl){
-          statusEl.textContent = `✓ Importé via JSON — ${data[year].totals.accompagnements} accompagnements`;
-          statusEl.className = 'import-status ok';
-        }
+        yearData[year]=data[year];saveYearDataToStorage();
+        const statusEl=document.getElementById('status-'+year);
+        if(statusEl){statusEl.textContent=`✓ Importé via JSON — ${data[year].totals.accompagnements} accompagnements`;statusEl.className='import-status ok';}
       });
-      const activeBtn = document.querySelector('.year-btn.active');
-      applyYearAggregates(activeBtn.dataset.year);
-      rebuildMonthlyAndEvolution();
-    } catch(err){
-      alert('Fichier JSON invalide.');
-      console.error(err);
-    }
+      const activeBtn=document.querySelector('.year-btn.active');
+      applyYearAggregates(activeBtn.dataset.year);rebuildMonthlyAndEvolution();
+    }catch(err){alert('Fichier JSON invalide.');console.error(err);}
   };
   reader.readAsText(file);
 });
 
-document.getElementById('resetDataBtn').addEventListener('click', ()=>{
-  if(!confirm('Effacer toutes les données importées ? Le tableau de bord sera vide jusqu\'au prochain import.')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  location.reload();
+document.getElementById('resetDataBtn').addEventListener('click',()=>{
+  if(!confirm('Effacer toutes les données importées ?')) return;
+  localStorage.removeItem(STORAGE_KEY);location.reload();
 });
 
+// ===== ANNÉE BUTTONS =====
 document.querySelectorAll('.year-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
+  btn.addEventListener('click',()=>{
     document.querySelectorAll('.year-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    const year = btn.dataset.year;
-    updateKPIs(year);
-    buildMonthlyChart(year);
-    buildEvolutionChart(year);
-    highlightYearCompare(year);
-    applyYearAggregates(year);
+    const year=btn.dataset.year;
+    updateKPIs(year);buildMonthlyChart(year);buildEvolutionChart(year);
+    highlightYearCompare(year);applyYearAggregates(year);
   });
 });
 
+// ===== TABS =====
 document.querySelectorAll('.tab').forEach(tab=>{
   function activateTab(){
-    document.querySelectorAll('.tab').forEach(t=>{ t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
+    document.querySelectorAll('.tab').forEach(t=>{t.classList.remove('active');t.setAttribute('aria-selected','false');});
     document.querySelectorAll('.pages').forEach(p=>p.classList.remove('active'));
-    tab.classList.add('active');
-    tab.setAttribute('aria-selected','true');
+    tab.classList.add('active');tab.setAttribute('aria-selected','true');
     document.getElementById('page-'+tab.dataset.page).classList.add('active');
-    document.getElementById('globalKpis').style.display = (tab.dataset.page === 'ateliers') ? 'none' : '';
-    document.getElementById('dataBanner').style.display = (tab.dataset.page === 'ateliers') ? 'none' : '';
+    const isAtel=tab.dataset.page==='ateliers'||tab.dataset.page==='rapport';
+    document.getElementById('globalKpis').style.display=isAtel?'none':'';
+    document.getElementById('dataBanner').style.display=isAtel?'none':'';
+    if(tab.dataset.page==='rapport') generateRapport();
   }
-  tab.addEventListener('click', activateTab);
-  tab.addEventListener('keydown', (e)=>{
-    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); activateTab(); }
-  });
+  tab.addEventListener('click',activateTab);
+  tab.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();activateTab();}});
 });
 
-// ===== PERSISTANCE LOCALSTORAGE =====
-const STORAGE_KEY = 'coopDashboard_yearData';
+// ===== TOGGLE MOVING AVERAGE =====
+document.getElementById('toggleMA').addEventListener('click',function(){
+  showMA=!showMA;
+  this.classList.toggle('on',showMA);
+  const activeBtn=document.querySelector('.year-btn.active');
+  buildMonthlyChart(activeBtn?activeBtn.dataset.year:'all');
+});
 
-function saveYearDataToStorage(){
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(yearData)); }
-  catch(err){ console.error('Erreur sauvegarde localStorage', err); }
-}
+// ===== PDF + RAPPORT BUTTONS =====
+document.getElementById('pdfExportBtn').addEventListener('click',exportPDF);
+document.getElementById('pdfRapportBtn').addEventListener('click',exportPDF);
+document.getElementById('copyRapportBtn').addEventListener('click',()=>{
+  const text=document.getElementById('rapportContent').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.getElementById('copyRapportBtn');
+    const orig=btn.textContent;btn.textContent='✓ Copié !';
+    setTimeout(()=>btn.textContent=orig,2000);
+  }).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  });
+});
+document.getElementById('refreshRapportBtn').addEventListener('click',generateRapport);
 
+// ===== PERSISTANCE =====
+const STORAGE_KEY='coopDashboard_yearData';
+function saveYearDataToStorage(){ try{localStorage.setItem(STORAGE_KEY,JSON.stringify(yearData));}catch(e){} }
 function loadYearDataFromStorage(){
   try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw) return;
-    const data = JSON.parse(raw);
-    Object.keys(data).forEach(y => { yearData[y] = data[y]; });
+    const raw=localStorage.getItem(STORAGE_KEY);if(!raw) return;
+    const data=JSON.parse(raw);
+    Object.keys(data).forEach(y=>{yearData[y]=data[y];});
     Object.keys(yearData).forEach(y=>{
-      const statusEl = document.getElementById('status-'+y);
-      if(statusEl && yearData[y]){
-        statusEl.textContent = `✓ Données ${y} chargées (sauvegardées localement)`;
-        statusEl.className = 'import-status ok';
-      }
+      const el=document.getElementById('status-'+y);
+      if(el&&yearData[y]){el.textContent=`✓ Données ${y} chargées (local)`;el.className='import-status ok';}
     });
-  } catch(err){ console.error('Erreur lecture localStorage', err); }
+  }catch(e){}
 }
 
 // ===== IMPRESSION =====
-let printPrevActive = null;
-window.addEventListener('beforeprint', ()=>{
-  printPrevActive = document.querySelector('.pages.active');
+let printPrevActive=null;
+window.addEventListener('beforeprint',()=>{
+  printPrevActive=document.querySelector('.pages.active');
   document.querySelectorAll('.pages').forEach(p=>p.classList.add('active'));
-  document.getElementById('globalKpis').style.display = '';
-  Object.values(chartRegistry).forEach(c=>{ try{ c.resize(); }catch(e){} });
-  [chartMonthly, chartEvolutionFull, chartYearOverlay, chartYearCompare].forEach(c=>{ if(c){ try{ c.resize(); }catch(e){} } });
+  document.getElementById('globalKpis').style.display='';
+  Object.values(chartRegistry).forEach(c=>{try{c.resize();}catch(e){}});
+  [chartMonthly,chartEvolutionFull,chartYearOverlay,chartYearCompare].forEach(c=>{if(c){try{c.resize();}catch(e){}}});
 });
-window.addEventListener('afterprint', ()=>{
+window.addEventListener('afterprint',()=>{
   document.querySelectorAll('.pages').forEach(p=>p.classList.remove('active'));
   if(printPrevActive) printPrevActive.classList.add('active');
 });
 
-// init
+// ===== INIT =====
 loadYearDataFromStorage();
+loadAnnotations();
 applyYearAggregates('all');
 if(Object.keys(yearData).length){ rebuildMonthlyAndEvolution(); }
 else { updateKPIs('all'); buildMonthlyChart('all'); }
