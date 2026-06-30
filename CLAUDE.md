@@ -10,6 +10,24 @@ git fetch origin && git pull origin main
 
 Ce repo est modifié activement entre les sessions (uploads GitHub directs). Ne jamais travailler sur une version potentiellement périmée.
 
+## Règles de comportement
+
+- Ne jamais modifier un fichier sans avoir d'abord lu sa version actuelle dans le repo.
+- En cas de conflit de fusion, lire les deux versions avant de choisir — ne jamais
+  utiliser `--strategy-option=ours` sans vérifier ce que chaque côté contient.
+- Ne jamais remplacer une librairie locale (JS, CSS) par un CDN sans autorisation
+  explicite.
+- Toujours travailler sur la branche de développement désignée, jamais directement
+  sur `main` sauf instruction explicite contraire.
+- Avant de déclarer une tâche terminée, vérifier que le fichier modifié correspond
+  bien à ce qui était demandé (pas d'écrasement accidentel).
+
+## En cas de doute
+
+Poser la question plutôt qu'agir sur une hypothèse.
+Si une version plus récente du fichier existe sur le remote, la récupérer avant
+de continuer.
+
 ## Contexte du projet
 
 Tableau de bord HTML unique (`dashboard-stats.html`) pour un conseiller en médiation numérique à La Coop.
