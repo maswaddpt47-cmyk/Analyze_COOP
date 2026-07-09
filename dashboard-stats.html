@@ -1250,6 +1250,8 @@
 
 <div class="footer-note" id="footerNote">Données issues de l'export La Coop de la médiation numérique</div>
 
+<script src="utils.js"></script>
+<script src="logic.js"></script>
 <script>
 // ===== DATA =====
 let monthly = {
@@ -1367,12 +1369,6 @@ function renderBars(containerId, data){
   });
 }
 
-function hexToRgba(hex, alpha){
-  const h = hex.replace('#','');
-  const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
-
 // ===== DONUT =====
 function makeOrUpdateDoughnut(id, labels, values, colors) {
   const total = values.reduce((a,b)=>a+b,0);
@@ -1438,9 +1434,6 @@ function makeOrUpdateAtelHBar(id, labels, values, colors) {
   });
 }
 
-function colorKey(label){
-  return norm(label).toLowerCase().replace(/\s/g,'');
-}
 const colorIndex = {};
 Object.keys(colorMaps).forEach(cat=>{
   colorIndex[cat] = {};
@@ -1449,13 +1442,6 @@ Object.keys(colorMaps).forEach(cat=>{
 
 function colorFor(category, label, i){
   return (colorIndex[category] && colorIndex[category][colorKey(label)]) || palette[i % palette.length];
-}
-
-// ===== GROWTH BADGE =====
-function growthBadge(pct){
-  const sign = pct >= 0 ? '+' : '';
-  const cls = pct >= 0 ? 'color:var(--green)' : 'color:var(--red)';
-  return `<span style="${cls};font-size:12px;font-weight:700;margin-left:6px;">${sign}${pct.toFixed(1)}%</span>`;
 }
 
 // ===== RENDER AGGREGATES =====
@@ -1640,8 +1626,6 @@ function buildDureesYearChart(){
     tooltip: { theme:'dark', shared:true, intersect:false }
   });
 }
-
-function monthYear(label){ return '20'+label.split('/')[1]; }
 
 function getFilteredMonthly(year){
   if(year==='all') return monthly;
@@ -2022,67 +2006,6 @@ window.addEventListener('afterprint', () => {
 
 
 // ===== IMPORT / PARSING xlsx EXPORTS =====
-function norm(s){
-  return String(s==null?'':s)
-    .replace(/[‘’ʼ]/g, "'")
-    .replace(/ /g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-function parsePct(v){
-  if(v==null) return 0;
-  const c = String(v).replace(/ /g,' ').replace('%','').replace(',','.').trim();
-  const n = parseFloat(c);
-  return isNaN(n) ? 0 : n;
-}
-function parseNum(v){
-  const n = parseFloat(v);
-  return isNaN(n) ? 0 : n;
-}
-
-const SECTION_ORDER = [
-  "Statistiques générales",
-  "Statistiques sur vos accompagnements",
-  "Thématiques Médiation numérique",
-  "Thématiques Démarches administratives",
-  "Tags",
-  "Matériel utilisés",
-  "Canaux des activités",
-  "Durées des activités",
-  "Nombre d'activités par lieux",
-  "Statistiques sur vos bénéficiaires",
-  "Genre",
-  "Tranches d'âge",
-  "Statuts",
-  "Commune de résidence des bénéficiaires"
-];
-const SECTION_ORDER_N = SECTION_ORDER.map(norm);
-
-function rowsBetween(rows, header){
-  const h = norm(header);
-  const idx = rows.findIndex(r => norm(r[0]) === h);
-  if(idx === -1) return [];
-  let endIdx = rows.length;
-  for(let j=idx+1;j<rows.length;j++){
-    const label = norm(rows[j][0]);
-    if(SECTION_ORDER_N.includes(label)){ endIdx = j; break; }
-  }
-  const out = [];
-  for(let j=idx+1;j<endIdx;j++){
-    const r = rows[j];
-    const label = norm(r[0]);
-    if(!label) continue;
-    if(typeof r[1] !== 'number' && isNaN(parseFloat(r[1]))) continue;
-    out.push({ label, val: parseNum(r[1]), pct: parsePct(r[2]) });
-  }
-  return out;
-}
-
-function getValue(rows, label){
-  const l = norm(label);
-  const r = rows.find(r => norm(r[0]) === l);
-  return r ? parseNum(r[1]) : 0;
-}
 
 function parseWorkbookToDataset(wb){
   const sheet = wb.Sheets['Statistiques'] || wb.Sheets[wb.SheetNames[0]];
@@ -2154,58 +2077,6 @@ function parseWorkbookToDataset(wb){
   };
 }
 
-function mergeArraysSum(arrays){
-  const map = new Map();
-  arrays.forEach(arr=>{
-    arr.forEach(item=>{
-      const cur = map.get(item.label) || { label:item.label, val:0, color:item.color };
-      cur.val += item.val;
-      map.set(item.label, cur);
-    });
-  });
-  const merged = [...map.values()];
-  const total = merged.reduce((a,b)=>a+b.val,0) || 1;
-  merged.forEach(m=> m.pct = Math.round((m.val/total)*1000)/10);
-  return merged.sort((a,b)=>b.val-a.val);
-}
-
-function sumDatasets(list){
-  const t = list.reduce((acc, ds)=>{
-    Object.keys(ds.totals).forEach(k=>{
-      if(k.endsWith('Pct')) return;
-      acc[k] = (acc[k]||0) + ds.totals[k];
-    });
-    return acc;
-  }, {});
-
-  // Dédoublonnage bénéficiaires si les IDs sont disponibles dans tous les datasets
-  const allHaveIds = list.every(ds => ds.benefIds && ds.benefIds.length > 0);
-  if(allHaveIds){
-    const mergedIds = new Set(list.flatMap(ds => ds.benefIds));
-    t.beneficiaires = mergedIds.size;
-    t._deduplicated = true;
-  }
-
-  const indivTotal = (t.individuelsVal||0) + (t.ateliersVal||0) || 1;
-  t.individuelsPct = Math.round((t.individuelsVal/indivTotal)*1000)/10;
-  t.ateliersPct = Math.round((t.ateliersVal/indivTotal)*1000)/10;
-
-  return {
-    totals: t,
-    agentName: list[0] && list[0].agentName,
-    types: mergeArraysSum(list.map(d=>d.types)),
-    themMed: mergeArraysSum(list.map(d=>d.themMed)),
-    themAdmin: mergeArraysSum(list.map(d=>d.themAdmin)),
-    materiel: mergeArraysSum(list.map(d=>d.materiel)),
-    canaux: mergeArraysSum(list.map(d=>d.canaux)),
-    durees: mergeArraysSum(list.map(d=>d.durees)),
-    lieux: mergeArraysSum(list.map(d=>d.lieux)).slice(0,10),
-    genre: mergeArraysSum(list.map(d=>d.genre)),
-    age: mergeArraysSum(list.map(d=>d.age)),
-    statut: mergeArraysSum(list.map(d=>d.statut)),
-    communes: mergeArraysSum(list.map(d=>d.communes)).slice(0,10)
-  };
-}
 
 function setBanner(text){
   const b = document.getElementById('dataBanner');
@@ -2404,21 +2275,6 @@ async function chartToBase64(id){
   } catch(e){ return null; }
 }
 
-// Barre de progression légère (light)
-function rpBar(label, val, pct, color){
-  return `<div class="rp-bar-row">
-    <div class="rp-bar-top"><span>${label}</span><span>${val} · ${pct}%</span></div>
-    <div class="rp-bar-track"><div class="rp-bar-fill" style="width:${pct}%;background:${color||'#3b82f6'}"></div></div>
-  </div>`;
-}
-
-function rpKpi(label, val, sub, accent){
-  return `<div class="rp-kpi-card accent-${accent||'blue'}">
-    <div class="rk-label">${label}</div>
-    <div class="rk-val">${val}</div>
-    ${sub ? `<div class="rk-sub">${sub}</div>` : ''}
-  </div>`;
-}
 
 async function buildRapport(){
   const ds = getActiveDataset();
@@ -2692,12 +2548,6 @@ let presSlides = [];
 let presIndex = 0;
 let presSwipeStartX = 0;
 
-function slBar(label, val, pct, color){
-  return `<div class="sl-bar-row">
-    <div class="sl-bar-top"><span>${label}</span><span>${val} · ${pct}%</span></div>
-    <div class="sl-bar-track"><div class="sl-bar-fill" style="width:${Math.min(pct,100)}%;background:${color||'#3b82f6'}"></div></div>
-  </div>`;
-}
 
 async function buildPresSlides(){
   const ds = getActiveDataset();
@@ -3136,15 +2986,7 @@ document.getElementById('qrModalOverlay').addEventListener('click', e=>{
     document.getElementById('qrModalOverlay').classList.remove('active');
 });
 
-// ===== COMPARAISON CÔTE À CÔTE =====
-function delta(a, b){
-  if(!a || !b) return '';
-  const pct = ((b-a)/a*100);
-  const sign = pct >= 0 ? '+' : '';
-  const cls = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat';
-  return `<span class="delta-badge ${cls}">${sign}${pct.toFixed(1)}%</span>`;
-}
-
+// ===== COMPARAISON =====
 function renderCompare(yA, yB){
   const dA = yearData[yA], dB = yearData[yB];
   const missing = [];

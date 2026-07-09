@@ -28,13 +28,36 @@ Poser la question plutôt qu'agir sur une hypothèse.
 Si une version plus récente du fichier existe sur le remote, la récupérer avant
 de continuer.
 
+## Tests unitaires — règle obligatoire
+
+| Fichier source | Fichier de tests | Runner |
+|---|---|---|
+| `utils.js` — fonctions bas niveau | `utils.test.js` | `node --test utils.test.js` |
+| `logic.js` — logique métier | `logic.test.js` | `node --test logic.test.js` |
+
+Ces fichiers sont chargés dans le navigateur ET testés sous Node (aucune dépendance externe).
+Une seule source de vérité — ne jamais dupliquer une fonction entre ces fichiers et `dashboard-stats.html`.
+
+Après toute modification de `utils.js` ou `logic.js` :
+1. Modifier la fonction
+2. Exécuter le runner correspondant
+3. Commiter source + tests ensemble si un test a été mis à jour
+
+Règles :
+- Bug corrigé → corriger le code, pas le test
+- Ne jamais supprimer un test pour faire passer le commit
+- La CI bloque le déploiement si un test échoue
+
 ## Contexte du projet
 
 Tableau de bord HTML unique (`dashboard-stats.html`) pour un conseiller en médiation numérique à La Coop.
 
-- **Fichier principal** : `dashboard-stats.html` (toute l'app en un seul fichier)
+- **Fichier principal** : `dashboard-stats.html`
+- **Fonctions extraites** (chargées avant le script inline) :
+  - `utils.js` — fonctions pures bas niveau (norm, parsePct, hexToRgba, growthBadge…)
+  - `logic.js` — logique métier (rowsBetween, getValue, mergeArraysSum, sumDatasets…)
 - **Librairies locales** (ne pas remplacer par CDN) :
-  - `chart.umd.min.js` — Chart.js v4 (chargé en `<head>`)
+  - `chart.umd.min.js` — Chart.js v4 (si utilisé)
   - `xlsx.full.min.js` — SheetJS pour parser les exports XLSX de La Coop
 - **Données** : stockées en `localStorage` (`yearData`, `annotations`)
 - **Branche de développement** : `claude/stats-optimization-thl4rq`
