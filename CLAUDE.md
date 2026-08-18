@@ -23,6 +23,7 @@ Ne jamais travailler sur une version potentiellement périmée — l'oubli est u
 3. Sur toute demande d'audit ou de correction de bug, livrer un audit systématique (tous les points d'impact) avant la première correction — pas des trouvailles ponctuelles au fil des questions.
 4. Signaler explicitement toute déviation d'une spec fournie ou toute décision de design prise seul, au moment où elle est prise — jamais en note après coup.
 5. Poser une question de clarification dès qu'une demande est ambiguë ou sous-spécifiée (contenu non précisé, "adapte" vs "applique", référence absente) plutôt que de trancher en silence.
+5bis. Utiliser des dates explicites (JJ/MM ou JJ/MM/AAAA) plutôt que des termes relatifs ("hier", "aujourd'hui", "la semaine dernière") — la perception du temps vient d'un contexte injecté en début de session, pas d'une horloge en temps réel, et devient peu fiable sur une session qui s'étale sur plusieurs jours ou plusieurs reprises.
 6. Toujours faire `git pull` avant de lire ou modifier le moindre fichier, même si le repo semble à jour. Respecter la politique de push définie ici (push direct sur `main` pour la doc/config, branche de travail pour le code applicatif) et signaler tout conflit avec les instructions de session avant d'agir.
 7. Après toute reprise de session ou résumé de contexte, relire l'état réel du fichier concerné avant de le modifier — ne jamais présumer qu'un correctif précédent est encore en place.
 8. Avant de pousser un changement visuel (CSS/layout), vérifier mentalement les interactions à risque (stacking context, overflow, position sticky/fixed) sur les zones sensibles existantes.
@@ -42,6 +43,7 @@ Ne jamais travailler sur une version potentiellement périmée — l'oubli est u
 **Priorité haute**
 
 1. Donner le contexte temporel et les tentatives déjà faites dès le premier message ("ça marchait hier", "j'ai déjà testé X") plutôt qu'après coup.
+1bis. Utiliser des dates explicites (JJ/MM ou JJ/MM/AAAA) plutôt que des termes relatifs ("hier", "la semaine dernière", "demain") — Claude n'a pas d'horloge en temps réel et sa perception du temps devient peu fiable sur une session longue.
 2. Pour un bug visuel ou "bizarre", ajouter une description du symptôme précis (ou une capture annotée) plutôt qu'une formule vague.
 3. Signaler explicitement en début de message tout changement d'état fait hors session (redéploiement, fichier uploadé, branche renommée, settings modifiés).
 4. Pour les demandes ouvertes ("plus", "mieux", "améliore"), préciser le critère de succès attendu.
