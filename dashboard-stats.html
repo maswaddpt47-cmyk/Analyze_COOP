@@ -2179,7 +2179,9 @@ document.getElementById('jsonImportInput').addEventListener('change', (e)=>{
         }
       });
       const activeBtn = document.querySelector('.year-btn.active');
-      applyYearAggregates(activeBtn.dataset.year);
+      const years = Object.keys(data).filter(k => !k.startsWith('_')).sort();
+      const activeYear = activeBtn ? activeBtn.dataset.year : years[years.length - 1];
+      applyYearAggregates(activeYear);
       rebuildMonthlyAndEvolution();
     } catch(err){
       alert('Fichier JSON invalide.');
