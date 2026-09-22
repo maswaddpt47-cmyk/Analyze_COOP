@@ -98,6 +98,9 @@ Tableau de bord HTML unique (`dashboard-stats.html`) pour un conseiller en médi
 - **Librairies locales** (ne pas remplacer par CDN) :
   - `apexcharts.min.js` — ApexCharts (chargé en `<head>`)
   - `xlsx.full.min.js` — SheetJS pour parser les exports XLSX de La Coop
+  - `leaflet.js` / `leaflet.css` + `images/` — Leaflet 1.9.4 pour la carte des
+    communes. Fonds de carte : Géoplateforme IGN (`data.geopf.fr`), gratuite et
+    sans clé, avec repli sur OpenStreetMap — **ne pas revenir à CARTO**
 - **Données** : stockées en `localStorage` (`yearData`, `annotations`)
 - **Autres fichiers HTML** : `conum-multi-agents.html`, `conum-pptx.html` — ne pas confondre avec le dashboard principal
 - **Branche de développement** : `claude/stats-optimization-thl4rq`

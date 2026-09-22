@@ -8,8 +8,8 @@
 <script src="xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="leaflet.css"/>
+<script src="leaflet.js"></script>
 <style>
   :root{
     --bg:#0b1020;
@@ -698,6 +698,21 @@
     overflow:hidden;position:relative;
   }
   #communeMap{width:100%;height:340px;}
+  /* L'IGN ne publie pas de fond sombre : on inverse les tuiles pour retrouver
+     le rendu de l'ancien fond CARTO dark. Le filtre ne porte que sur le calque
+     de tuiles — marqueurs, popups et contrôles gardent leurs vraies couleurs. */
+  #communeMap .leaflet-tile-pane{
+    filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.75);
+  }
+  body.light-mode #communeMap .leaflet-tile-pane{ filter:none; }
+  /* Attribution lisible sur fond sombre (obligatoire : licence IGN et OSM). */
+  #communeMap .leaflet-control-attribution{
+    background:rgba(18,26,50,.85); color:var(--muted); font-size:10px;
+  }
+  #communeMap .leaflet-control-attribution a{ color:var(--muted); }
+  body.light-mode #communeMap .leaflet-control-attribution{
+    background:rgba(255,255,255,.85);
+  }
   .map-legend{
     position:absolute;bottom:10px;right:10px;background:rgba(18,26,50,.9);
     border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:11px;
@@ -3390,9 +3405,28 @@ function buildCommuneMap(communes){
   if(leafletMap){ leafletMap.remove(); leafletMap = null; }
 
   leafletMap = L.map('communeMap', { zoomControl:true }).setView([44.35, 0.63], 9);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution:'© OpenStreetMap © CARTO', maxZoom:14
-  }).addTo(leafletMap);
+  // Fonds de carte : Géoplateforme de l'IGN (data.geopf.fr), service public
+  // français, gratuit et SANS clé API. Remplace les tuiles CARTO, dont la
+  // version raster exige desormais une cle et est en cours de retrait
+  // (constate le 22/09/2026). Le rendu sombre du thème est obtenu par filtre
+  // CSS sur .leaflet-tile-pane, l'IGN ne publiant pas de style sombre.
+  // Repli automatique sur OpenStreetMap si une tuile IGN ne repond pas.
+  const fondIGN = L.tileLayer(
+    'https://data.geopf.fr/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile' +
+    '&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&TILEMATRIXSET=PM' +
+    '&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image/png',
+    { attribution:'© IGN — Géoplateforme', maxZoom:14, crossOrigin:true }
+  );
+  let repliFait = false;
+  fondIGN.on('tileerror', () => {
+    if(repliFait) return;
+    repliFait = true;
+    leafletMap.removeLayer(fondIGN);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution:'© OpenStreetMap', maxZoom:14, crossOrigin:true
+    }).addTo(leafletMap);
+  });
+  fondIGN.addTo(leafletMap);
 
   const maxVal = Math.max(...points.map(p=>p.val));
   points.forEach(p => {

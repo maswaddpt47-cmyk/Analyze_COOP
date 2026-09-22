@@ -28,9 +28,19 @@ seul ce qui est commité survit. À relire au démarrage, avec `CLAUDE.md`.
   visible et le graphique déborde de sa carte. Ne se voyait que sur les
   graphiques rendus une seule fois, les autres étant nettoyés par
   `apexDestroy`.
-- **Les librairies restent locales** (`xlsx.full.min.js`, `apexcharts.min.js`).
+- **Les librairies restent locales** (`xlsx.full.min.js`, `apexcharts.min.js`,
+  `leaflet.js`/`leaflet.css` + `images/`).
   Le passage au CDN rendait l'import impossible dès que le réseau filtrait
   cdnjs — avec un message qui accusait le fichier de l'usager.
+- **Les fonds de carte viennent de la Géoplateforme de l'IGN**
+  (`data.geopf.fr`), service public gratuit et **sans clé API**, avec repli
+  automatique sur OpenStreetMap si une tuile ne répond pas. Ne pas revenir aux
+  tuiles CARTO (`basemaps.cartocdn.com`) : leur version raster exige désormais
+  une clé et est en cours de retrait (constaté le 22/09/2026). L'IGN ne
+  publiant pas de style sombre, le rendu est obtenu par un filtre CSS sur
+  `#communeMap .leaflet-tile-pane`, neutralisé en mode clair — ne pas le poser
+  sur le conteneur entier, marqueurs et popups y perdraient leurs couleurs.
+  L'attribution IGN/OSM est obligatoire, ne pas la masquer.
 - **Les messages d'erreur d'import distinguent les causes.** Le message
   générique « format inattendu » a fait chercher pendant un temps un problème
   de fichier alors que la cause était `getValue is not defined`.
@@ -39,28 +49,13 @@ seul ce qui est commité survit. À relire au démarrage, avec `CLAUDE.md`.
 
 ## Chantiers ouverts, par priorité
 
-### 1. Leaflet est encore en CDN, sans copie locale
-
-`dashboard-stats.html` charge Leaflet 1.9.4 (JS + CSS) depuis `unpkg.com`.
-Si unpkg est filtré ou que le poste est hors-ligne, la carte des communes
-casse (`L is not defined`) — constaté le 22/09/2026 en test navigateur avec
-les CDN bloqués.
-
-Contrairement à ApexCharts et SheetJS, **il n'y a pas de copie locale dans le
-dépôt** : il faut télécharger `leaflet.js`, `leaflet.css` et le dossier
-`images/` (les icônes de marqueurs sont référencées en relatif depuis le CSS),
-puis basculer les deux balises.
-
-À faire quand le réseau le permet. Non bloquant : le reste du dashboard
-fonctionne sans Leaflet.
-
-### 2. `conum-multi-agents.html` charge aussi ApexCharts en CDN
+### 1. `conum-multi-agents.html` charge aussi ApexCharts en CDN
 
 Même exposition que le dashboard avant correction (`ligne 7`). Non traité
 le 22/09/2026 : hors du périmètre demandé, et ce fichier n'est pas le
 dashboard principal. À aligner sur la copie locale si ce fichier reste utilisé.
 
-### 3. Deux écarts entre `CLAUDE.md` et le code réel
+### 2. Deux écarts entre `CLAUDE.md` et le code réel
 
 À corriger dans `CLAUDE.md` lors d'une prochaine passe documentaire :
 
