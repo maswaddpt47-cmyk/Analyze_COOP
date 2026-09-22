@@ -2075,27 +2075,16 @@ buildYearCompareChart();
 // accompagnements lus, 591 affiches). Les labels se derivent donc des donnees
 // reellement importees, sans jamais retrecir en deca du squelette d'origine.
 function rebuildMonthlyLabels(){
-  let maxY = 2026, maxM = 6;
-  Object.keys(yearData).forEach(y => {
-    const d = yearData[y];
-    if(!d || !d.monthly) return;
-    d.monthly.labels.forEach(lbl => {
-      const parts = String(lbl).split('/');
-      if(parts.length !== 2) return;
-      const mm = parseInt(parts[0], 10), yy = 2000 + parseInt(parts[1], 10);
-      if(isNaN(mm) || isNaN(yy)) return;
-      if(yy > maxY || (yy === maxY && mm > maxM)){ maxY = yy; maxM = mm; }
-    });
-  });
-  const labels = [];
-  for(let y = 2024; y <= maxY; y++){
-    const last = (y === maxY) ? maxM : 12;
-    for(let m = 1; m <= last; m++){
-      labels.push(String(m).padStart(2,'0') + '/' + String(y).slice(2));
-    }
-  }
-  monthly.labels = labels;
-  return { maxY, maxM };
+  // Seules les annees reellement importees produisent des colonnes : voir
+  // buildMonthlyLabels() dans logic.js. Si rien n'est importe, on conserve le
+  // squelette par defaut pour que l'ecran d'accueil garde un axe coherent.
+  const labels = buildMonthlyLabels(yearData);
+  if(labels.length) monthly.labels = labels;
+  const dernier = monthly.labels[monthly.labels.length - 1] || '';
+  const parts = String(dernier).split('/');
+  return parts.length === 2
+    ? { maxY: 2000 + parseInt(parts[1], 10), maxM: parseInt(parts[0], 10) }
+    : { maxY: 2026, maxM: 6 };
 }
 
 function rebuildMonthlyAndEvolution(){

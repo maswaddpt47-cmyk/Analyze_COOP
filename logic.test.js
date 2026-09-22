@@ -1,7 +1,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { rowsBetween, getValue, mergeArraysSum, sumDatasets, SECTION_ORDER_N,
-        isCurrentMonth, monthlySeriesStats, sumYearUpTo } = require('./logic.js');
+        isCurrentMonth, monthlySeriesStats, sumYearUpTo, buildMonthlyLabels } = require('./logic.js');
 
 const ROWS_FIXTURE = [
   ['Statistiques générales', null, null],
@@ -270,5 +270,50 @@ describe('sumYearUpTo', () => {
   });
   it("ignore les autres annees", () => {
     assert.equal(sumYearUpTo(['01/25','01/26'], [50, 75], '2026', 12), 75);
+  });
+});
+
+
+describe('buildMonthlyLabels', () => {
+  const an = (...mois) => ({ monthly: { labels: mois, values: mois.map(()=>1) } });
+
+  // Regression du 22/09/2026 : le squelette partait de janvier 2024 quoi qu'il
+  // arrive. Avec la seule annee 2026 importee, 24 colonnes vides sur 33
+  // ecrasaient l'axe du graphique mensuel.
+  it("ne produit aucune colonne pour une annee non importee", () => {
+    const labels = buildMonthlyLabels({ '2026': an('01/26','02/26','03/26') });
+    assert.deepEqual(labels, ['01/26','02/26','03/26']);
+    assert.equal(labels.some(l => l.endsWith('/24') || l.endsWith('/25')), false);
+  });
+
+  it("garde les mois a zero A L'INTERIEUR d'une annee importee", () => {
+    // aout absent de l'export mais encadre par juillet et septembre :
+    // « aucune activite en aout » est une information, pas un trou.
+    const labels = buildMonthlyLabels({ '2026': an('07/26','09/26') });
+    assert.deepEqual(labels, ['07/26','08/26','09/26']);
+  });
+
+  it("enchaine plusieurs annees dans l'ordre", () => {
+    const labels = buildMonthlyLabels({
+      '2026': an('01/26','02/26'),
+      '2025': an('11/25','12/25')
+    });
+    assert.deepEqual(labels, ['11/25','12/25','01/26','02/26']);
+  });
+
+  it("ne relie pas deux annees par des mois inexistants", () => {
+    const labels = buildMonthlyLabels({ '2024': an('12/24'), '2026': an('01/26') });
+    assert.deepEqual(labels, ['12/24','01/26']);
+  });
+
+  it("rend une liste vide quand rien n'est importe", () => {
+    assert.deepEqual(buildMonthlyLabels({}), []);
+    assert.deepEqual(buildMonthlyLabels(null), []);
+  });
+
+  it("ignore une annee sans serie mensuelle exploitable", () => {
+    assert.deepEqual(buildMonthlyLabels({ '2026': { monthly: { labels: [] } } }), []);
+    assert.deepEqual(buildMonthlyLabels({ '2026': {} }), []);
+    assert.deepEqual(buildMonthlyLabels({ '2026': an('nimporte quoi') }), []);
   });
 });

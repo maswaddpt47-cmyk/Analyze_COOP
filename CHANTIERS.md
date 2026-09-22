@@ -84,6 +84,13 @@ production.
   à droite sortirait de l'écran sur la dernière colonne. La carte prend un
   `z-index` au survol parce que `.kpi:hover` applique un `transform`, qui crée
   un stacking context.
+- **Le squelette mensuel ne contient que les années importées.** Une année
+  absente de `yearData` ne produit aucune colonne — l'axe partait de janvier
+  2024 quoi qu'il arrive, soit 24 colonnes mortes sur 33 avec la seule année
+  2026, illisible sur mobile. En revanche un mois à zéro **à l'intérieur**
+  d'une année importée reste affiché : « aucune activité en août » est une
+  information, pas un trou. `buildMonthlyLabels()` dans `logic.js`, avec ses
+  tests.
 - **Les messages d'erreur d'import distinguent les causes.** Le message
   générique « format inattendu » a fait chercher pendant un temps un problème
   de fichier alors que la cause était `getValue is not defined`.

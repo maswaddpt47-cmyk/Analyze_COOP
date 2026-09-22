@@ -153,6 +153,35 @@ function monthlySeriesStats(labels, values, year, now){
   };
 }
 
+// Construit le squelette de mois a partir des seules annees REELLEMENT
+// importees. Distinction qui fait toute la difference :
+//   - une annee absente de yearData ne produit AUCUNE colonne. Le squelette
+//     partait auparavant de janvier 2024 quoi qu'il arrive : avec la seule
+//     annee 2026 importee, 24 colonnes vides sur 33 ecrasaient l'axe et le
+//     rendaient illisible sur mobile (constate le 22/09/2026) ;
+//   - un mois a zero DANS une annee importee reste affiche : « aucune
+//     activite en aout » est une information, pas un trou.
+function buildMonthlyLabels(yearData){
+  const labels = [];
+  Object.keys(yearData || {})
+    .filter(y => {
+      const d = yearData[y];
+      return d && d.monthly && Array.isArray(d.monthly.labels) && d.monthly.labels.length;
+    })
+    .sort()
+    .forEach(y => {
+      const mois = yearData[y].monthly.labels
+        .map(l => parseInt(String(l).split('/')[0], 10))
+        .filter(n => !isNaN(n) && n >= 1 && n <= 12);
+      if(!mois.length) return;
+      const min = Math.min(...mois), max = Math.max(...mois);
+      for(let m = min; m <= max; m++){
+        labels.push(String(m).padStart(2,'0') + '/' + String(y).slice(2));
+      }
+    });
+  return labels;
+}
+
 // Somme d'une annee bornee au mois `maxMois` inclus — sert a comparer deux
 // annees sur la MEME fenetre, au lieu d'opposer une annee pleine a un semestre.
 function sumYearUpTo(labels, values, year, maxMois){
@@ -168,5 +197,5 @@ function sumYearUpTo(labels, values, year, maxMois){
 
 if (typeof module !== 'undefined') {
   module.exports = { rowsBetween, getValue, mergeArraysSum, sumDatasets, SECTION_ORDER, SECTION_ORDER_N,
-                    isCurrentMonth, monthlySeriesStats, sumYearUpTo };
+                    isCurrentMonth, monthlySeriesStats, sumYearUpTo, buildMonthlyLabels };
 }
