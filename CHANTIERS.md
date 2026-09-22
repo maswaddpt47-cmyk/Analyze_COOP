@@ -3,7 +3,12 @@
 État du travail entre deux sessions. Une session ne transmet rien à la suivante :
 seul ce qui est commité survit. À relire au démarrage, avec `CLAUDE.md`.
 
-**Référence** : 22/09/2026, sur la branche `claude/quirky-clarke-l9ynxv`.
+**Référence** : 22/09/2026, `main` à `de559e6`.
+
+**Validé en conditions réelles le 22/09/2026** par l'utilisateur, sur la version
+déployée : import de l'export XLSX et carte des communes fonctionnels. Les
+points ci-dessous ne sont donc pas seulement vérifiés en test, ils le sont en
+production.
 
 ---
 
