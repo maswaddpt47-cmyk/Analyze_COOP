@@ -78,6 +78,15 @@ Règles :
 
 ---
 
+## État du travail en cours
+
+**`CHANTIERS.md` à la racine** — à lire au démarrage, en même temps que ce
+fichier. Il porte les chantiers ouverts, les décisions en attente et les
+points à ne pas défaire. Le tenir à jour à chaque avancée, pas en fin de
+session.
+
+---
+
 ## Contexte du projet
 
 Tableau de bord HTML unique (`dashboard-stats.html`) pour un conseiller en médiation numérique à La Coop.

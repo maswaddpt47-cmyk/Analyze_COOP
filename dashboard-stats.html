@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>COOP — Dashboard Activité Conum</title>
-<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.0/dist/apexcharts.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="apexcharts.min.js"></script>
+<script src="xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -1260,6 +1260,8 @@ let monthly = {
            '01/26','02/26','03/26','04/26','05/26','06/26'],
   values: Array(30).fill(0)
 };
+// Fin de la periode reellement couverte, recalculee a chaque import.
+let monthlySpanEnd = '06/2026';
 
 const palette = ["#3b82f6","#10b981","#f59e0b","#a855f7","#ec4899","#06b6d4","#ef4444","#eab308",
                   "#22c55e","#6366f1","#f97316","#14b8a6","#d946ef","#84cc16","#0ea5e9","#f43f5e",
@@ -1345,6 +1347,13 @@ function apexMake(id, opts) {
   apexDestroy(id);
   const el = document.getElementById(id);
   if (!el) return null;
+  // Retirer le placeholder "Importe des donnees…" avant de dessiner : ApexCharts
+  // ajoute son canvas a la suite du contenu existant au lieu de le remplacer, ce
+  // qui laissait le message visible et decalait le graphique hors de sa carte
+  // (constate le 22/09/2026 sur le donut "Repartition par type", rendu une seule
+  // fois — les graphiques redessines etaient nettoyes par apexDestroy).
+  const placeholder = el.querySelector('.empty-placeholder');
+  if (placeholder) placeholder.remove();
   const ch = new ApexCharts(el, opts);
   ch.render();
   apexRegistry[id] = ch;
@@ -1691,7 +1700,7 @@ function updateKPIs(year){
   const total = data.values.reduce((a,b)=>a+b,0);
   const nonZero = data.values.filter(v=>v>0);
   document.getElementById('kpi-total').textContent = total.toLocaleString('fr-FR');
-  document.getElementById('kpi-total-sub').textContent = year==='all' ? 'période 01/2024 → 06/2026' : `année ${year}`;
+  document.getElementById('kpi-total-sub').textContent = year==='all' ? `période 01/2024 → ${monthlySpanEnd}` : `année ${year}`;
   const avg = nonZero.length ? (total / nonZero.length).toFixed(1) : '0';
   document.getElementById('kpi-avg').textContent = avg;
   document.getElementById('kpi-avg-sub').textContent = `${nonZero.length} mois (données)`;
@@ -1910,7 +1919,37 @@ function buildYearCompareChart(){
 }
 buildYearCompareChart();
 
+// Le squelette mensuel etait fige en dur jusqu'a 06/26 : tout mois importe
+// au-dela etait silencieusement jete (22/09/2026 : export a 9 mois, 660
+// accompagnements lus, 591 affiches). Les labels se derivent donc des donnees
+// reellement importees, sans jamais retrecir en deca du squelette d'origine.
+function rebuildMonthlyLabels(){
+  let maxY = 2026, maxM = 6;
+  Object.keys(yearData).forEach(y => {
+    const d = yearData[y];
+    if(!d || !d.monthly) return;
+    d.monthly.labels.forEach(lbl => {
+      const parts = String(lbl).split('/');
+      if(parts.length !== 2) return;
+      const mm = parseInt(parts[0], 10), yy = 2000 + parseInt(parts[1], 10);
+      if(isNaN(mm) || isNaN(yy)) return;
+      if(yy > maxY || (yy === maxY && mm > maxM)){ maxY = yy; maxM = mm; }
+    });
+  });
+  const labels = [];
+  for(let y = 2024; y <= maxY; y++){
+    const last = (y === maxY) ? maxM : 12;
+    for(let m = 1; m <= last; m++){
+      labels.push(String(m).padStart(2,'0') + '/' + String(y).slice(2));
+    }
+  }
+  monthly.labels = labels;
+  return { maxY, maxM };
+}
+
 function rebuildMonthlyAndEvolution(){
+  const span = rebuildMonthlyLabels();
+  monthlySpanEnd = String(span.maxM).padStart(2,'0') + '/' + span.maxY;
   monthly.values = monthly.labels.map(lbl => {
     const y = '20'+lbl.split('/')[1];
     const d = yearData[y];
@@ -2131,8 +2170,14 @@ document.querySelectorAll('.import-row input[type=file]').forEach(input=>{
     const reader = new FileReader();
     reader.onload = (evt)=>{
       try{
+        if(typeof XLSX === 'undefined'){
+          throw new Error('LIB_ABSENTE');
+        }
         const wb = XLSX.read(evt.target.result, { type:'array' });
         const ds = parseWorkbookToDataset(wb);
+        if(!ds.totals.accompagnements && !ds.themMed.length && !ds.genre.length){
+          throw new Error('FEUILLE_VIDE');
+        }
         yearData[year] = ds;
         saveYearDataToStorage();
         statusEl.textContent = `✓ ${file.name} — ${ds.totals.accompagnements} accompagnements`;
@@ -2141,7 +2186,17 @@ document.querySelectorAll('.import-row input[type=file]').forEach(input=>{
         applyYearAggregates(activeBtn.dataset.year);
         rebuildMonthlyAndEvolution();
       } catch(err){
-        statusEl.textContent = 'Erreur de lecture : format inattendu';
+        // Distinguer la lib absente d'un vrai problème de fichier : le message
+        // générique faisait accuser le fichier alors que la lib ne chargeait pas.
+        let msg;
+        if(err.message === 'LIB_ABSENTE'){
+          msg = 'La librairie de lecture XLSX n\'est pas chargée (xlsx.full.min.js manquant à côté du HTML).';
+        } else if(err.message === 'FEUILLE_VIDE'){
+          msg = 'Fichier lu, mais aucune statistique reconnue — vérifie que c\'est bien l\'export « Statistiques » de La Coop.';
+        } else {
+          msg = 'Erreur de lecture : ' + err.message;
+        }
+        statusEl.textContent = msg;
         statusEl.className = 'import-status err';
         console.error(err);
       }
