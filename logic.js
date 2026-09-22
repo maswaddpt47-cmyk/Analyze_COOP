@@ -1,8 +1,16 @@
 // logic.js — logique métier (parsing XLSX, agrégation de données)
 // Chargé par le navigateur (<script src>) ET par Node.js (require) pour les tests.
 
-const _utils = typeof require !== 'undefined' ? require('./utils.js') : window;
-const { norm, parsePct, parseNum } = _utils;
+// Sous Node, les fonctions bas niveau viennent du module utils.js. Dans le
+// navigateur elles sont déjà globales (utils.js est chargé avant ce fichier) :
+// ne surtout pas les redéclarer ici. Un `const norm` au scope global alors que
+// utils.js y a posé `function norm` lève une SyntaxError qui empêche TOUT ce
+// fichier de s'exécuter — les tests Node n'en voient rien, chaque fichier y
+// ayant son propre scope de module.
+if (typeof require !== 'undefined') {
+  var _utils = require('./utils.js');
+  var norm = _utils.norm, parsePct = _utils.parsePct, parseNum = _utils.parseNum;
+}
 
 const SECTION_ORDER = [
   "Statistiques générales",

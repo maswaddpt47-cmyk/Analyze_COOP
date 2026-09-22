@@ -154,3 +154,41 @@ describe('SECTION_ORDER_N', () => {
     assert.equal(SECTION_ORDER_N.length, 14);
   });
 });
+
+// Ce test reproduit le chargement NAVIGATEUR : utils.js puis logic.js evalues
+// dans un seul et meme scope global, sans `require`. C'est le seul scenario qui
+// voit une redeclaration entre les deux fichiers — sous `require`, chacun a son
+// propre scope de module et la collision reste invisible.
+// Bug du 22/09/2026 : `const { norm } = _utils` dans logic.js entrait en
+// collision avec `function norm` de utils.js -> SyntaxError -> logic.js ne
+// s'executait pas -> l'import XLSX echouait avec "format inattendu".
+describe('chargement navigateur (utils.js + logic.js dans un scope commun)', () => {
+  const fs = require('node:fs');
+  const vm = require('node:vm');
+
+  function loadInBrowserLikeScope(){
+    const sandbox = { window: {}, console };
+    sandbox.window = sandbox;
+    vm.createContext(sandbox);
+    for(const f of ['utils.js', 'logic.js']){
+      vm.runInContext(fs.readFileSync(__dirname + '/' + f, 'utf8'), sandbox, { filename: f });
+    }
+    return sandbox;
+  }
+
+  it("s'evalue sans SyntaxError de redeclaration", () => {
+    assert.doesNotThrow(loadInBrowserLikeScope);
+  });
+
+  it("expose les fonctions de logic.js en global", () => {
+    const g = loadInBrowserLikeScope();
+    for(const fn of ['rowsBetween', 'getValue', 'mergeArraysSum', 'sumDatasets']){
+      assert.equal(typeof g[fn], 'function', fn + ' doit etre defini globalement');
+    }
+  });
+
+  it("logic.js utilise bien les fonctions de utils.js une fois charge ainsi", () => {
+    const g = loadInBrowserLikeScope();
+    assert.equal(g.getValue([['Accompagnements au total', 660, null]], 'Accompagnements au total'), 660);
+  });
+});
