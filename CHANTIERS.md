@@ -46,6 +46,11 @@ production.
   `#communeMap .leaflet-tile-pane`, neutralisé en mode clair — ne pas le poser
   sur le conteneur entier, marqueurs et popups y perdraient leurs couleurs.
   L'attribution IGN/OSM est obligatoire, ne pas la masquer.
+- **Ne pas nommer une branche de développement en dur dans `CLAUDE.md`.** La
+  plateforme en impose une nouvelle à chaque session ; une branche écrite en
+  dur devient morte et fait chercher du travail là où il n'y en a plus
+  (`claude/stats-optimization-thl4rq`, corrigé le 22/09/2026). Ce qui compte
+  est que tout finisse mergé dans `main`, seule source du déploiement.
 - **Les messages d'erreur d'import distinguent les causes.** Le message
   générique « format inattendu » a fait chercher pendant un temps un problème
   de fichier alors que la cause était `getValue is not defined`.
@@ -59,18 +64,6 @@ production.
 Même exposition que le dashboard avant correction (`ligne 7`). Non traité
 le 22/09/2026 : hors du périmètre demandé, et ce fichier n'est pas le
 dashboard principal. À aligner sur la copie locale si ce fichier reste utilisé.
-
-### 2. Deux écarts entre `CLAUDE.md` et le code réel
-
-À corriger dans `CLAUDE.md` lors d'une prochaine passe documentaire :
-
-- la clé `localStorage` est `coopDashboard_yearData` (et
-  `coopDashboard_annotations`), pas `yearData` / `annotations` ;
-- la branche de développement annoncée est `claude/stats-optimization-thl4rq`,
-  alors que la plateforme impose une branche de session
-  (`claude/quirky-clarke-l9ynxv` le 22/09/2026). Dire laquelle fait foi.
-
----
 
 ## Décisions à trancher
 

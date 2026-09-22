@@ -24,7 +24,7 @@ Ne jamais travailler sur une version potentiellement périmée — l'oubli est u
 4. Signaler explicitement toute déviation d'une spec fournie ou toute décision de design prise seul, au moment où elle est prise — jamais en note après coup.
 5. Poser une question de clarification dès qu'une demande est ambiguë ou sous-spécifiée (contenu non précisé, "adapte" vs "applique", référence absente) plutôt que de trancher en silence.
 5bis. Utiliser des dates explicites (JJ/MM ou JJ/MM/AAAA) plutôt que des termes relatifs ("hier", "aujourd'hui", "la semaine dernière") — la perception du temps vient d'un contexte injecté en début de session, pas d'une horloge en temps réel, et devient peu fiable sur une session qui s'étale sur plusieurs jours ou plusieurs reprises.
-6. Toujours faire `git pull` avant de lire ou modifier le moindre fichier, même si le repo semble à jour. Respecter la politique de push définie ici (push direct sur `main` pour la doc/config, branche de travail pour le code applicatif) et signaler tout conflit avec les instructions de session avant d'agir.
+6. Toujours faire `git pull` avant de lire ou modifier le moindre fichier, même si le repo semble à jour. Respecter la politique de push définie ici (travailler sur la branche imposée par la session, puis merger dans `main` ; push direct sur `main` admis pour la doc/config et les correctifs courts déjà validés) et signaler tout conflit avec les instructions de session avant d'agir.
 7. Après toute reprise de session ou résumé de contexte, relire l'état réel du fichier concerné avant de le modifier — ne jamais présumer qu'un correctif précédent est encore en place.
 8. Avant de pousser un changement visuel (CSS/layout), vérifier mentalement les interactions à risque (stacking context, overflow, position sticky/fixed) sur les zones sensibles existantes.
 9. Ne jamais modifier un fichier sans avoir d'abord lu sa version actuelle dans le repo.
@@ -101,9 +101,14 @@ Tableau de bord HTML unique (`dashboard-stats.html`) pour un conseiller en médi
   - `leaflet.js` / `leaflet.css` + `images/` — Leaflet 1.9.4 pour la carte des
     communes. Fonds de carte : Géoplateforme IGN (`data.geopf.fr`), gratuite et
     sans clé, avec repli sur OpenStreetMap — **ne pas revenir à CARTO**
-- **Données** : stockées en `localStorage` (`yearData`, `annotations`)
+- **Données** : stockées en `localStorage`, clés `coopDashboard_yearData` et
+  `coopDashboard_annotations` (constantes `STORAGE_KEY` / `ANNOT_KEY`)
 - **Autres fichiers HTML** : `conum-multi-agents.html`, `conum-pptx.html` — ne pas confondre avec le dashboard principal
-- **Branche de développement** : `claude/stats-optimization-thl4rq`
+- **Branche de développement** : celle que la plateforme impose à la session en
+  cours. Son nom change à chaque session (`claude/…`), il ne peut donc pas être
+  écrit en dur ici — ne pas chercher à réutiliser une branche d'une session
+  passée. **Tout doit finir mergé dans `main`** : le déploiement GitHub Pages
+  ne part que de là, une branche de session ne déploie rien.
 
 ---
 
@@ -115,13 +120,24 @@ git fetch origin && git pull origin main
 git log --oneline -5
 
 # Développement (code applicatif)
-git checkout claude/stats-optimization-thl4rq   # ou créer la branche si nécessaire
+# La branche est celle imposée par la session en cours — ne pas en inventer une.
+git checkout -b <branche-de-session>        # si elle n'existe pas déjà
 # ... modifications ...
 node --test utils.test.js && node --test logic.test.js   # vérifier avant de commiter
 git add <fichiers>
 git commit -m "description claire"
-git push -u origin claude/stats-optimization-thl4rq
+git push -u origin <branche-de-session>
+
+# OBLIGATOIRE en fin de session — sinon rien n'est déployé
+git checkout main && git pull origin main
+git merge <branche-de-session> --no-ff
+node --test utils.test.js && node --test logic.test.js   # la CI bloque sinon
+git push origin main
 
 # Configuration / docs (CLAUDE.md, deploy.yml, etc.)
 # → push direct sur main autorisé
 ```
+
+**Branches obsolètes** : `claude/stats-optimization-thl4rq` date du 14/09/2026.
+Son unique commit non mergé (`b7c1557`) est déjà présent dans `main` sous un
+autre SHA (`86096b9`) — rien à récupérer, la branche peut être supprimée.
