@@ -218,7 +218,105 @@ function sumYearUpTo(labels, values, year, maxMois){
   return t;
 }
 
+// ===== EXPORT EQUIPE (fichier « accompagnements », une ligne par personne) =====
+// Ce format n'a rien a voir avec l'export « statistiques » : il est detaille,
+// multi-mediateurs, et UNE LIGNE = UN PARTICIPANT. Un atelier de 7 personnes
+// occupe 7 lignes, numerotees « 1/7 » a « 7/7 ».
+//
+// Comptage des ateliers, calibre le 22/09/2026 sur les totaux publies par
+// La Coop : lignes « 1/N » (premier participant de chaque atelier) PLUS les
+// ateliers a participant unique, dont la cellule ne porte pas de denominateur.
+// 755 + 12 = 767, le chiffre annonce. Verifie aussi agent par agent :
+// Michel Aswad ressort a 660 accompagnements, 259 individuels, 42 ateliers,
+// 401 participants — identique a son export statistiques.
+//
+// Champs ABSENTS de cet export, laisses a zero : beneficiaires, nouveaux,
+// suivis. Aucun identifiant de beneficiaire n'y figure, ces totaux ne sont
+// donc pas calculables — ne pas les inventer a partir du nombre de lignes.
+
+function serieExcelVersDate(n){
+  const num = Number(n);
+  if(!isFinite(num)) return null;
+  const d = new Date(Date.UTC(1899, 11, 30));
+  d.setUTCDate(d.getUTCDate() + num);
+  return d;
+}
+
+function parseEquipeRows(rows){
+  const iEntete = rows.findIndex(r => Array.isArray(r) && r.indexOf('Nom du médiateur') !== -1);
+  if(iEntete === -1) return { agents: [], erreur: 'ENTETE_INTROUVABLE' };
+  const H = rows[iEntete];
+  const col = nom => H.indexOf(nom);
+  const cDate = col('Date'), cPrenom = col('Prénom du médiateur'), cNom = col('Nom du médiateur');
+  const cType = col('Type'), cPart = col('Participants'), cThem = col('Thématique(s) d’accompagnement');
+  const cDuree = col('Durée (min)');
+  if(cPrenom === -1 || cNom === -1 || cType === -1) return { agents: [], erreur: 'COLONNES_MANQUANTES' };
+
+  const parAgent = new Map();
+  let lignes = 0;
+
+  for(let i = iEntete + 1; i < rows.length; i++){
+    const r = rows[i];
+    if(!r || r[cDate] == null) continue;
+    lignes++;
+    const nom = String((r[cPrenom] || '') + ' ' + (r[cNom] || '')).trim() || 'Sans nom';
+    const d = serieExcelVersDate(r[cDate]);
+    const annee = d ? String(d.getUTCFullYear()) : 'inconnue';
+
+    if(!parAgent.has(nom)) parAgent.set(nom, new Map());
+    const annees = parAgent.get(nom);
+    if(!annees.has(annee)){
+      annees.set(annee, {
+        totals: { accompagnements:0, individuelsVal:0, ateliersVal:0, participants:0,
+                  beneficiaires:0, nouveaux:0, suivis:0, minutes:0 },
+        them: new Map()
+      });
+    }
+    const a = annees.get(annee);
+    a.totals.accompagnements++;
+
+    const part = String(r[cPart] == null ? '' : r[cPart]).trim();
+    if(r[cType] === 'Atelier collectif'){
+      a.totals.participants++;
+      // Un atelier compte une fois : a son premier participant, ou lorsqu'il
+      // n'en a qu'un seul (cellule sans denominateur).
+      if(/^1\s*\//.test(part) || !part.includes('/')) a.totals.ateliersVal++;
+    } else {
+      a.totals.individuelsVal++;
+    }
+
+    const min = Number(r[cDuree]);
+    if(isFinite(min) && min > 0) a.totals.minutes += min;
+
+    if(cThem !== -1 && r[cThem]){
+      String(r[cThem]).split(/\r?\n/).forEach(t => {
+        const lib = norm(t);
+        if(!lib) return;
+        a.them.set(lib, (a.them.get(lib) || 0) + 1);
+      });
+    }
+  }
+
+  const agents = [...parAgent.entries()].map(([nom, annees]) => {
+    const data = {};
+    annees.forEach((a, annee) => {
+      const arr = [...a.them.entries()].map(([label, val]) => ({ label, val }));
+      const tot = arr.reduce((x,y) => x + y.val, 0) || 1;
+      arr.forEach(x => x.pct = Math.round((x.val / tot) * 1000) / 10);
+      arr.sort((x,y) => y.val - x.val);
+      data[annee] = { totals: a.totals, themMed: arr, themAdmin: [] };
+    });
+    return { nom, data };
+  }).sort((a,b) => {
+    const s = o => Object.values(o.data).reduce((x,y) => x + y.totals.accompagnements, 0);
+    return s(b) - s(a);
+  });
+
+  return { agents, lignes };
+}
+
 if (typeof module !== 'undefined') {
   module.exports = { rowsBetween, getValue, mergeArraysSum, sumDatasets, SECTION_ORDER, SECTION_ORDER_N,
-                    isCurrentMonth, monthlySeriesStats, sumYearUpTo, buildMonthlyLabels, topNAvecReste };
+                    isCurrentMonth, monthlySeriesStats, sumYearUpTo, buildMonthlyLabels, topNAvecReste,
+                    parseEquipeRows, serieExcelVersDate };
 }

@@ -1,7 +1,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { rowsBetween, getValue, mergeArraysSum, sumDatasets, SECTION_ORDER_N,
-        isCurrentMonth, monthlySeriesStats, sumYearUpTo, buildMonthlyLabels, topNAvecReste } = require('./logic.js');
+        isCurrentMonth, monthlySeriesStats, sumYearUpTo, buildMonthlyLabels, topNAvecReste, parseEquipeRows, serieExcelVersDate } = require('./logic.js');
 
 const ROWS_FIXTURE = [
   ['Statistiques générales', null, null],
@@ -357,5 +357,99 @@ describe('topNAvecReste', () => {
     assert.deepEqual(topNAvecReste([{label:'a',val:0}], 15), []);
     assert.deepEqual(topNAvecReste([], 15), []);
     assert.deepEqual(topNAvecReste(null, 15), []);
+  });
+});
+
+
+describe('parseEquipeRows (export « accompagnements » multi-mediateurs)', () => {
+  const ENTETE = ['Date','Prénom du médiateur','Nom du médiateur','Type','Participants',
+                  'Thématique(s) d’accompagnement','Durée (min)'];
+  // 46000 tombe en 2025, 46400 en 2027 — on reste sur une seule annee ici.
+  const L = (d,p,n,t,part,them,duree) => [d,p,n,t,part,them,duree];
+  const feuille = (...lignes) => [['Informations export'], [], ENTETE, ...lignes];
+
+  it("agrege par mediateur", () => {
+    const r = parseEquipeRows(feuille(
+      L(46287,'Michel','Aswad','Accompagnement individuel',1,'E-mail',60),
+      L(46287,'Michel','Aswad','Accompagnement individuel',1,'E-mail',30),
+      L(46287,'Irène','Séverin','Accompagnement individuel',1,'Santé',45)
+    ));
+    assert.equal(r.agents.length, 2);
+    assert.equal(r.agents[0].nom, 'Michel Aswad'); // trie par volume decroissant
+    assert.equal(r.lignes, 3);
+  });
+
+  // Calibration du 22/09/2026 : un atelier de 7 personnes occupe 7 lignes.
+  // Le compter 7 fois gonflerait le nombre d'ateliers d'un facteur 8.
+  it("ne compte un atelier qu'une fois, malgre une ligne par participant", () => {
+    const lignes = [];
+    for(let i=1;i<=7;i++) lignes.push(L(46287,'Michel','Aswad','Atelier collectif',i+'/7','Culture numérique',90));
+    const t = parseEquipeRows(feuille(...lignes)).agents[0].data['2026'].totals;
+    assert.equal(t.ateliersVal, 1);
+    assert.equal(t.participants, 7);
+    assert.equal(t.accompagnements, 7);
+  });
+
+  it("compte aussi l'atelier a participant unique, sans denominateur", () => {
+    const t = parseEquipeRows(feuille(
+      L(46287,'Michel','Aswad','Atelier collectif','1','Culture numérique',90)
+    )).agents[0].data['2026'].totals;
+    assert.equal(t.ateliersVal, 1);
+    assert.equal(t.participants, 1);
+  });
+
+  it("separe individuels et ateliers", () => {
+    const t = parseEquipeRows(feuille(
+      L(46287,'M','A','Accompagnement individuel',1,'E-mail',60),
+      L(46287,'M','A','Atelier collectif','1/2','E-mail',60),
+      L(46287,'M','A','Atelier collectif','2/2','E-mail',60)
+    )).agents[0].data['2026'].totals;
+    assert.equal(t.individuelsVal, 1);
+    assert.equal(t.ateliersVal, 1);
+    assert.equal(t.participants, 2);
+    assert.equal(t.accompagnements, 3);
+  });
+
+  it("eclate les thematiques multiples d'une meme ligne", () => {
+    const th = parseEquipeRows(feuille(
+      L(46287,'M','A','Accompagnement individuel',1,'E-mail\nNavigation sur internet',60),
+      L(46287,'M','A','Accompagnement individuel',1,'E-mail',60)
+    )).agents[0].data['2026'].themMed;
+    assert.equal(th[0].label, 'E-mail');
+    assert.equal(th[0].val, 2);
+    assert.equal(th.find(x=>x.label==='Navigation sur internet').val, 1);
+  });
+
+  it("cumule les minutes", () => {
+    const t = parseEquipeRows(feuille(
+      L(46287,'M','A','Accompagnement individuel',1,'E-mail',60),
+      L(46287,'M','A','Accompagnement individuel',1,'E-mail',45)
+    )).agents[0].data['2026'].totals;
+    assert.equal(t.minutes, 105);
+  });
+
+  // Ces totaux n'existent pas dans cet export : les deduire du nombre de
+  // lignes donnerait un faux nombre de personnes.
+  it("laisse a zero les totaux que l'export ne porte pas", () => {
+    const t = parseEquipeRows(feuille(
+      L(46287,'M','A','Accompagnement individuel',1,'E-mail',60)
+    )).agents[0].data['2026'].totals;
+    assert.equal(t.beneficiaires, 0);
+    assert.equal(t.nouveaux, 0);
+    assert.equal(t.suivis, 0);
+  });
+
+  it("signale un fichier qui n'est pas cet export", () => {
+    assert.equal(parseEquipeRows([['Statistiques générales'],['Accompagnements au total',527]]).erreur,
+                 'ENTETE_INTROUVABLE');
+  });
+});
+
+describe('serieExcelVersDate', () => {
+  it("convertit un numero de serie Excel", () => {
+    assert.equal(serieExcelVersDate(46287).toISOString().slice(0,10), '2026-09-22');
+  });
+  it("resiste a une valeur non numerique", () => {
+    assert.equal(serieExcelVersDate('bonjour'), null);
   });
 });

@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Multi-agents — Conum CD47</title>
-<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.0/dist/apexcharts.min.js"></script>
+<script src="apexcharts.min.js"></script>
+<script src="xlsx.full.min.js"></script>
 <style>
   :root{--bg:#0b1020;--panel:#121a32;--panel2:#0e1530;--border:#243154;--text:#e8ecf7;--muted:#8b95b8;--blue:#3b82f6;--green:#10b981;--orange:#f59e0b;--purple:#a855f7;--cyan:#06b6d4;--red:#ef4444;}
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -79,7 +80,11 @@
   <div class="badge">CD47</div>
   <div><div class="title">Multi-agents Conum</div><div class="sub">Vue agrégée + comparaison par conseiller</div></div>
   <div class="spacer"></div>
-  <button class="btn btn-primary" id="addAgentBtn">+ Ajouter un agent</button>
+  <label class="btn btn-primary" style="cursor:pointer;" title="Export « accompagnements » de La Coop — une ligne par participant, tous médiateurs">
+    ⬆ Importer l'export équipe
+    <input type="file" id="equipeInput" accept=".xlsx" style="display:none;">
+  </label>
+  <button class="btn btn-sec" id="addAgentBtn">+ Ajouter un agent</button>
   <button class="btn btn-sec" onclick="location.href='dashboard-stats.html'">← Dashboard</button>
 </div>
 
@@ -109,6 +114,8 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<script src="utils.js"></script>
+<script src="logic.js"></script>
 
 <div class="grid2">
   <!-- Sidebar agents -->
@@ -157,7 +164,9 @@
       <div style="margin-bottom:12px;">
         <select id="rankMetric">
           <option value="accompagnements">Accompagnements</option>
-          <option value="beneficiaires">Bénéficiaires</option>
+          <option value="minutes">Heures d'accompagnement</option>
+          <option value="individuelsVal">Accompagnements individuels</option>
+          <option value="beneficiaires">Bénéficiaires (export statistiques uniquement)</option>
           <option value="ateliersVal">Ateliers collectifs</option>
           <option value="participants">Participants ateliers</option>
         </select>
@@ -175,6 +184,58 @@ let agentJsonData = null;
 let currentView = 'aggregated'; // 'aggregated' | agentId
 
 function saveAgents(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(agents)); }
+
+// ===== IMPORT DE L'EXPORT EQUIPE =====
+// Un seul fichier remplace la saisie manuelle agent par agent : l'export
+// « accompagnements » de La Coop porte deja tous les mediateurs. Le parsing
+// vit dans logic.js (parseEquipeRows), avec ses tests — une ligne y vaut un
+// participant, pas un atelier.
+const PALETTE_AGENTS = ['3b82f6','10b981','f59e0b','a855f7','ec4899','06b6d4','ef4444','eab308',
+                        '22c55e','6366f1','f97316','14b8a6','d946ef','84cc16','0ea5e9','f43f5e'];
+
+document.getElementById('equipeInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  toast('Lecture de ' + file.name + '…');
+  const reader = new FileReader();
+  reader.onload = (evt)=>{
+    try{
+      if(typeof XLSX === 'undefined') throw new Error('LIB_ABSENTE');
+      const wb = XLSX.read(evt.target.result, { type:'array' });
+      const sheet = wb.Sheets['Activités'] || wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header:1, raw:true, defval:null });
+      const res = parseEquipeRows(rows);
+      if(res.erreur === 'ENTETE_INTROUVABLE'){
+        throw new Error("Ce fichier n'est pas l'export « accompagnements » : colonne « Nom du médiateur » absente. "
+          + "L'export « statistiques » se charge dans le dashboard, pas ici.");
+      }
+      if(!res.agents.length) throw new Error('Aucun médiateur trouvé dans ce fichier.');
+
+      // Remplace integralement la liste : reimporter le meme export ne doit pas
+      // dupliquer les agents. Les couleurs deja choisies sont conservees.
+      const couleurs = new Map(agents.map(a => [a.name, a.color]));
+      agents = res.agents.map((a,i)=>({
+        id: 'a' + Date.now() + '_' + i,
+        name: a.nom,
+        color: couleurs.get(a.nom) || PALETTE_AGENTS[i % PALETTE_AGENTS.length],
+        data: a.data
+      }));
+      saveAgents();
+      currentView = 'aggregated';
+      renderAll();
+      const total = res.agents.reduce((x,a)=> x + Object.values(a.data).reduce((p,q)=>p+q.totals.accompagnements,0), 0);
+      toast(res.agents.length + ' agents importés — ' + total.toLocaleString('fr-FR') + ' accompagnements');
+    } catch(err){
+      const msg = err.message === 'LIB_ABSENTE'
+        ? "Librairie XLSX non chargée (xlsx.full.min.js manquant à côté du HTML)."
+        : err.message;
+      toast(msg, false);
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value = '';
+});
 function toast(msg, ok=true){
   const t=document.getElementById('toast');
   t.textContent=msg; t.style.borderColor=ok?'var(--green)':'var(--red)';
@@ -256,8 +317,10 @@ document.getElementById('saveAgentBtn').addEventListener('click',()=>{
 // Agréger un agent sur toutes ses années
 function agentTotals(agent){
   const years=Object.keys(agent.data||{});
-  if(!years.length) return {accompagnements:0,beneficiaires:0,ateliersVal:0,participants:0,individuelsVal:0};
-  const t={accompagnements:0,beneficiaires:0,ateliersVal:0,participants:0,individuelsVal:0,nouveaux:0,suivis:0};
+  if(!years.length) return {accompagnements:0,beneficiaires:0,ateliersVal:0,participants:0,individuelsVal:0,minutes:0};
+  // `minutes` ne vient que de l'export equipe ; l'import JSON du dashboard ne
+  // le porte pas, d'ou le repli a 0 et le KPI qui s'adapte.
+  const t={accompagnements:0,beneficiaires:0,ateliersVal:0,participants:0,individuelsVal:0,nouveaux:0,suivis:0,minutes:0};
   years.forEach(y=>{ const d=agent.data[y]?.totals||{}; Object.keys(t).forEach(k=>{ t[k]+=(d[k]||0); }); });
   return t;
 }
@@ -338,10 +401,13 @@ function renderVue(){
   const totals=agents.map(a=>({...agentTotals(a),name:a.name,color:'#'+a.color}));
   const agg={accompagnements:0,beneficiaires:0,ateliersVal:0,participants:0};
   totals.forEach(t=>{ Object.keys(agg).forEach(k=>agg[k]+=(t[k]||0)); });
+  agg.minutes = totals.reduce((a,t)=>a+(t.minutes||0),0);
 
   document.getElementById('aggKpis').innerHTML=`
     <div class="kpi-box"><div class="kpi-label">Accompagnements</div><div class="kpi-val">${agg.accompagnements.toLocaleString('fr-FR')}</div><div class="kpi-sub">cumul équipe</div></div>
-    <div class="kpi-box k2"><div class="kpi-label">Bénéficiaires</div><div class="kpi-val">${agg.beneficiaires.toLocaleString('fr-FR')}</div><div class="kpi-sub">non dédoublonné</div></div>
+    ${agg.minutes > 0
+      ? `<div class="kpi-box k2"><div class="kpi-label">Heures d'accompagnement</div><div class="kpi-val">${Math.round(agg.minutes/60).toLocaleString('fr-FR')}</div><div class="kpi-sub">${(agg.minutes/agg.accompagnements).toFixed(0)} min en moyenne</div></div>`
+      : `<div class="kpi-box k2"><div class="kpi-label">Bénéficiaires</div><div class="kpi-val">${agg.beneficiaires ? agg.beneficiaires.toLocaleString('fr-FR') : '—'}</div><div class="kpi-sub">${agg.beneficiaires ? 'non dédoublonné' : 'absent de cet export'}</div></div>`}
     <div class="kpi-box k3"><div class="kpi-label">Ateliers collectifs</div><div class="kpi-val">${agg.ateliersVal.toLocaleString('fr-FR')}</div><div class="kpi-sub">${agg.participants} participants</div></div>
     <div class="kpi-box k4"><div class="kpi-label">Agents actifs</div><div class="kpi-val">${agents.length}</div><div class="kpi-sub">conseillers numériques</div></div>
   `;
@@ -453,7 +519,11 @@ function renderClassement(){
         <div class="lb-name" style="color:${a.color}">${a.name}</div>
         <div class="lb-bar"><div class="lb-bar-fill" style="width:${((a[metric]||0)/maxV*100).toFixed(1)}%;background:${a.color}"></div></div>
       </div>
-      <div class="lb-val" style="color:${a.color}">${(a[metric]||0).toLocaleString('fr-FR')}</div>
+      <div class="lb-val" style="color:${a.color}">${
+        metric==='minutes'
+          ? Math.round((a.minutes||0)/60).toLocaleString('fr-FR')+' h'
+          : (a[metric]||0).toLocaleString('fr-FR')
+      }</div>
     </div>`).join('');
 }
 

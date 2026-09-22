@@ -1,0 +1,19 @@
+# ===== DONNEES PERSONNELLES — NE JAMAIS COMMITER =====
+# Le depot est PUBLIC. Les exports de La Coop contiennent les noms des agents
+# et, pour les beneficiaires, le croisement commune + code INSEE + genre +
+# tranche d'age + statut : dans une petite commune, ce croisement suffit a
+# reidentifier une personne. Les donnees vivent dans le localStorage du
+# navigateur, jamais dans le depot.
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+dashboard-data-*.json
+
+# Exceptions : les librairies embarquees restent versionnees
+!xlsx.full.min.js
+
+# Divers
+node_modules/
+.DS_Store
+Thumbs.db

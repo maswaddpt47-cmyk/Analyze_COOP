@@ -110,6 +110,21 @@ production.
   référencés en sont absents. Ne pas présenter ce total comme l'activité
   totale. *Interprétation appuyée sur la concordance des deux chiffres, non
   confirmée par la documentation de La Coop.*
+- **Deux exports de La Coop, deux formats à ne pas confondre.**
+  « Statistiques » = agrégé, un seul agent, se charge dans `dashboard-stats.html`.
+  « Accompagnements » = détaillé, multi-médiateurs, **une ligne par participant**,
+  se charge dans `conum-multi-agents.html`. Dans le second, un atelier de 7
+  personnes occupe 7 lignes (« 1/7 » à « 7/7 ») : le compter par ligne
+  multiplierait le nombre d'ateliers par 8.
+- **Comptage des ateliers, calibré sur les totaux publiés par La Coop** :
+  lignes « 1/N » **plus** les ateliers à participant unique, dont la cellule ne
+  porte pas de dénominateur (755 + 12 = 767 le 22/09/2026). Vérifié aussi agent
+  par agent : Michel Aswad ressort à 660 / 259 / 42 / 401, identique à son
+  export statistiques. Ne pas « simplifier » cette règle sans refaire la mesure.
+- **L'export « accompagnements » ne porte ni bénéficiaires, ni nouveaux, ni
+  suivis** — aucun identifiant de bénéficiaire n'y figure. Ces totaux restent à
+  zéro et le KPI bascule sur les heures d'accompagnement. Ne jamais les déduire
+  du nombre de lignes : ce serait un nombre d'actes, pas de personnes.
 - **Les messages d'erreur d'import distinguent les causes.** Le message
   générique « format inattendu » a fait chercher pendant un temps un problème
   de fichier alors que la cause était `getValue is not defined`.
@@ -117,12 +132,6 @@ production.
 ---
 
 ## Chantiers ouverts, par priorité
-
-### 1. `conum-multi-agents.html` charge aussi ApexCharts en CDN
-
-Même exposition que le dashboard avant correction (`ligne 7`). Non traité
-le 22/09/2026 : hors du périmètre demandé, et ce fichier n'est pas le
-dashboard principal. À aligner sur la copie locale si ce fichier reste utilisé.
 
 ## Décisions à trancher
 
