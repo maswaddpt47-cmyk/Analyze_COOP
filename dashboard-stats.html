@@ -185,7 +185,16 @@
      reecrit la mise en page de tout le dashboard (24 collisions mesurees le
      22/09/2026). Ne jamais desescoper ces regles. */
   #page-equipe .eq-layout{display:grid;grid-template-columns:270px 1fr;gap:16px;}
-  @media(max-width:900px){ #page-equipe .eq-layout{grid-template-columns:1fr;} }
+  @media(max-width:900px){
+    /* En une colonne, la barre laterale passait AVANT le contenu : on tombait
+       sur la liste des 25 agents puis sur le bloc d'import avant d'avoir vu le
+       moindre chiffre, ce qui donnait l'impression d'un import en double au
+       milieu de la page (signale le 22/09/2026). Le contenu passe donc en
+       premier, la liste et l'import viennent apres. */
+    #page-equipe .eq-layout{grid-template-columns:1fr;}
+    #page-equipe .eq-principal{order:1;}
+    #page-equipe .eq-side{order:2;}
+  }
   #page-equipe .eq-side{display:flex;flex-direction:column;gap:12px;}
   #page-equipe .eq-agent{
     display:flex;align-items:center;gap:10px;padding:10px;
@@ -1387,7 +1396,7 @@
       </div>
     </div>
 
-    <div>
+    <div class="eq-principal">
       <div class="eq-tabs">
         <button class="eq-tab on" data-eq="synthese">Synthèse</button>
         <button class="eq-tab" data-eq="classement">Classement</button>
@@ -2450,8 +2459,15 @@ window.addEventListener('afterprint', () => {
     const parAgent = equipe.map(a => ({ nom:a.name, color:a.color, val: totaux(a).accompagnements }))
                            .sort((x,y) => y.val - x.val);
     const maxA = Math.max(1, ...parAgent.map(x => x.val));
+    // Quand rien n'est importe, le bouton doit etre atteignable sans scroller :
+    // sur mobile la colonne laterale, qui porte l'import, passe apres.
     document.getElementById('eqChartAgents').innerHTML = vide
-      ? '<div class="eq-vide">Importe l\'export équipe pour afficher la répartition.</div>'
+      ? `<div class="eq-vide">Aucune donnée équipe sur cet appareil.<br>
+           Charge le fichier « …_accompagnements_… » de La Coop.
+           <div style="margin-top:14px;">
+             <button class="eq-import" onclick="document.getElementById('eqInput').click()">⬆ Importer l'export équipe</button>
+           </div>
+         </div>`
       : parAgent.map(x => `<div class="eq-bar">
           <div class="eq-bar-top"><span>${x.nom}</span><span>${x.val.toLocaleString('fr-FR')}</span></div>
           <div class="eq-bar-tr"><div class="eq-bar-fi" style="width:${(x.val/maxA*100).toFixed(1)}%;background:${x.color}"></div></div>

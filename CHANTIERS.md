@@ -140,6 +140,11 @@ production.
 - **Les barres de l'onglet Équipe sont en HTML, pas en ApexCharts** : le
   conteneur est masqué tant que l'onglet n'est pas ouvert, et un graphe Apex
   rendu à taille zéro reste faux ensuite.
+- **Sur l'onglet Équipe en une colonne, le contenu passe avant la colonne
+  latérale** (`order` sous `@media(max-width:900px)`). Sans cela, on tombait
+  sur la liste des 25 agents puis sur le bloc d'import avant d'avoir vu le
+  moindre chiffre — au point de le prendre pour un import en double au milieu
+  de la page. La colonne reste à gauche sur écran large.
 - **Les messages d'erreur d'import distinguent les causes.** Le message
   générique « format inattendu » a fait chercher pendant un temps un problème
   de fichier alors que la cause était `getValue is not defined`.
