@@ -147,6 +147,12 @@ production.
   profit d'une barre compacte (sélecteur + import + vider) — 175px avant les
   KPI sur mobile, contre un écran entier. Ne pas réintroduire de liste
   dépliée : elle ne tient pas sur un téléphone.
+- **Le filtre par année de l'onglet Équipe ne s'affiche que s'il y a plusieurs
+  années.** `parseEquipeRows` structure déjà les données par année ; le
+  sélecteur reste masqué quand l'export n'en couvre qu'une (cas courant : un
+  export filtré sur l'année en cours), auquel cas l'année est simplement
+  rappelée dans la barre. Ne pas l'afficher en permanence : il reprendrait la
+  place gagnée en passant la liste des conseillers en liste déroulante.
 - **Les messages d'erreur d'import distinguent les causes.** Le message
   générique « format inattendu » a fait chercher pendant un temps un problème
   de fichier alors que la cause était `getValue is not defined`.

@@ -1366,6 +1366,7 @@
        laterale qui ne portait plus qu'un select et deux boutons disparait. -->
   <div class="eq-barre">
     <select id="eqAgentPick" class="eq-select" aria-label="Filtrer par conseiller"></select>
+    <select id="eqAnnee" class="eq-select" aria-label="Filtrer par année" style="display:none;max-width:160px;"></select>
     <div class="eq-barre-info" id="eqBarreInfo"></div>
     <div class="eq-barre-actions">
       <label class="eq-import" title="Export « …_accompagnements_… » de La Coop">
@@ -2365,15 +2366,32 @@ window.addEventListener('afterprint', () => {
   let equipe = [];
   try { equipe = JSON.parse(localStorage.getItem(CLE) || '[]'); } catch(e){ equipe = []; }
   let vueAgent = 'tous';
+  let anneeVue = 'toutes';
 
   function sauver(){
     try { localStorage.setItem(CLE, JSON.stringify(equipe)); }
     catch(e){ console.error('Sauvegarde équipe impossible', e); }
   }
 
+  // `annee` vaut 'toutes' ou une annee precise. Les donnees sont deja
+  // structurees par annee par parseEquipeRows : le filtre ne fait que
+  // restreindre les entrees parcourues.
+  function anneesDe(agent){ return Object.keys(agent.data || {}); }
+
+  function anneesDispo(){
+    const s = new Set();
+    equipe.forEach(a => anneesDe(a).forEach(y => s.add(y)));
+    return [...s].sort();
+  }
+
+  function retenues(agent){
+    const d = agent.data || {};
+    return anneeVue === 'toutes' ? Object.values(d) : (d[anneeVue] ? [d[anneeVue]] : []);
+  }
+
   function totaux(agent){
     const t = { accompagnements:0, individuelsVal:0, ateliersVal:0, participants:0, minutes:0 };
-    Object.values(agent.data || {}).forEach(an => {
+    retenues(agent).forEach(an => {
       Object.keys(t).forEach(k => t[k] += ((an.totals || {})[k] || 0));
     });
     return t;
@@ -2381,7 +2399,7 @@ window.addEventListener('afterprint', () => {
 
   function themes(agent){
     const m = new Map();
-    Object.values(agent.data || {}).forEach(an => {
+    retenues(agent).forEach(an => {
       (an.themMed || []).forEach(x => m.set(x.label, (m.get(x.label) || 0) + x.val));
     });
     const arr = [...m.entries()].map(([label,val]) => ({label,val}));
@@ -2399,6 +2417,21 @@ window.addEventListener('afterprint', () => {
 
     // Liste deroulante : 25 agents en liste occupaient un ecran entier sur
     // mobile. La selection pilote toute la vue Synthese.
+    // Selecteur d'annee : masque tant qu'une seule annee est presente, il
+    // n'apporterait rien et reprendrait la place qu'on vient de gagner.
+    const selAn = document.getElementById('eqAnnee');
+    const annees = anneesDispo();
+    if(annees.length > 1){
+      if(anneeVue !== 'toutes' && !annees.includes(anneeVue)) anneeVue = 'toutes';
+      selAn.innerHTML = `<option value="toutes">Toutes les années</option>` +
+        annees.map(y => `<option value="${y}">${y}</option>`).join('');
+      selAn.value = anneeVue;
+      selAn.style.display = '';
+    } else {
+      anneeVue = 'toutes';
+      selAn.style.display = 'none';
+    }
+
     const pick = document.getElementById('eqAgentPick');
     const total = equipe.reduce((x,a) => x + totaux(a).accompagnements, 0);
     pick.innerHTML = vide
@@ -2411,7 +2444,11 @@ window.addEventListener('afterprint', () => {
 
     document.getElementById('eqBarreInfo').textContent = vide
       ? "Aucune donnée équipe sur cet appareil."
-      : `${total.toLocaleString('fr-FR')} accompagnements · ${equipe.length} conseillers · données locales`;
+      : `${total.toLocaleString('fr-FR')} accompagnements · ${equipe.length} conseillers`
+        + (anneeVue === 'toutes'
+            ? (annees.length > 1 ? ` · ${annees.length} années` : (annees[0] ? ` · ${annees[0]}` : ''))
+            : ` · ${anneeVue}`)
+        + ' · données locales';
 
     const sel = selection();
     const agg = sel.reduce((acc,a) => {
@@ -2508,6 +2545,10 @@ window.addEventListener('afterprint', () => {
   // --- interactions
   document.getElementById('eqAgentPick').addEventListener('change', e => {
     vueAgent = e.target.value;
+    rendre();
+  });
+  document.getElementById('eqAnnee').addEventListener('change', e => {
+    anneeVue = e.target.value;
     rendre();
   });
   document.querySelectorAll('#page-equipe .eq-tab').forEach(b => {
