@@ -109,6 +109,64 @@ function sumDatasets(list){
   };
 }
 
+// ===== SERIES MENSUELLES =====
+// Le mois en cours est incomplet par construction : l'export s'arrete au jour
+// de son edition. L'inclure dans une moyenne ou une projection tire les deux
+// vers le bas — mesure du 22/09/2026 : 5 accompagnements au 22 du mois, contre
+// une moyenne de 82 sur les mois complets. On l'exclut donc des CALCULS, tout
+// en le gardant a l'AFFICHAGE (le total et le graphique le montrent).
+
+function isCurrentMonth(label, now){
+  const parts = String(label == null ? '' : label).split('/');
+  if(parts.length !== 2) return false;
+  const m = parseInt(parts[0], 10), y = 2000 + parseInt(parts[1], 10);
+  if(isNaN(m) || isNaN(y)) return false;
+  const d = now || new Date();
+  return m === (d.getMonth() + 1) && y === d.getFullYear();
+}
+
+// Agrege une serie mensuelle sur une annee ('2026') ou sur tout ('all').
+// `total` inclut tout ce qui est connu ; `moyenne` et `projection` ne reposent
+// que sur les mois complets et non nuls.
+function monthlySeriesStats(labels, values, year, now){
+  const idx = [];
+  for(let i = 0; i < labels.length; i++){
+    if(year && year !== 'all'){
+      const y = '20' + String(labels[i]).split('/')[1];
+      if(y !== year) continue;
+    }
+    idx.push(i);
+  }
+  const total = idx.reduce((a,i) => a + (values[i] || 0), 0);
+  const enCours = idx.filter(i => isCurrentMonth(labels[i], now));
+  const retenus = idx.filter(i => !isCurrentMonth(labels[i], now) && values[i] > 0);
+  const totalComplet = retenus.reduce((a,i) => a + (values[i] || 0), 0);
+  const moisComplets = retenus.length;
+  return {
+    total,
+    totalComplet,
+    moisComplets,
+    moyenne: moisComplets ? totalComplet / moisComplets : 0,
+    projection: moisComplets ? Math.round((totalComplet / moisComplets) * 12) : 0,
+    moisEnCoursExclu: enCours.length > 0,
+    dernierMoisComplet: retenus.length ? labels[retenus[retenus.length - 1]] : null
+  };
+}
+
+// Somme d'une annee bornee au mois `maxMois` inclus — sert a comparer deux
+// annees sur la MEME fenetre, au lieu d'opposer une annee pleine a un semestre.
+function sumYearUpTo(labels, values, year, maxMois){
+  let t = 0;
+  for(let i = 0; i < labels.length; i++){
+    const parts = String(labels[i]).split('/');
+    if(parts.length !== 2) continue;
+    const m = parseInt(parts[0], 10), y = '20' + parts[1];
+    if(y === year && m <= maxMois) t += (values[i] || 0);
+  }
+  return t;
+}
+
 if (typeof module !== 'undefined') {
-  module.exports = { rowsBetween, getValue, mergeArraysSum, sumDatasets, SECTION_ORDER, SECTION_ORDER_N };
+  module.exports = { rowsBetween, getValue, mergeArraysSum, sumDatasets, SECTION_ORDER, SECTION_ORDER_N,
+                    isCurrentMonth, monthlySeriesStats, sumYearUpTo };
 }

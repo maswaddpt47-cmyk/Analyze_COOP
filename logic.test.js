@@ -1,6 +1,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { rowsBetween, getValue, mergeArraysSum, sumDatasets, SECTION_ORDER_N } = require('./logic.js');
+const { rowsBetween, getValue, mergeArraysSum, sumDatasets, SECTION_ORDER_N,
+        isCurrentMonth, monthlySeriesStats, sumYearUpTo } = require('./logic.js');
 
 const ROWS_FIXTURE = [
   ['Statistiques générales', null, null],
@@ -190,5 +191,84 @@ describe('chargement navigateur (utils.js + logic.js dans un scope commun)', () 
   it("logic.js utilise bien les fonctions de utils.js une fois charge ainsi", () => {
     const g = loadInBrowserLikeScope();
     assert.equal(g.getValue([['Accompagnements au total', 660, null]], 'Accompagnements au total'), 660);
+  });
+});
+
+
+// Serie reelle de l'export du 22/09/2026 : septembre n'a que 5 accompagnements
+// parce que le mois etait en cours au moment de l'export.
+const LAB_2026 = ['01/26','02/26','03/26','04/26','05/26','06/26','07/26','08/26','09/26'];
+const VAL_2026 = [75, 117, 132, 110, 81, 76, 39, 25, 5];
+const LE_22_SEPT = new Date('2026-09-22T12:00:00Z');
+
+describe('isCurrentMonth', () => {
+  it("reconnait le mois en cours", () => {
+    assert.equal(isCurrentMonth('09/26', LE_22_SEPT), true);
+  });
+  it("ne confond pas avec un mois passe ni une autre annee", () => {
+    assert.equal(isCurrentMonth('08/26', LE_22_SEPT), false);
+    assert.equal(isCurrentMonth('09/25', LE_22_SEPT), false);
+  });
+  it("tolere une etiquette invalide", () => {
+    assert.equal(isCurrentMonth('', LE_22_SEPT), false);
+    assert.equal(isCurrentMonth(null, LE_22_SEPT), false);
+    assert.equal(isCurrentMonth('septembre', LE_22_SEPT), false);
+  });
+});
+
+describe('monthlySeriesStats', () => {
+  const s = monthlySeriesStats(LAB_2026, VAL_2026, '2026', LE_22_SEPT);
+
+  it("garde le mois en cours dans le total affiche", () => {
+    assert.equal(s.total, 660);
+  });
+
+  it("exclut le mois en cours des mois retenus pour les moyennes", () => {
+    assert.equal(s.moisComplets, 8);
+    assert.equal(s.totalComplet, 655);
+    assert.equal(s.moisEnCoursExclu, true);
+    assert.equal(s.dernierMoisComplet, '08/26');
+  });
+
+  it("calcule la moyenne sur les seuls mois complets", () => {
+    assert.equal(Math.round(s.moyenne * 10) / 10, 81.9);
+  });
+
+  // Regression du 22/09/2026 : la projection divisait le total de janvier-juin
+  // (591, 6 mois) par le nombre de mois renseignes (9), puis multipliait par 12.
+  it("ne melange pas une fenetre de 6 mois avec un diviseur de 9", () => {
+    assert.notEqual(s.projection, Math.round(591 / 9 * 12)); // 788, l'ancien resultat
+    assert.equal(s.projection, Math.round(655 / 8 * 12));
+  });
+
+  it("une fois le mois termine, plus rien n'est exclu", () => {
+    const enOctobre = monthlySeriesStats(LAB_2026, VAL_2026, '2026', new Date('2026-10-05T12:00:00Z'));
+    assert.equal(enOctobre.moisComplets, 9);
+    assert.equal(enOctobre.totalComplet, 660);
+    assert.equal(enOctobre.moisEnCoursExclu, false);
+  });
+
+  it("ne retient pas les mois a zero", () => {
+    const avecZero = monthlySeriesStats(['01/26','02/26'], [100, 0], '2026', LE_22_SEPT);
+    assert.equal(avecZero.moisComplets, 1);
+    assert.equal(avecZero.moyenne, 100);
+  });
+
+  it("ne plante pas sur une serie vide", () => {
+    const vide = monthlySeriesStats([], [], '2026', LE_22_SEPT);
+    assert.equal(vide.moisComplets, 0);
+    assert.equal(vide.moyenne, 0);
+    assert.equal(vide.projection, 0);
+  });
+});
+
+describe('sumYearUpTo', () => {
+  it("borne la somme au mois demande", () => {
+    assert.equal(sumYearUpTo(LAB_2026, VAL_2026, '2026', 6), 591);
+    assert.equal(sumYearUpTo(LAB_2026, VAL_2026, '2026', 8), 655);
+    assert.equal(sumYearUpTo(LAB_2026, VAL_2026, '2026', 12), 660);
+  });
+  it("ignore les autres annees", () => {
+    assert.equal(sumYearUpTo(['01/25','01/26'], [50, 75], '2026', 12), 75);
   });
 });

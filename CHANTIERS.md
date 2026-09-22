@@ -51,6 +51,30 @@ production.
   dur devient morte et fait chercher du travail là où il n'y en a plus
   (`claude/stats-optimization-thl4rq`, corrigé le 22/09/2026). Ce qui compte
   est que tout finisse mergé dans `main`, seule source du déploiement.
+- **Le mois en cours est exclu de tout calcul de moyenne, de projection et
+  d'extremum.** Il est tronqué au jour de l'export (5 accompagnements au
+  22/09/2026 contre 82 de moyenne) : l'inclure tirait la moyenne et la
+  projection vers le bas et le faisait ressortir en rouge comme « pire mois ».
+  Il reste **affiché** dans le total et sur le graphique, en gris neutre.
+  `isCurrentMonth()` et `monthlySeriesStats()` dans `logic.js` portent cette
+  règle, avec leurs tests — ne pas recalculer une moyenne à la main ailleurs.
+- **Une seule source pour la projection : `stats2026()`.** Quatre formules
+  différentes coexistaient dans `dashboard-stats.html` (écran, insight,
+  rapport imprimable, slides) et donnaient des chiffres divergents — 788 à
+  l'écran contre 880 dans le rapport le 22/09/2026, dont une qui divisait un
+  total de 6 mois par 9 mois. Il ne doit plus jamais y avoir de `…/mois*12`
+  écrit en dur hors de `logic.js`.
+- **Les libellés de période sont dérivés, jamais écrits en dur.** La carte
+  titrée « Total 2026 (jan–jun) » affichait l'année entière. Voir
+  `libellePeriode2026()`.
+- **« Nouveaux » et « suivis » ne sont pas deux parts d'un tout** : leur somme
+  dépasse le nombre de bénéficiaires (287 + 326 = 613 pour 345 personnes), les
+  catégories se recoupent. Ne jamais réafficher un « X% / 100−X% » sur cette
+  base. Même vigilance pour les thématiques : leur total (1238) compte des
+  occurrences, pas des accompagnements (660).
+- **`growthBadge()` contient déjà la valeur et son signe** — le concaténer à un
+  texte de pourcentage l'affichait deux fois (« +97.0%+97.0% »). Ce défaut
+  n'apparaît qu'avec deux années importées.
 - **Les messages d'erreur d'import distinguent les causes.** Le message
   générique « format inattendu » a fait chercher pendant un temps un problème
   de fichier alors que la cause était `getValue is not defined`.

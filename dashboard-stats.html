@@ -1037,7 +1037,7 @@
       <div id="delta2025" style="margin-top:8px;font-size:12px;"></div>
     </div>
     <div class="card">
-      <div class="card-title purple"><span class="dot"></span>Total 2026 (jan–jun)</div>
+      <div class="card-title purple" id="title2026"><span class="dot"></span>Total 2026</div>
       <div class="kpi-value" id="tot2026" style="font-size:28px;">—</div>
       <div class="kpi-sub">accompagnements</div>
       <div id="delta2026" style="margin-top:8px;font-size:12px;"></div>
@@ -1479,11 +1479,18 @@ function renderAggregates(ds, periodLabel){
   const dedupNote = periodLabel.startsWith('cumul') ? ' · non dédoublonné' : '';
   document.getElementById('kpi-benef-sub').textContent = `${t.suivis} suivis · ${t.anonymes} anonymes (${periodLabel}${dedupNote})`;
 
+  // « Nouveaux » et « suivis » ne sont PAS deux parts d'un tout : leur somme
+  // depasse le nombre de beneficiaires (287 + 326 = 613 pour 345 personnes le
+  // 22/09/2026), les deux categories se recoupent. Afficher « 47% nouveaux ·
+  // 53% suivis » revenait a inventer un denominateur. On rapporte donc chaque
+  // categorie aux beneficiaires reels, sans pretendre qu'elles se completent.
   const totalTracked = (t.nouveaux || 0) + (t.suivis || 0);
   if (t.accompagnements > 0 && totalTracked > 0) {
-    const pctNouv = Math.round((t.nouveaux / totalTracked) * 100);
     document.getElementById('kpi-retention').textContent = t.nouveaux + ' / ' + t.suivis;
-    document.getElementById('kpi-retention-sub').textContent = pctNouv + '% nouveaux · ' + (100 - pctNouv) + '% suivis (' + periodLabel + ')';
+    const base = t.beneficiaires || 0;
+    document.getElementById('kpi-retention-sub').textContent = base
+      ? `sur ${base} bénéficiaires — ${Math.round(t.nouveaux/base*100)}% nouveaux, ${Math.round(t.suivis/base*100)}% suivis (catégories non exclusives, ${periodLabel})`
+      : `nouveaux vs suivis (${periodLabel})`;
   } else if (t.accompagnements > 0) {
     document.getElementById('kpi-retention').textContent = t.nouveaux + ' / ' + t.suivis;
     document.getElementById('kpi-retention-sub').textContent = 'nouveaux vs suivis (' + periodLabel + ')';
@@ -1494,7 +1501,10 @@ function renderAggregates(ds, periodLabel){
 
   const topTheme = ds.themMed.length ? [...ds.themMed].sort((a,b)=>b.val-a.val)[0] : {label:'—', val:0, pct:0};
   document.getElementById('kpi-theme').textContent = topTheme.label;
-  document.getElementById('kpi-theme-sub').textContent = `${topTheme.val} accompagnements · ${topTheme.pct}% (${periodLabel})`;
+  // Le pourcentage porte sur le total des thematiques citees (1238 le
+  // 22/09/2026), pas sur les 660 accompagnements : un accompagnement porte
+  // plusieurs thematiques. Dire « accompagnements » ici induisait en erreur.
+  document.getElementById('kpi-theme-sub').textContent = `${topTheme.val} occurrences · ${topTheme.pct}% des thématiques citées (${periodLabel})`;
 
   const types = ds.types.map((tt,i)=>({...tt, color: tt.color || colorFor('types', tt.label, i)}));
   makeOrUpdateDoughnut('chartTypes', types.map(x=>x.label), types.map(x=>x.val), types.map(x=>x.color));
@@ -1713,12 +1723,16 @@ function renderSpark(divId, values, color){
 function updateKPIs(year){
   const data = getFilteredMonthly(year);
   const total = data.values.reduce((a,b)=>a+b,0);
-  const nonZero = data.values.filter(v=>v>0);
+  // La moyenne ne porte que sur les mois COMPLETS : le mois en cours est
+  // tronque au jour de l'export et tirait la moyenne vers le bas (22/09/2026 :
+  // 5 accompagnements au 22 du mois contre 82 de moyenne). Le total, lui,
+  // continue de tout afficher.
+  const st = monthlySeriesStats(data.labels, data.values, 'all');
   document.getElementById('kpi-total').textContent = total.toLocaleString('fr-FR');
   document.getElementById('kpi-total-sub').textContent = year==='all' ? `période 01/2024 → ${monthlySpanEnd}` : `année ${year}`;
-  const avg = nonZero.length ? (total / nonZero.length).toFixed(1) : '0';
-  document.getElementById('kpi-avg').textContent = avg;
-  document.getElementById('kpi-avg-sub').textContent = `${nonZero.length} mois (données)`;
+  document.getElementById('kpi-avg').textContent = st.moisComplets ? st.moyenne.toFixed(1) : '0';
+  document.getElementById('kpi-avg-sub').textContent =
+    `${st.moisComplets} mois complets` + (st.moisEnCoursExclu ? ' — mois en cours exclu' : '');
   renderSpark('spark-total', data.values, '#3b82f6');
   const mavg = data.values.map((_,i,arr)=>{
     const sl = arr.slice(Math.max(0,i-2), i+1).filter(v=>v>0);
@@ -1730,12 +1744,18 @@ function updateKPIs(year){
 // ===== GRAPHE MENSUEL =====
 function buildMonthlyChart(year){
   const data = getFilteredMonthly(year);
-  const nonZeroVals = data.values.filter(v=>v>0);
+  // Le mois en cours est tronque au jour de l'export : le compter dans le
+  // min/max le faisait ressortir en rouge comme « pire mois » alors qu'il est
+  // seulement incomplet (5 accompagnements au 22/09/2026). Il garde sa barre,
+  // mais en gris neutre, et ne peut plus etre designe comme extremum.
+  const idxEnCours = data.labels.map((l,i)=> isCurrentMonth(l) ? i : -1).filter(i=>i>=0);
+  const nonZeroVals = data.values.filter((v,i)=> v>0 && !idxEnCours.includes(i));
   const maxVal = nonZeroVals.length ? Math.max(...nonZeroVals) : 0;
   const minVal = nonZeroVals.length ? Math.min(...nonZeroVals) : 0;
   const baseColors = { '2024':'#3b82f6', '2025':'#f59e0b', '2026':'#a855f7' };
   const fillColors = data.values.map((v,i) => {
     if(v===0) return 'rgba(139,149,184,0.15)';
+    if(idxEnCours.includes(i)) return 'rgba(139,149,184,0.55)';
     if(v===maxVal) return '#06b6d4';
     if(v===minVal) return '#ef4444';
     const y = '20'+data.labels[i].split('/')[1];
@@ -1798,6 +1818,34 @@ function buildEvolutionChart(year){
 buildEvolutionChart('all');
 
 // ===== TOTAUX ET CARTES ÉVOLUTION =====
+const MOIS_COURTS = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+
+// Source unique des agregats 2026 : l'ecran, l'insight et le rapport
+// imprimable calculaient chacun leur projection, avec deux resultats
+// differents (788 a l'ecran, 880 dans le rapport, le 22/09/2026).
+function stats2026(){
+  return monthlySeriesStats(monthly.labels, monthly.values, '2026');
+}
+// Numero du dernier mois 2026 retenu dans les calculs (mois en cours exclu).
+function dernierMoisRetenu2026(){
+  const d = stats2026().dernierMoisComplet;
+  return d ? parseInt(String(d).split('/')[0], 10) : 0;
+}
+// Libelle de la periode reellement couverte, ex. « jan–aoû ».
+function libellePeriode2026(){
+  const st = stats2026();
+  const mois = monthly.labels
+    .filter(l => '20'+l.split('/')[1] === '2026')
+    .filter(l => monthly.values[monthly.labels.indexOf(l)] > 0)
+    .map(l => parseInt(l.split('/')[0], 10));
+  if(!mois.length) return 'aucun mois';
+  const min = Math.min(...mois), max = Math.max(...mois);
+  const suffixe = st.moisEnCoursExclu ? ', mois en cours inclus' : '';
+  return min === max
+    ? MOIS_COURTS[min-1]
+    : `${MOIS_COURTS[min-1]}–${MOIS_COURTS[max-1]}${suffixe}`;
+}
+
 function sumYear(y){
   return monthly.labels.reduce((acc,l,i)=> monthYear(l)===y ? acc+monthly.values[i] : acc, 0);
 }
@@ -1815,25 +1863,58 @@ function updateEvolutionCards(){
   document.getElementById('tot2026').textContent = y26.toLocaleString('fr-FR');
   document.getElementById('delta2024').textContent = 'Année de référence';
   if(y24>0&&y25>0){ document.getElementById('delta2025').innerHTML = `vs 2024 ${growthBadge((y25-y24)/y24*100)}`; }
-  const monthsLoaded = monthly.labels.filter(l=>'20'+l.split('/')[1]==='2026' && monthly.values[monthly.labels.indexOf(l)]>0).length;
-  if(y25>0&&y26>0){
-    const h1_25=sumH1('2025'), h1_26=sumH1('2026');
-    const d = h1_25 ? (h1_26-h1_25)/h1_25*100 : null;
-    document.getElementById('delta2026').innerHTML = `vs H1 2025 ${d!==null?growthBadge(d):''}`;
+  // Une seule source de verite pour la projection : l'ecran et le rapport
+  // imprimable affichaient deux chiffres differents (788 vs 880 le 22/09/2026).
+  const st26 = stats2026();
+
+  // Le titre de la carte suit la periode reellement couverte. Il etait fige a
+  // « jan-jun » alors que la valeur affichee portait l'annee entiere.
+  const t2026 = document.getElementById('title2026');
+  if(t2026) t2026.innerHTML = `<span class="dot"></span>Total 2026 (${libellePeriode2026()})`;
+
+  // Comparer 2026 a la MEME fenetre de 2025, pas une annee pleine a un semestre.
+  const borne = dernierMoisRetenu2026();
+  if(y25>0 && y26>0 && borne){
+    const a = sumYearUpTo(monthly.labels, monthly.values, '2025', borne);
+    const b = sumYearUpTo(monthly.labels, monthly.values, '2026', borne);
+    const d = a ? (b-a)/a*100 : null;
+    const fin = MOIS_COURTS[borne-1];
+    document.getElementById('delta2026').innerHTML =
+      d!==null ? `vs jan–${fin} 2025 ${growthBadge(d)}` : '';
+  } else {
+    document.getElementById('delta2026').innerHTML = '';
   }
-  const h1_26=sumH1('2026');
+
+  const monthsLoaded = st26.moisComplets;
   if(monthsLoaded>0){
-    const proj=Math.round(h1_26/monthsLoaded*12);
-    document.getElementById('proj2026').textContent = proj.toLocaleString('fr-FR');
-    document.getElementById('proj2026-sub').textContent = `basé sur ${monthsLoaded} mois renseignés en 2026`;
+    document.getElementById('proj2026').textContent = st26.projection.toLocaleString('fr-FR');
+    document.getElementById('proj2026-sub').textContent =
+      `basé sur ${monthsLoaded} mois complets` +
+      (st26.moisEnCoursExclu ? ' — mois en cours exclu' : '');
   }
-  const h1_24=sumH1('2024'), h1_25=sumH1('2025');
-  if(h1_24>0){ const g=(h1_25-h1_24)/h1_24*100; document.getElementById('growthH1_2025').innerHTML=(g>=0?'+':'')+g.toFixed(1)+'%'+growthBadge(g); document.getElementById('growthH1_2025-sub').textContent=`${h1_24} → ${h1_25} (jan–juin)`; }
-  if(h1_25>0){ const g=(h1_26-h1_25)/h1_25*100; document.getElementById('growthH1_2026').innerHTML=(g>=0?'+':'')+g.toFixed(1)+'%'+growthBadge(g); document.getElementById('growthH1_2026-sub').textContent=`${h1_25} → ${h1_26} (jan–juin)`; }
+  const h1_24=sumH1('2024'), h1_25=sumH1('2025'), h1_26=sumH1('2026');
+  // growthBadge() contient deja la valeur et son signe : l'ajouter au texte
+  // brut affichait le pourcentage deux fois (« +97.0%+97.0% »). Ne visible
+  // qu'avec deux annees importees, d'ou le passage inapercu jusqu'au
+  // 22/09/2026. On garde le chiffre en grand, colore comme le badge.
+  const coul = g => g >= 0 ? 'var(--green)' : 'var(--red)';
+  const pctTexte = g => (g >= 0 ? '+' : '') + g.toFixed(1) + '%';
+  if(h1_24>0){
+    const g=(h1_25-h1_24)/h1_24*100;
+    const el=document.getElementById('growthH1_2025');
+    el.textContent=pctTexte(g); el.style.color=coul(g);
+    document.getElementById('growthH1_2025-sub').textContent=`${h1_24} → ${h1_25} (jan–juin)`;
+  }
+  if(h1_25>0){
+    const g=(h1_26-h1_25)/h1_25*100;
+    const el=document.getElementById('growthH1_2026');
+    el.textContent=pctTexte(g); el.style.color=coul(g);
+    document.getElementById('growthH1_2026-sub').textContent=`${h1_25} → ${h1_26} (jan–juin)`;
+  }
   const ebox=document.getElementById('evolutionInsightBox');
   if(y24>0&&y25>0){
     const g=((y25-y24)/y24*100);
-    const projLine=(h1_25>0&&monthsLoaded>0)?` La projection 2026 à ce rythme est de <b>~${Math.round(h1_26/monthsLoaded*12).toLocaleString('fr-FR')} accompagnements</b>.`:'';
+    const projLine=(monthsLoaded>0)?` La projection 2026 à ce rythme est de <b>~${st26.projection.toLocaleString('fr-FR')} accompagnements</b>.`:'';
     ebox.innerHTML=`L'activité a progressé de <b>${g.toFixed(0)}%</b> entre 2024 (${y24}) et 2025 (${y25}).${projLine}`;
     ebox.style.display='';
   } else { ebox.style.display='none'; }
@@ -2197,8 +2278,11 @@ document.querySelectorAll('.import-row input[type=file]').forEach(input=>{
         saveYearDataToStorage();
         statusEl.textContent = `✓ ${file.name} — ${ds.totals.accompagnements} accompagnements`;
         statusEl.className = 'import-status ok';
+        // Sans garde, un import lance alors qu'aucun bouton d'annee n'est actif
+        // levait un TypeError avale par le catch. Meme correctif que celui
+        // applique a l'import JSON le 14/09/2026, jamais reporte ici.
         const activeBtn = document.querySelector('.year-btn.active');
-        applyYearAggregates(activeBtn.dataset.year);
+        applyYearAggregates(activeBtn ? activeBtn.dataset.year : year);
         rebuildMonthlyAndEvolution();
       } catch(err){
         // Distinguer la lib absente d'un vrai problème de fichier : le message
@@ -2460,7 +2544,7 @@ async function buildRapport(){
     <div class="rp-kpi-row">
       ${rpKpi('Total 2024', y24.toLocaleString('fr-FR'), 'Année de référence', 'blue')}
       ${rpKpi('Total 2025', y25.toLocaleString('fr-FR'), y24 ? `vs 2024 : ${y25>y24?'+':''}${((y25-y24)/y24*100).toFixed(1)}%` : '', 'orange')}
-      ${rpKpi('Total 2026 (jan–jun)', y26.toLocaleString('fr-FR'), `Projection : ~${Math.round(y26/Math.max(1,monthly.labels.filter(l=>'20'+l.split('/')[1]==='2026'&&monthly.values[monthly.labels.indexOf(l)]>0).length)*12).toLocaleString('fr-FR')} sur 12 mois`, 'purple')}
+      ${rpKpi(`Total 2026 (${libellePeriode2026()})`, y26.toLocaleString('fr-FR'), `Projection : ~${stats2026().projection.toLocaleString('fr-FR')} sur 12 mois`, 'purple')}
     </div>
     ${imgTag(imgEvol, 'Évolution mensuelle 2024–2026')}
     ${imgTag(imgOverlay, 'Superposition des années (Jan → Déc)')}
@@ -2633,8 +2717,11 @@ async function buildPresSlides(){
   const pctNouv = (t.nouveaux&&(t.nouveaux+t.suivis)) ? Math.round(t.nouveaux/(t.nouveaux+t.suivis)*100) : 0;
   const avgVal = document.getElementById('kpi-avg').textContent;
   const y24=sumYear('2024'), y25=sumYear('2025'), y26=sumYear('2026');
-  const monthsLoaded26 = monthly.labels.filter(l=>'20'+l.split('/')[1]==='2026'&&monthly.values[monthly.labels.indexOf(l)]>0).length;
-  const proj26 = monthsLoaded26 ? Math.round(y26/monthsLoaded26*12) : 0;
+  // Meme source que l'ecran : quatre formules de projection coexistaient dans
+  // ce fichier et donnaient des chiffres differents (22/09/2026).
+  const st26_ = stats2026();
+  const monthsLoaded26 = st26_.moisComplets;
+  const proj26 = st26_.projection;
 
   // Capturer les charts nécessaires
   const [imgMonthly, imgTypes, imgEvol, imgOverlay,
@@ -2708,7 +2795,7 @@ async function buildPresSlides(){
         </div>
         <div class="sl-kpi">
           <div class="sk-val" style="color:#a855f7">${y26.toLocaleString('fr-FR')}</div>
-          <div class="sk-label">2026 (jan–jun)</div>
+          <div class="sk-label">2026 (${libellePeriode2026()})</div>
           <div class="sk-sub">${proj26 ? 'Projection : ~'+proj26.toLocaleString('fr-FR') : ''}</div>
         </div>
       </div>
@@ -3676,11 +3763,11 @@ function generateBilan(year){
   const now = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
 
   // Projection 2026
-  const monthsLoaded26 = monthly.labels.filter(l=>'20'+l.split('/')[1]==='2026'&&monthly.values[monthly.labels.indexOf(l)]>0).length;
+  const monthsLoaded26 = stats2026().moisComplets;
   const h1_26 = monthly.labels.reduce((acc,l,i)=>{
     const [mm,yy]=l.split('/'); return yy==='26'&&parseInt(mm)<=6 ? acc+monthly.values[i] : acc;
   },0);
-  const proj26 = monthsLoaded26 ? Math.round(h1_26/monthsLoaded26*12) : 0;
+  const proj26 = stats2026().projection;
 
   // Annotations de la période
   const periodAnnots = annotations.filter(a => year === 'all' || '20'+a.month.split('/')[1] === year);
