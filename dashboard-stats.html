@@ -80,7 +80,44 @@
     display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
     gap:14px;margin-bottom:18px;
   }
-  .kpi-label{font-size:11px;color:var(--muted);letter-spacing:1px;font-weight:700;text-transform:uppercase;margin-bottom:8px;}
+  .kpi-label{font-size:11px;color:var(--muted);letter-spacing:1px;font-weight:700;text-transform:uppercase;margin-bottom:8px;padding-right:14px;}
+
+  /* ===== BULLES D'INFO SUR LES KPI =====
+     Ancrees DANS la carte (left/right a 0) plutot qu'en debordement lateral :
+     la grille est en auto-fit, une bulle calee a droite sortirait de l'ecran
+     sur la derniere colonne et sur mobile. La carte prend un z-index au survol
+     parce que .kpi:hover applique un transform, qui cree un stacking context —
+     sans lui, la bulle passerait sous la carte voisine. */
+  .kpi, .card.has-info{position:relative;}
+  .kpi:hover, .kpi:focus-within,
+  .card.has-info:hover, .card.has-info:focus-within{z-index:30;}
+  .info-btn{
+    position:absolute;top:11px;right:10px;z-index:2;
+    width:16px;height:16px;padding:0;line-height:14px;
+    border-radius:50%;border:1px solid var(--border);
+    background:transparent;color:var(--muted);
+    font-size:11px;font-weight:700;font-family:inherit;
+    cursor:help;transition:color .15s ease,border-color .15s ease;
+  }
+  .info-btn:hover,.info-btn:focus-visible{color:var(--text);border-color:var(--muted);outline:none;}
+  .info-bulle{
+    position:absolute;top:34px;left:12px;right:12px;z-index:40;
+    background:var(--panel2);border:1px solid var(--border);border-radius:8px;
+    padding:10px 12px;
+    font-size:11.5px;line-height:1.5;color:var(--text);
+    text-transform:none;letter-spacing:normal;font-weight:400;
+    box-shadow:0 10px 26px rgba(0,0,0,.5);
+    opacity:0;visibility:hidden;transform:translateY(-4px);
+    transition:opacity .15s ease,transform .15s ease,visibility .15s;
+  }
+  .info-btn:hover + .info-bulle,
+  .info-btn:focus-visible + .info-bulle,
+  .info-bulle:hover{opacity:1;visibility:visible;transform:translateY(0);}
+  .info-bulle b{color:var(--text);font-weight:700;}
+  .info-bulle .ib-warn{color:var(--orange);font-weight:700;}
+  body.light-mode .info-bulle{background:#fff;color:#111827;}
+  body.light-mode .info-bulle b{color:#111827;}
+  @media print{ .info-btn,.info-bulle{display:none !important;} }
   .kpi-value{font-size:30px;font-weight:800;}
   .kpi-sub{font-size:12px;color:var(--muted);margin-top:4px;}
 
@@ -940,33 +977,45 @@
 <!-- KPI cards (always visible, recalculated) -->
 <div class="kpis" id="globalKpis">
   <div class="kpi">
+    <button type="button" class="info-btn" aria-label="À propos des accompagnements">i</button>
+    <div class="info-bulle" role="tooltip">Nombre de <b>personnes accompagnées</b> sur la période, séance par séance. À ne pas confondre avec le nombre d'<b>activités</b> : un atelier collectif compte pour une seule activité mais pour autant d'accompagnements que de participants. C'est pourquoi ce chiffre est supérieur au nombre d'activités.</div>
     <div class="kpi-label">Accompagnements</div>
     <div class="kpi-value" id="kpi-total">—</div>
     <div class="kpi-sub" id="kpi-total-sub">période sélectionnée</div>
     <div class="spark-wrap"><div id="spark-total"></div></div>
   </div>
   <div class="kpi k2">
+    <button type="button" class="info-btn" aria-label="À propos du ratio individuels / ateliers">i</button>
+    <div class="info-bulle" role="tooltip">Décompte en <b>activités</b>, pas en accompagnements : un atelier collectif compte pour 1 quel que soit le nombre de participants. Les pourcentages se rapportent au total des activités de la période.</div>
     <div class="kpi-label">Individuels / Ateliers</div>
     <div class="kpi-value" id="kpi-types">—</div>
     <div class="kpi-sub" id="kpi-types-sub">période sélectionnée</div>
   </div>
   <div class="kpi k3">
+    <button type="button" class="info-btn" aria-label="À propos des bénéficiaires">i</button>
+    <div class="info-bulle" role="tooltip"><b>Personnes distinctes</b> accompagnées sur la période : une personne vue dix fois ne compte qu'une fois. <span class="ib-warn">En cumul sur plusieurs années, ce total n'est pas dédoublonné</span> — les exports de La Coop ne contiennent pas d'identifiant permettant de reconnaître une même personne d'une année à l'autre, elle est donc comptée dans chacune.</div>
     <div class="kpi-label">Bénéficiaires</div>
     <div class="kpi-value" id="kpi-benef">—</div>
     <div class="kpi-sub" id="kpi-benef-sub">période sélectionnée</div>
   </div>
   <div class="kpi k4">
+    <button type="button" class="info-btn" aria-label="À propos de la thématique dominante">i</button>
+    <div class="info-bulle" role="tooltip">Thématique de médiation numérique la plus citée. <span class="ib-warn">Le pourcentage porte sur le total des thématiques citées, pas sur les accompagnements</span> : un même accompagnement peut en porter plusieurs, le total des thématiques dépasse donc le nombre d'accompagnements. Lire « 22% des thématiques citées », pas « 22% de mon activité ».</div>
     <div class="kpi-label">Thématique dominante</div>
     <div class="kpi-value" id="kpi-theme" style="font-size:22px;">—</div>
     <div class="kpi-sub" id="kpi-theme-sub">période sélectionnée</div>
   </div>
   <div class="kpi k5">
+    <button type="button" class="info-btn" aria-label="À propos de la moyenne mensuelle">i</button>
+    <div class="info-bulle" role="tooltip">Moyenne d'accompagnements par mois, calculée <b>sur les seuls mois complets</b>. Le mois en cours est exclu : l'export s'arrête au jour où tu l'as généré, l'inclure ferait chuter la moyenne artificiellement. Les mois sans aucune activité sont également écartés. Le total, lui, comptabilise tout.</div>
     <div class="kpi-label">Moyenne mensuelle</div>
     <div class="kpi-value" id="kpi-avg">—</div>
     <div class="kpi-sub" id="kpi-avg-sub">sur la période</div>
     <div class="spark-wrap"><div id="spark-avg"></div></div>
   </div>
-  <div class="kpi k6" title="Ratio nouveaux bénéficiaires sur total accompagnés (hors anonymes). Mesure l'attraction vs la fidélisation.">
+  <div class="kpi k6">
+    <button type="button" class="info-btn" aria-label="À propos des nouveaux bénéficiaires">i</button>
+    <div class="info-bulle" role="tooltip">Nombre de <b>nouveaux</b> bénéficiaires et de bénéficiaires <b>suivis</b> sur la période. <span class="ib-warn">Ces deux catégories ne sont pas exclusives</span> : leur somme dépasse le nombre de bénéficiaires, une même personne pouvant relever des deux. Chaque pourcentage est donc rapporté au total des bénéficiaires et les deux ne font pas 100%.</div>
     <div class="kpi-label">Nouveaux bénéf.</div>
     <div class="kpi-value" id="kpi-retention">—</div>
     <div class="kpi-sub" id="kpi-retention-sub">nouveaux vs suivis</div>
@@ -1046,17 +1095,23 @@
 
   <!-- Projection + croissance H1 -->
   <div class="grid3" id="projectionCards">
-    <div class="card" title="Extrapolation du rythme actuel sur 12 mois. Basé sur les mois déjà saisis.">
+    <div class="card has-info">
+      <button type="button" class="info-btn" aria-label="À propos de la projection">i</button>
+      <div class="info-bulle" role="tooltip"><b>Extrapolation, pas une prévision.</b> On prend la moyenne des mois complets et on la multiplie par 12. Le mois en cours est exclu du calcul. <span class="ib-warn">Ce chiffre suppose que le rythme des mois écoulés se reproduit toute l'année</span> — congés d'été compris. À manier avec prudence si la période saisie n'est pas représentative.</div>
       <div class="card-title cyan"><span class="dot"></span>Projection 2026 (12 mois)</div>
       <div class="kpi-value" id="proj2026" style="font-size:28px;color:var(--cyan);">—</div>
       <div class="kpi-sub" id="proj2026-sub">sur la base des mois disponibles</div>
     </div>
-    <div class="card" title="Croissance du 1er semestre 2025 vs 2024.">
+    <div class="card has-info">
+      <button type="button" class="info-btn" aria-label="À propos de la croissance H1 2025">i</button>
+      <div class="info-bulle" role="tooltip">Compare <b>janvier–juin 2025 à janvier–juin 2024</b>. Cette fenêtre fixe permet de comparer deux années à durée égale, même si l'une n'est pas terminée. Elle ignore volontairement le second semestre.</div>
       <div class="card-title orange"><span class="dot"></span>Croissance H1 2025 / 2024</div>
       <div class="kpi-value" id="growthH1_2025" style="font-size:28px;">—</div>
       <div class="kpi-sub" id="growthH1_2025-sub">jan–juin 2025 vs jan–juin 2024</div>
     </div>
-    <div class="card" title="Croissance du 1er semestre 2026 vs 2025.">
+    <div class="card has-info">
+      <button type="button" class="info-btn" aria-label="À propos de la croissance H1 2026">i</button>
+      <div class="info-bulle" role="tooltip">Compare <b>janvier–juin 2026 à janvier–juin 2025</b>, à durée égale. Ne pas confondre avec le badge de la carte « Total 2026 », qui compare lui toute la période saisie de 2026 à la même fenêtre de 2025.</div>
       <div class="card-title purple"><span class="dot"></span>Croissance H1 2026 / 2025</div>
       <div class="kpi-value" id="growthH1_2026" style="font-size:28px;">—</div>
       <div class="kpi-sub" id="growthH1_2026-sub">jan–juin 2026 vs jan–juin 2025</div>

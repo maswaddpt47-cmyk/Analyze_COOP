@@ -75,6 +75,15 @@ production.
 - **`growthBadge()` contient déjà la valeur et son signe** — le concaténer à un
   texte de pourcentage l'affichait deux fois (« +97.0%+97.0% »). Ce défaut
   n'apparaît qu'avec deux années importées.
+- **Les bulles d'info des KPI portent les pièges de lecture repérés à l'audit**
+  (accompagnements ≠ activités, % des thématiques ≠ % de l'activité, catégories
+  nouveaux/suivis non exclusives, cumul non dédoublonné, mois en cours exclu,
+  projection = extrapolation). Elles ne sont pas décoratives : ne pas les
+  retirer sans avoir supprimé le piège qu'elles décrivent. Ancrées dans la
+  carte (`left`/`right` à 0) car la grille est en `auto-fit` — une bulle calée
+  à droite sortirait de l'écran sur la dernière colonne. La carte prend un
+  `z-index` au survol parce que `.kpi:hover` applique un `transform`, qui crée
+  un stacking context.
 - **Les messages d'erreur d'import distinguent les causes.** Le message
   générique « format inattendu » a fait chercher pendant un temps un problème
   de fichier alors que la cause était `getValue is not defined`.
