@@ -1,7 +1,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const { rowsBetween, getValue, mergeArraysSum, sumDatasets, SECTION_ORDER_N,
-        isCurrentMonth, monthlySeriesStats, sumYearUpTo, buildMonthlyLabels } = require('./logic.js');
+        isCurrentMonth, monthlySeriesStats, sumYearUpTo, buildMonthlyLabels, topNAvecReste } = require('./logic.js');
 
 const ROWS_FIXTURE = [
   ['Statistiques générales', null, null],
@@ -315,5 +315,47 @@ describe('buildMonthlyLabels', () => {
     assert.deepEqual(buildMonthlyLabels({ '2026': { monthly: { labels: [] } } }), []);
     assert.deepEqual(buildMonthlyLabels({ '2026': {} }), []);
     assert.deepEqual(buildMonthlyLabels({ '2026': an('nimporte quoi') }), []);
+  });
+});
+
+
+describe('topNAvecReste', () => {
+  const faux = n => Array.from({length:n}, (_,i) => ({ label:'Lieu '+(i+1), val: n-i, pct:0 }));
+
+  // Regression du 22/09/2026 : une quarantaine de lieux rendait le graphique
+  // « par lieu » illisible, toutes les etiquettes superposees.
+  it("plafonne le nombre de barres", () => {
+    const r = topNAvecReste(faux(40), 15, 'Autres lieux');
+    assert.equal(r.length, 16); // 15 + la ligne de reste
+  });
+
+  it("ne perd aucune valeur dans le regroupement", () => {
+    const src = faux(40);
+    const total = src.reduce((a,b)=>a+b.val,0);
+    const r = topNAvecReste(src, 15, 'Autres lieux');
+    assert.equal(r.reduce((a,b)=>a+b.val,0), total);
+  });
+
+  it("annonce combien d'entrees sont regroupees", () => {
+    const r = topNAvecReste(faux(40), 15, 'Autres lieux');
+    assert.equal(r[r.length-1].label, 'Autres lieux (25)');
+    assert.equal(r[r.length-1]._reste, true);
+  });
+
+  it("ne regroupe rien quand la liste tient deja", () => {
+    const r = topNAvecReste(faux(5), 15, 'Autres lieux');
+    assert.equal(r.length, 5);
+    assert.equal(r.some(x => x._reste), false);
+  });
+
+  it("trie par valeur decroissante", () => {
+    const r = topNAvecReste([{label:'a',val:1},{label:'b',val:9},{label:'c',val:5}], 15);
+    assert.deepEqual(r.map(x=>x.label), ['b','c','a']);
+  });
+
+  it("ecarte les valeurs nulles et resiste a une liste vide", () => {
+    assert.deepEqual(topNAvecReste([{label:'a',val:0}], 15), []);
+    assert.deepEqual(topNAvecReste([], 15), []);
+    assert.deepEqual(topNAvecReste(null, 15), []);
   });
 });

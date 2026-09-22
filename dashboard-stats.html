@@ -176,6 +176,11 @@
 
   .chart-wrap{overflow:visible;position:relative;height:260px;will-change:transform;}
   .chart-wrap>div{height:100%;width:100%;}
+  /* Palmares a hauteur variable (lieux) : la carte doit suivre le graphique,
+     sinon un classement de 16 barres deborde sur la carte du dessous. */
+  .chart-note{margin-top:10px;font-size:11.5px;color:var(--muted);line-height:1.5;}
+  .chart-wrap.auto-h{height:auto;min-height:260px;}
+  .chart-wrap.auto-h>div{height:auto;min-height:260px;}
   .chart-wrap:hover{transform:scale(1.012);transition:transform .3s ease;}
   .chart-wrap:not(:hover){transition:transform .25s ease;}
   .spark-wrap>div{height:100%;width:100%;}
@@ -1180,9 +1185,15 @@
 <!-- PAGE: LIEUX -->
 <div class="pages" id="page-lieux">
   <div class="grid2">
-    <div class="card">
+    <div class="card has-info">
+      <button type="button" class="info-btn" aria-label="À propos des accompagnements par lieu">i</button>
+      <div class="info-bulle" role="tooltip">Répartition des accompagnements <b>rattachés à un lieu identifié</b>.
+      <span class="ib-warn">Le total de ce graphique est inférieur à ton nombre d'accompagnements</span> :
+      ceux réalisés à distance, à domicile ou hors d'un lieu référencé n'y figurent pas — voir « Canaux d'activité » ci-contre.
+      Seuls les <b>15 lieux les plus actifs</b> sont tracés ; les suivants sont récapitulés en note sous le graphique, pour ne pas écraser l'échelle.</div>
       <div class="card-title"><span class="dot"></span>Accompagnements par lieu</div>
-      <div class="chart-wrap"><div id="chartLieux"></div></div>
+      <div class="chart-wrap auto-h"><div id="chartLieux"></div></div>
+      <div id="lieuxReste" class="chart-note" style="display:none;"></div>
     </div>
     <div class="card">
       <div class="card-title green"><span class="dot"></span>Canaux d'activité</div>
@@ -1471,8 +1482,12 @@ function makeOrUpdateDoughnut(id, labels, values, colors) {
 
 // ===== HORIZONTAL BAR simple =====
 function makeOrUpdateHBar(id, labels, values, color) {
+  // Hauteur proportionnelle au nombre de barres : a 260px fixes, une
+  // quarantaine d'entrees se chevauchaient jusqu'a l'illisible (22/09/2026).
+  // Plancher a 260px pour ne pas ecraser les petits classements.
+  const hauteur = Math.max(260, 30 * (labels ? labels.length : 0) + 40);
   return apexMake(id, {
-    chart: { ...apexBase.chartCfg, type: 'bar', height: 260, events: spotlightHandlers },
+    chart: { ...apexBase.chartCfg, type: 'bar', height: hauteur, events: spotlightHandlers },
     theme: { mode: 'dark' },
     series: [{ data: values }],
     colors: [color],
@@ -1576,7 +1591,32 @@ function renderAggregates(ds, periodLabel){
   makeOrUpdateDoughnut('chartAge', ds.age.map(x=>x.label), ds.age.map(x=>x.val), palette.slice(0, ds.age.length));
   makeOrUpdateDoughnut('chartStatut', statutC.map(x=>x.label), statutC.map(x=>x.val), statutC.map(x=>x.color));
 
-  makeOrUpdateHBar('chartLieux', ds.lieux.map(x=>x.label), ds.lieux.map(x=>x.val), '#3b82f6');
+  // Le palmares des lieux n'est borne par rien dans l'export : un agent
+  // intervenant sur une quarantaine de sites saturait le graphique. On plafonne
+  // a 15 lignes, le reste etant agrege sans rien perdre du total. La vue annee
+  // et la vue cumul appliquent desormais la meme regle — le cumul coupait deja
+  // a 10, la vue annee affichait tout, le meme graphique changeait de forme
+  // selon le bouton clique.
+  // Le reste n'est PAS trace comme une barre : agreger 25 lieux en une seule
+  // entree ecrasait l'echelle et rendait le palmares des 15 premiers illisible
+  // — l'inverse de l'effet recherche. Il part donc en note sous le graphique,
+  // ou l'information reste complete sans fausser la lecture.
+  const LIEUX_MAX = 15;
+  const lieuxTries = topNAvecReste(ds.lieux, Number.MAX_SAFE_INTEGER);
+  const lieuxTete = lieuxTries.slice(0, LIEUX_MAX);
+  const lieuxReste = lieuxTries.slice(LIEUX_MAX);
+  makeOrUpdateHBar('chartLieux', lieuxTete.map(x=>x.label), lieuxTete.map(x=>x.val), '#3b82f6');
+  const noteLieux = document.getElementById('lieuxReste');
+  if(noteLieux){
+    if(lieuxReste.length){
+      const somme = lieuxReste.reduce((a,b)=>a+b.val,0);
+      noteLieux.textContent = `+ ${lieuxReste.length} autres lieux, ${somme.toLocaleString('fr-FR')} accompagnements au total `
+        + `(du plus actif : ${lieuxReste[0].label}, ${lieuxReste[0].val.toLocaleString('fr-FR')}).`;
+      noteLieux.style.display = '';
+    } else {
+      noteLieux.style.display = 'none';
+    }
+  }
 
   const canauxC = ds.canaux.map((x,i)=>({...x, color: x.color || colorFor('canaux', x.label, i)}));
   makeOrUpdateDoughnut('chartCanaux', canauxC.map(x=>x.label), canauxC.map(x=>x.val), canauxC.map(x=>x.color));

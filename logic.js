@@ -71,6 +71,29 @@ function mergeArraysSum(arrays){
   return merged.sort((a,b)=>b.val-a.val);
 }
 
+// Garde les `n` premieres entrees d'un classement et agrege tout le reste
+// dans une ligne « Autres (N ...) », pour ne rien perdre du total. Sert aux
+// palmares ou le nombre d'entrees n'est pas borne par la source : un agent
+// intervenant sur une quarantaine de lieux rendait le graphique illisible,
+// etiquettes superposees (constate le 22/09/2026).
+// Les pourcentages sont recalcules sur le total d'origine, reste compris.
+function topNAvecReste(items, n, nomReste){
+  const liste = (items || []).filter(x => x && x.val > 0).sort((a,b) => b.val - a.val);
+  if(liste.length <= n) return liste;
+  const tete = liste.slice(0, n);
+  const reste = liste.slice(n);
+  const valReste = reste.reduce((a,b) => a + b.val, 0);
+  if(valReste <= 0) return tete;
+  const total = liste.reduce((a,b) => a + b.val, 0) || 1;
+  const sortie = tete.concat([{
+    label: (nomReste || 'Autres') + ' (' + reste.length + ')',
+    val: valReste,
+    pct: Math.round((valReste / total) * 1000) / 10,
+    _reste: true
+  }]);
+  return sortie;
+}
+
 function sumDatasets(list){
   const t = list.reduce((acc, ds)=>{
     Object.keys(ds.totals).forEach(k=>{
@@ -101,7 +124,7 @@ function sumDatasets(list){
     materiel: mergeArraysSum(list.map(d=>d.materiel)),
     canaux: mergeArraysSum(list.map(d=>d.canaux)),
     durees: mergeArraysSum(list.map(d=>d.durees)),
-    lieux: mergeArraysSum(list.map(d=>d.lieux)).slice(0,10),
+    lieux: mergeArraysSum(list.map(d=>d.lieux)),
     genre: mergeArraysSum(list.map(d=>d.genre)),
     age: mergeArraysSum(list.map(d=>d.age)),
     statut: mergeArraysSum(list.map(d=>d.statut)),
@@ -197,5 +220,5 @@ function sumYearUpTo(labels, values, year, maxMois){
 
 if (typeof module !== 'undefined') {
   module.exports = { rowsBetween, getValue, mergeArraysSum, sumDatasets, SECTION_ORDER, SECTION_ORDER_N,
-                    isCurrentMonth, monthlySeriesStats, sumYearUpTo, buildMonthlyLabels };
+                    isCurrentMonth, monthlySeriesStats, sumYearUpTo, buildMonthlyLabels, topNAvecReste };
 }

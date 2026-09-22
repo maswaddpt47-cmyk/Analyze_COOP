@@ -91,6 +91,25 @@ production.
   d'une année importée reste affiché : « aucune activité en août » est une
   information, pas un trou. `buildMonthlyLabels()` dans `logic.js`, avec ses
   tests.
+- **Les palmarès à nombre d'entrées non borné se plafonnent à l'affichage.**
+  Le graphique « par lieu » traçait toutes les entrées de l'export : avec une
+  quarantaine de sites, les étiquettes se superposaient jusqu'à l'illisible.
+  Trois règles tiennent ensemble — n'en défaire aucune isolément : **15 barres
+  maximum**, **hauteur du graphique proportionnelle** au nombre de barres
+  (`.chart-wrap.auto-h`, sinon le graphique déborde sur la carte du dessous),
+  et le reste **en note sous le graphique, jamais en barre** : agréger 25 lieux
+  en une seule entrée écrasait l'échelle et rendait le palmarès encore moins
+  lisible qu'avant.
+- **La vue année et la vue cumul appliquent les mêmes règles d'affichage.**
+  Le cumul coupait les lieux à 10, la vue année les affichait tous : le même
+  graphique changeait de forme selon le bouton cliqué. Le plafond se pose au
+  rendu, pas dans l'agrégat.
+- **Le graphique « par lieu » ne couvre pas tout le volume.** Sa somme
+  correspond au seul canal « Lieu d'activité » (256 sur 660 accompagnements
+  mesuré le 22/09/2026) : le distanciel, le domicile et les lieux non
+  référencés en sont absents. Ne pas présenter ce total comme l'activité
+  totale. *Interprétation appuyée sur la concordance des deux chiffres, non
+  confirmée par la documentation de La Coop.*
 - **Les messages d'erreur d'import distinguent les causes.** Le message
   générique « format inattendu » a fait chercher pendant un temps un problème
   de fichier alors que la cause était `getValue is not defined`.
