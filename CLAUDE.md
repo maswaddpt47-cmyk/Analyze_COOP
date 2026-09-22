@@ -24,7 +24,7 @@ Ne jamais travailler sur une version potentiellement périmée — l'oubli est u
 4. Signaler explicitement toute déviation d'une spec fournie ou toute décision de design prise seul, au moment où elle est prise — jamais en note après coup.
 5. Poser une question de clarification dès qu'une demande est ambiguë ou sous-spécifiée (contenu non précisé, "adapte" vs "applique", référence absente) plutôt que de trancher en silence.
 5bis. Utiliser des dates explicites (JJ/MM ou JJ/MM/AAAA) plutôt que des termes relatifs ("hier", "aujourd'hui", "la semaine dernière") — la perception du temps vient d'un contexte injecté en début de session, pas d'une horloge en temps réel, et devient peu fiable sur une session qui s'étale sur plusieurs jours ou plusieurs reprises.
-6. Toujours faire `git pull` avant de lire ou modifier le moindre fichier, même si le repo semble à jour. Respecter la politique de push définie ici (travailler sur la branche imposée par la session, puis merger dans `main` ; push direct sur `main` admis pour la doc/config et les correctifs courts déjà validés) et signaler tout conflit avec les instructions de session avant d'agir.
+6. Toujours faire `git pull` avant de lire ou modifier le moindre fichier, même si le repo semble à jour. **Pousser directement sur `main`** (décidé le 22/09/2026) ; ne créer une branche que si l'utilisateur le demande. Signaler tout conflit avec les instructions de session avant d'agir — si la plateforme impose une branche, le dire et merger dans `main` sans attendre la fin de session.
 7. Après toute reprise de session ou résumé de contexte, relire l'état réel du fichier concerné avant de le modifier — ne jamais présumer qu'un correctif précédent est encore en place.
 8. Avant de pousser un changement visuel (CSS/layout), vérifier mentalement les interactions à risque (stacking context, overflow, position sticky/fixed) sur les zones sensibles existantes.
 9. Ne jamais modifier un fichier sans avoir d'abord lu sa version actuelle dans le repo.
@@ -104,11 +104,13 @@ Tableau de bord HTML unique (`dashboard-stats.html`) pour un conseiller en médi
 - **Données** : stockées en `localStorage`, clés `coopDashboard_yearData` et
   `coopDashboard_annotations` (constantes `STORAGE_KEY` / `ANNOT_KEY`)
 - **Autres fichiers HTML** : `conum-multi-agents.html`, `conum-pptx.html` — ne pas confondre avec le dashboard principal
-- **Branche de développement** : celle que la plateforme impose à la session en
-  cours. Son nom change à chaque session (`claude/…`), il ne peut donc pas être
-  écrit en dur ici — ne pas chercher à réutiliser une branche d'une session
-  passée. **Tout doit finir mergé dans `main`** : le déploiement GitHub Pages
-  ne part que de là, une branche de session ne déploie rien.
+- **Branche de développement : aucune — push direct sur `main`.** Demandé
+  explicitement le 22/09/2026. Le déploiement GitHub Pages ne part que de
+  `main`, et la CI y bloque déjà tout test rouge : passer par une branche de
+  session n'ajoutait qu'une étape de merge, sans garde-fou supplémentaire.
+  Ne pas créer de branche « au cas où ». Si la plateforme en impose une pour
+  des raisons techniques, la merger dans `main` immédiatement, pas en fin de
+  session.
 
 ---
 
@@ -119,25 +121,14 @@ Tableau de bord HTML unique (`dashboard-stats.html`) pour un conseiller en médi
 git fetch origin && git pull origin main
 git log --oneline -5
 
-# Développement (code applicatif)
-# La branche est celle imposée par la session en cours — ne pas en inventer une.
-git checkout -b <branche-de-session>        # si elle n'existe pas déjà
-# ... modifications ...
-node --test utils.test.js && node --test logic.test.js   # vérifier avant de commiter
+# Développement — directement sur main, pas de branche
+node --test utils.test.js && node --test logic.test.js   # avant de commiter
 git add <fichiers>
 git commit -m "description claire"
-git push -u origin <branche-de-session>
-
-# OBLIGATOIRE en fin de session — sinon rien n'est déployé
-git checkout main && git pull origin main
-git merge <branche-de-session> --no-ff
-node --test utils.test.js && node --test logic.test.js   # la CI bloque sinon
 git push origin main
-
-# Configuration / docs (CLAUDE.md, deploy.yml, etc.)
-# → push direct sur main autorisé
 ```
 
-**Branches obsolètes** : `claude/stats-optimization-thl4rq` date du 14/09/2026.
-Son unique commit non mergé (`b7c1557`) est déjà présent dans `main` sous un
-autre SHA (`86096b9`) — rien à récupérer, la branche peut être supprimée.
+**Branches obsolètes, supprimables** : `claude/stats-optimization-thl4rq`
+(14/09/2026, son unique commit non mergé `b7c1557` est déjà dans `main` sous
+`86096b9`) et `claude/quirky-clarke-l9ynxv` (22/09/2026, réalignée sur `main`,
+sans commit propre). Aucune des deux ne porte de travail à récupérer.
