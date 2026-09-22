@@ -103,7 +103,14 @@ Tableau de bord HTML unique (`dashboard-stats.html`) pour un conseiller en médi
     sans clé, avec repli sur OpenStreetMap — **ne pas revenir à CARTO**
 - **Données** : stockées en `localStorage`, clés `coopDashboard_yearData` et
   `coopDashboard_annotations` (constantes `STORAGE_KEY` / `ANNOT_KEY`)
-- **Autres fichiers HTML** : `conum-multi-agents.html`, `conum-pptx.html` — ne pas confondre avec le dashboard principal
+- **Autres fichiers HTML** : `conum-pptx.html` — ne pas confondre avec le dashboard principal
+- **Onglet Équipe** (`#page-equipe` dans `dashboard-stats.html`) : import de
+  l'export « …_accompagnements_… », tous médiateurs. Son CSS est **scopé sous
+  `#page-equipe` et préfixé `eq-`**, son JS est dans une **IIFE** — la page
+  autonome dont il vient (`conum-multi-agents.html`, supprimée le 22/09/2026)
+  définissait `.card`, `.tabs`, `.modal`, `input`, `select`, `body` et
+  redéclarait `STORAGE_KEY` : 24 collisions CSS et 2 collisions JS mesurées.
+  Ne jamais désescoper.
 - **Branche de développement : aucune — push direct sur `main`.** Demandé
   explicitement le 22/09/2026. Le déploiement GitHub Pages ne part que de
   `main`, et la CI y bloque déjà tout test rouge : passer par une branche de

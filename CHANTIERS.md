@@ -125,6 +125,21 @@ production.
   suivis** — aucun identifiant de bénéficiaire n'y figure. Ces totaux restent à
   zéro et le KPI bascule sur les heures d'accompagnement. Ne jamais les déduire
   du nombre de lignes : ce serait un nombre d'actes, pas de personnes.
+- **L'onglet Équipe est scopé, et doit le rester.** Son CSS vit sous
+  `#page-equipe` avec le préfixe `eq-`, son JS dans une IIFE. La page autonome
+  d'origine définissait `.card`, `.card-title`, `.tabs`, `.tab`, `.modal`,
+  `.toast` et surtout `input, select, label, body, *` : importée telle quelle,
+  elle réécrivait la mise en page de tout le dashboard (24 collisions CSS) et
+  sa redéclaration de `STORAGE_KEY` aurait tué le script entier, comme
+  `norm` l'avait fait le matin même.
+- **L'onglet Équipe masque le bandeau KPI et les boutons d'année.** Ses données
+  viennent d'un autre export : laisser les chiffres d'un agent au-dessus de
+  ceux de l'équipe serait trompeur, et les boutons d'année ne pilotent que le
+  dashboard. Même traitement que l'onglet Ateliers, qui masquait déjà ce
+  bandeau — c'est ce précédent qui a rendu l'intégration propre.
+- **Les barres de l'onglet Équipe sont en HTML, pas en ApexCharts** : le
+  conteneur est masqué tant que l'onglet n'est pas ouvert, et un graphe Apex
+  rendu à taille zéro reste faux ensuite.
 - **Les messages d'erreur d'import distinguent les causes.** Le message
   générique « format inattendu » a fait chercher pendant un temps un problème
   de fichier alors que la cause était `getValue is not defined`.

@@ -178,6 +178,67 @@
   .chart-wrap>div{height:100%;width:100%;}
   /* Palmares a hauteur variable (lieux) : la carte doit suivre le graphique,
      sinon un classement de 16 barres deborde sur la carte du dessous. */
+  /* ===== ONGLET EQUIPE =====
+     Tout est scope sous #page-equipe et prefixe `eq-`. La page autonome dont
+     ce bloc est issu definissait .card, .tabs, .tab, .modal, .toast et surtout
+     `input, select, label, body, *` : importee telle quelle, elle aurait
+     reecrit la mise en page de tout le dashboard (24 collisions mesurees le
+     22/09/2026). Ne jamais desescoper ces regles. */
+  #page-equipe .eq-layout{display:grid;grid-template-columns:270px 1fr;gap:16px;}
+  @media(max-width:900px){ #page-equipe .eq-layout{grid-template-columns:1fr;} }
+  #page-equipe .eq-side{display:flex;flex-direction:column;gap:12px;}
+  #page-equipe .eq-agent{
+    display:flex;align-items:center;gap:10px;padding:10px;
+    border:1px solid var(--border);border-radius:10px;margin-bottom:8px;
+    transition:border-color .15s ease;
+  }
+  #page-equipe .eq-agent:hover{border-color:#3a4a78;}
+  #page-equipe .eq-agent.on{border-color:var(--blue);background:rgba(59,130,246,.08);}
+  #page-equipe .eq-agent.tous{border-color:var(--green);background:rgba(16,185,129,.06);}
+  #page-equipe .eq-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  #page-equipe .eq-nom{font-size:13px;font-weight:700;flex:1;cursor:pointer;}
+  #page-equipe .eq-mini{font-size:11px;color:var(--muted);}
+  #page-equipe .eq-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap;}
+  #page-equipe .eq-tab{
+    padding:8px 14px;font-size:13px;font-weight:600;color:var(--muted);
+    cursor:pointer;border-bottom:2px solid transparent;background:none;border-top:none;
+    border-left:none;border-right:none;font-family:inherit;
+  }
+  #page-equipe .eq-tab.on{color:var(--blue);border-bottom-color:var(--blue);}
+  #page-equipe .eq-vue{display:none;}
+  #page-equipe .eq-vue.on{display:block;}
+  #page-equipe .eq-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px;}
+  #page-equipe .eq-kpi{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;border-top:3px solid var(--blue);}
+  #page-equipe .eq-kpi.k2{border-top-color:var(--green);}
+  #page-equipe .eq-kpi.k3{border-top-color:var(--orange);}
+  #page-equipe .eq-kpi.k4{border-top-color:var(--purple);}
+  #page-equipe .eq-kpi-lab{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;}
+  #page-equipe .eq-kpi-val{font-size:26px;font-weight:800;}
+  #page-equipe .eq-kpi-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+  #page-equipe .eq-bloc{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;}
+  #page-equipe .eq-bloc-t{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px;}
+  #page-equipe .eq-bar{margin-bottom:8px;}
+  #page-equipe .eq-bar-top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;}
+  #page-equipe .eq-bar-tr{height:6px;background:#1a2444;border-radius:3px;overflow:hidden;}
+  #page-equipe .eq-bar-fi{height:100%;border-radius:3px;}
+  #page-equipe .eq-lb{display:flex;flex-direction:column;gap:8px;}
+  #page-equipe .eq-lb-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--panel2);border-radius:8px;border:1px solid var(--border);}
+  #page-equipe .eq-lb-rk{font-size:16px;font-weight:800;min-width:28px;text-align:center;}
+  #page-equipe .eq-lb-nm{font-size:13px;font-weight:700;}
+  #page-equipe .eq-lb-vl{font-size:16px;font-weight:800;}
+  #page-equipe .eq-lb-tr{height:4px;background:var(--border);border-radius:2px;margin-top:4px;}
+  #page-equipe .eq-lb-fi{height:100%;border-radius:2px;}
+  #page-equipe .eq-vide{text-align:center;color:var(--muted);font-size:13px;padding:40px;opacity:.7;line-height:1.6;}
+  #page-equipe select.eq-select{
+    background:var(--panel2);border:1px solid var(--border);color:var(--text);
+    border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;max-width:340px;
+  }
+  #page-equipe .eq-import{
+    background:var(--blue);border:none;color:#fff;border-radius:8px;
+    padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;
+  }
+  #page-equipe .eq-import:hover{filter:brightness(1.1);}
+  body.light-mode #page-equipe .eq-bar-tr{background:#e5e7eb;}
   .chart-note{margin-top:10px;font-size:11.5px;color:var(--muted);line-height:1.5;}
   /* Aiguillage vers la page equipe : deux exports de La Coop se ressemblent et
      ne se chargent pas au meme endroit, rien ne le disait (22/09/2026). */
@@ -848,7 +909,7 @@
     <div class="drawer-section">
       <div class="drawer-section-label">Outils</div>
       <button class="drawer-item" id="themeToggleBtnDrawer"><span class="di-icon">🌙</span><span class="di-label">Mode clair/sombre</span></button>
-      <button class="drawer-item" onclick="location.href='conum-multi-agents.html'"><span class="di-icon">👥</span><span class="di-label">Multi-agents</span></button>
+      <button class="drawer-item" onclick="closeDrawer();document.querySelector('.tab[data-page=&quot;equipe&quot;]').click();"><span class="di-icon">👥</span><span class="di-label">Équipe</span></button>
     </div>
 
   </div>
@@ -975,10 +1036,10 @@
       <div class="ma-txt">
         <b>Ton fichier s'appelle « …_accompagnements_… » ?</b>
         Celui-là couvre toute l'équipe, avec une ligne par participant.
-        Il ne se charge pas ici, mais dans la page Multi-agents.
+        Il ne se charge pas ici, mais dans l'onglet Équipe.
         <span class="ma-sub">Ici, uniquement les fichiers « …_statistiques_… », un par année.</span>
       </div>
-      <button class="ma-btn" onclick="location.href='conum-multi-agents.html'">👥 Aller à Multi-agents</button>
+      <button class="ma-btn" onclick="document.getElementById('importModalOverlay').classList.remove('active');document.querySelector('.tab[data-page=&quot;equipe&quot;]').click();">👥 Ouvrir l'onglet Équipe</button>
     </div>
 
     <div class="modal-actions">
@@ -1001,6 +1062,7 @@
   <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="beneficiaires">Bénéficiaires</div>
   <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="lieux">Lieux & canaux</div>
   <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="ateliers">Ateliers</div>
+  <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="equipe">👥 Équipe</div>
   <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="compare">⇄ Comparaison</div>
   <div class="tab" role="tab" tabindex="0" aria-selected="false" data-page="bilan">📋 Bilan</div>
 </div>
@@ -1302,6 +1364,62 @@
 </div>
 
 <!-- PAGE: COMPARAISON -->
+<!-- PAGE: EQUIPE (import de l'export « accompagnements », tous mediateurs) -->
+<div class="pages" id="page-equipe">
+  <div class="eq-layout">
+
+    <div class="eq-side">
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>Conseillers numériques</div>
+        <div id="eqListe"><div class="eq-mini">Aucun agent importé.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>Données</div>
+        <label class="eq-import" style="display:block;text-align:center;cursor:pointer;">
+          ⬆ Importer l'export équipe
+          <input type="file" id="eqInput" accept=".xlsx" style="display:none;">
+        </label>
+        <div class="eq-mini" style="margin-top:10px;line-height:1.55;">
+          Fichier <b>« …_accompagnements_… »</b> de La Coop : toute l'équipe,
+          une ligne par participant. Les données restent sur cet appareil.
+        </div>
+        <button class="modal-btn" id="eqReset" style="margin-top:10px;width:100%;">↺ Vider</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="eq-tabs">
+        <button class="eq-tab on" data-eq="synthese">Synthèse</button>
+        <button class="eq-tab" data-eq="classement">Classement</button>
+        <button class="eq-tab" data-eq="individuel">Par agent</button>
+      </div>
+
+      <div class="eq-vue on" id="eq-synthese">
+        <div class="eq-kpis" id="eqKpis"></div>
+        <div class="eq-bloc"><div class="eq-bloc-t">Accompagnements par agent</div><div id="eqChartAgents" style="min-height:240px;"></div></div>
+        <div class="eq-bloc"><div class="eq-bloc-t">Top thématiques — cumul équipe</div><div id="eqThemes"></div></div>
+      </div>
+
+      <div class="eq-vue" id="eq-classement">
+        <select id="eqMetrique" class="eq-select" style="margin-bottom:14px;">
+          <option value="accompagnements">Accompagnements</option>
+          <option value="minutes">Heures d'accompagnement</option>
+          <option value="individuelsVal">Accompagnements individuels</option>
+          <option value="ateliersVal">Ateliers collectifs</option>
+          <option value="participants">Participants aux ateliers</option>
+        </select>
+        <div class="eq-lb" id="eqClassement"></div>
+      </div>
+
+      <div class="eq-vue" id="eq-individuel">
+        <select id="eqAgentSel" class="eq-select" style="margin-bottom:14px;"></select>
+        <div id="eqDetail"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <div class="pages" id="page-compare">
   <div class="card" style="margin-bottom:16px;">
     <div class="card-title cyan"><span class="dot"></span>Comparer deux années côte à côte</div>
@@ -2252,6 +2370,219 @@ window.addEventListener('afterprint', () => {
 });
 
 
+// ===== ONGLET EQUIPE =====
+// Tout est enferme dans une IIFE : la page autonome d'origine declarait
+// STORAGE_KEY et renderCompare au scope global, deja pris ici. Une
+// redeclaration `const` au meme scope leve une SyntaxError qui tue tout le
+// script — c'est exactement ce qui cassait l'import XLSX le 22/09/2026.
+// Seul `window.equipeRefresh` est expose, pour le rendu differe a l'ouverture
+// de l'onglet (un graphique dessine dans un conteneur masque sort faux).
+(function(){
+  'use strict';
+  const CLE = 'conumMultiAgents';
+  const PALETTE_EQ = ['#3b82f6','#10b981','#f59e0b','#a855f7','#ec4899','#06b6d4','#ef4444','#eab308',
+                      '#22c55e','#6366f1','#f97316','#14b8a6','#d946ef','#84cc16','#0ea5e9','#f43f5e'];
+  let equipe = [];
+  try { equipe = JSON.parse(localStorage.getItem(CLE) || '[]'); } catch(e){ equipe = []; }
+  let vueAgent = 'tous';
+
+  function sauver(){
+    try { localStorage.setItem(CLE, JSON.stringify(equipe)); }
+    catch(e){ console.error('Sauvegarde équipe impossible', e); }
+  }
+
+  function totaux(agent){
+    const t = { accompagnements:0, individuelsVal:0, ateliersVal:0, participants:0, minutes:0 };
+    Object.values(agent.data || {}).forEach(an => {
+      Object.keys(t).forEach(k => t[k] += ((an.totals || {})[k] || 0));
+    });
+    return t;
+  }
+
+  function themes(agent){
+    const m = new Map();
+    Object.values(agent.data || {}).forEach(an => {
+      (an.themMed || []).forEach(x => m.set(x.label, (m.get(x.label) || 0) + x.val));
+    });
+    const arr = [...m.entries()].map(([label,val]) => ({label,val}));
+    const tot = arr.reduce((a,b) => a + b.val, 0) || 1;
+    arr.forEach(x => x.pct = Math.round((x.val/tot)*1000)/10);
+    return arr.sort((a,b) => b.val - a.val);
+  }
+
+  function selection(){
+    return vueAgent === 'tous' ? equipe : equipe.filter(a => a.id === vueAgent);
+  }
+
+  function rendre(){
+    const vide = !equipe.length;
+    document.getElementById('eqListe').innerHTML = vide
+      ? '<div class="eq-mini">Aucun agent importé.</div>'
+      : `<div class="eq-agent tous${vueAgent==='tous'?' on':''}" data-a="tous">
+           <span class="eq-dot" style="background:var(--green)"></span>
+           <span class="eq-nom">Toute l'équipe<div class="eq-mini">${equipe.length} agents</div></span>
+         </div>` +
+        equipe.map(a => {
+          const t = totaux(a);
+          return `<div class="eq-agent${vueAgent===a.id?' on':''}" data-a="${a.id}">
+            <span class="eq-dot" style="background:${a.color}"></span>
+            <span class="eq-nom">${a.name}<div class="eq-mini">${t.accompagnements.toLocaleString('fr-FR')} accompagnements</div></span>
+          </div>`;
+        }).join('');
+
+    const sel = selection();
+    const agg = sel.reduce((acc,a) => {
+      const t = totaux(a);
+      Object.keys(acc).forEach(k => acc[k] += t[k]);
+      return acc;
+    }, { accompagnements:0, individuelsVal:0, ateliersVal:0, participants:0, minutes:0 });
+
+    const titre = vueAgent === 'tous' ? "cumul équipe" : (sel[0] ? sel[0].name : '');
+    document.getElementById('eqKpis').innerHTML = vide ? '' : `
+      <div class="eq-kpi"><div class="eq-kpi-lab">Accompagnements</div><div class="eq-kpi-val">${agg.accompagnements.toLocaleString('fr-FR')}</div><div class="eq-kpi-sub">${titre}</div></div>
+      <div class="eq-kpi k2"><div class="eq-kpi-lab">Heures d'accompagnement</div><div class="eq-kpi-val">${Math.round(agg.minutes/60).toLocaleString('fr-FR')}</div><div class="eq-kpi-sub">${agg.accompagnements ? (agg.minutes/agg.accompagnements).toFixed(0)+' min en moyenne' : ''}</div></div>
+      <div class="eq-kpi k3"><div class="eq-kpi-lab">Ateliers collectifs</div><div class="eq-kpi-val">${agg.ateliersVal.toLocaleString('fr-FR')}</div><div class="eq-kpi-sub">${agg.participants.toLocaleString('fr-FR')} participants</div></div>
+      <div class="eq-kpi k4"><div class="eq-kpi-lab">${vueAgent==='tous'?'Agents':'Individuels'}</div><div class="eq-kpi-val">${vueAgent==='tous'?equipe.length:agg.individuelsVal.toLocaleString('fr-FR')}</div><div class="eq-kpi-sub">${vueAgent==='tous'?'conseillers numériques':'accompagnements individuels'}</div></div>`;
+
+    // Barres par agent — dessinees en HTML plutot qu'en ApexCharts : le
+    // conteneur est masque tant que l'onglet n'est pas ouvert, et un graphe
+    // Apex rendu a taille zero reste faux ensuite.
+    const parAgent = equipe.map(a => ({ nom:a.name, color:a.color, val: totaux(a).accompagnements }))
+                           .sort((x,y) => y.val - x.val);
+    const maxA = Math.max(1, ...parAgent.map(x => x.val));
+    document.getElementById('eqChartAgents').innerHTML = vide
+      ? '<div class="eq-vide">Importe l\'export équipe pour afficher la répartition.</div>'
+      : parAgent.map(x => `<div class="eq-bar">
+          <div class="eq-bar-top"><span>${x.nom}</span><span>${x.val.toLocaleString('fr-FR')}</span></div>
+          <div class="eq-bar-tr"><div class="eq-bar-fi" style="width:${(x.val/maxA*100).toFixed(1)}%;background:${x.color}"></div></div>
+        </div>`).join('');
+
+    const th = vide ? [] : (vueAgent === 'tous'
+      ? themes({ data: Object.assign({}, ...equipe.map(a => ({ [a.name]: { themMed: themes(a) } }))) })
+      : themes(sel[0]));
+    const maxT = Math.max(1, ...th.map(x => x.val));
+    document.getElementById('eqThemes').innerHTML = th.length
+      ? th.slice(0,12).map((x,i) => `<div class="eq-bar">
+          <div class="eq-bar-top"><span>${x.label}</span><span>${x.val.toLocaleString('fr-FR')} · ${x.pct}%</span></div>
+          <div class="eq-bar-tr"><div class="eq-bar-fi" style="width:${(x.val/maxT*100).toFixed(1)}%;background:${PALETTE_EQ[i%PALETTE_EQ.length]}"></div></div>
+        </div>`).join('')
+      : '<div class="eq-vide">Aucune thématique.</div>';
+
+    rendreClassement();
+    rendreIndividuel(vide);
+  }
+
+  function rendreClassement(){
+    const metrique = document.getElementById('eqMetrique').value;
+    const liste = equipe.map(a => ({ nom:a.name, color:a.color, v: totaux(a)[metrique] || 0 }))
+                        .sort((x,y) => y.v - x.v);
+    const max = Math.max(1, ...liste.map(x => x.v));
+    const medailles = ['🥇','🥈','🥉'];
+    document.getElementById('eqClassement').innerHTML = liste.length
+      ? liste.map((x,i) => `<div class="eq-lb-row">
+          <div class="eq-lb-rk">${medailles[i] || (i+1)}</div>
+          <div style="flex:1">
+            <div class="eq-lb-nm" style="color:${x.color}">${x.nom}</div>
+            <div class="eq-lb-tr"><div class="eq-lb-fi" style="width:${(x.v/max*100).toFixed(1)}%;background:${x.color}"></div></div>
+          </div>
+          <div class="eq-lb-vl" style="color:${x.color}">${
+            metrique === 'minutes' ? Math.round(x.v/60).toLocaleString('fr-FR')+' h' : x.v.toLocaleString('fr-FR')
+          }</div>
+        </div>`).join('')
+      : '<div class="eq-vide">Importe l\'export équipe pour afficher le classement.</div>';
+  }
+
+  function rendreIndividuel(vide){
+    const sel = document.getElementById('eqAgentSel');
+    const courant = sel.value;
+    sel.innerHTML = equipe.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+    if(courant && equipe.some(a => a.id === courant)) sel.value = courant;
+    const a = equipe.find(x => x.id === sel.value) || equipe[0];
+    const box = document.getElementById('eqDetail');
+    if(vide || !a){ box.innerHTML = '<div class="eq-vide">Importe l\'export équipe.</div>'; return; }
+    const t = totaux(a);
+    const th = themes(a).slice(0,10);
+    const maxT = Math.max(1, ...th.map(x => x.val));
+    box.innerHTML = `
+      <div class="eq-kpis">
+        <div class="eq-kpi"><div class="eq-kpi-lab">Accompagnements</div><div class="eq-kpi-val">${t.accompagnements.toLocaleString('fr-FR')}</div></div>
+        <div class="eq-kpi k2"><div class="eq-kpi-lab">Heures</div><div class="eq-kpi-val">${Math.round(t.minutes/60).toLocaleString('fr-FR')}</div></div>
+        <div class="eq-kpi k3"><div class="eq-kpi-lab">Ateliers</div><div class="eq-kpi-val">${t.ateliersVal}</div><div class="eq-kpi-sub">${t.participants} participants</div></div>
+        <div class="eq-kpi k4"><div class="eq-kpi-lab">Individuels</div><div class="eq-kpi-val">${t.individuelsVal.toLocaleString('fr-FR')}</div></div>
+      </div>
+      <div class="eq-bloc"><div class="eq-bloc-t">Thématiques — ${a.name}</div>
+        ${th.map((x,i) => `<div class="eq-bar">
+          <div class="eq-bar-top"><span>${x.label}</span><span>${x.val} · ${x.pct}%</span></div>
+          <div class="eq-bar-tr"><div class="eq-bar-fi" style="width:${(x.val/maxT*100).toFixed(1)}%;background:${PALETTE_EQ[i%PALETTE_EQ.length]}"></div></div>
+        </div>`).join('')}
+      </div>`;
+  }
+
+  // --- interactions
+  document.getElementById('eqListe').addEventListener('click', e => {
+    const el = e.target.closest('.eq-agent');
+    if(!el) return;
+    vueAgent = el.dataset.a;
+    rendre();
+  });
+  document.querySelectorAll('#page-equipe .eq-tab').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('#page-equipe .eq-tab').forEach(x => x.classList.remove('on'));
+      document.querySelectorAll('#page-equipe .eq-vue').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      document.getElementById('eq-' + b.dataset.eq).classList.add('on');
+    });
+  });
+  document.getElementById('eqMetrique').addEventListener('change', rendreClassement);
+  document.getElementById('eqAgentSel').addEventListener('change', () => rendreIndividuel(!equipe.length));
+  document.getElementById('eqReset').addEventListener('click', () => {
+    if(!equipe.length) return;
+    if(!confirm('Effacer les ' + equipe.length + ' agents importés ?')) return;
+    equipe = []; vueAgent = 'tous'; sauver(); rendre();
+    showToast('Données équipe effacées');
+  });
+
+  document.getElementById('eqInput').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    showToast('Lecture de ' + file.name + '…');
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try{
+        if(typeof XLSX === 'undefined') throw new Error('Librairie XLSX non chargée.');
+        const wb = XLSX.read(ev.target.result, { type:'array' });
+        const sheet = wb.Sheets['Activités'] || wb.Sheets[wb.SheetNames[0]];
+        const lignes = XLSX.utils.sheet_to_json(sheet, { header:1, raw:true, defval:null });
+        const res = parseEquipeRows(lignes);
+        if(res.erreur === 'ENTETE_INTROUVABLE'){
+          throw new Error("Ce fichier n'est pas l'export « accompagnements ». L'export « statistiques » se charge via « Importer données ».");
+        }
+        if(!res.agents.length) throw new Error('Aucun médiateur trouvé.');
+        const couleurs = new Map(equipe.map(a => [a.name, a.color]));
+        equipe = res.agents.map((a,i) => ({
+          id: 'eq' + i + '_' + Date.now(),
+          name: a.nom,
+          color: couleurs.get(a.nom) || PALETTE_EQ[i % PALETTE_EQ.length],
+          data: a.data
+        }));
+        vueAgent = 'tous';
+        sauver();
+        rendre();
+        const tot = equipe.reduce((x,a) => x + totaux(a).accompagnements, 0);
+        showToast(equipe.length + ' agents importés — ' + tot.toLocaleString('fr-FR') + ' accompagnements');
+      } catch(err){
+        showToast(err.message, 'warn');
+        console.error(err);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    e.target.value = '';
+  });
+
+  window.equipeRefresh = rendre;
+  rendre();
+})();
+
 // ===== IMPORT / PARSING xlsx EXPORTS =====
 
 function parseWorkbookToDataset(wb){
@@ -2488,8 +2819,19 @@ document.querySelectorAll('.tab').forEach(tab=>{
     tab.classList.add('active');
     tab.setAttribute('aria-selected','true');
     document.getElementById('page-'+tab.dataset.page).classList.add('active');
-    document.getElementById('globalKpis').style.display = (tab.dataset.page === 'ateliers') ? 'none' : '';
-    document.getElementById('dataBanner').style.display = (tab.dataset.page === 'ateliers') ? 'none' : '';
+    // L'onglet Equipe vient d'une autre source (export « accompagnements »,
+    // tous mediateurs) : laisser le bandeau KPI perso au-dessus afficherait
+    // les chiffres d'un agent au-dessus de ceux de l'equipe. Meme traitement
+    // que l'onglet Ateliers, qui masquait deja ce bandeau.
+    const sansKpi = (tab.dataset.page === 'ateliers' || tab.dataset.page === 'equipe');
+    document.getElementById('globalKpis').style.display = sansKpi ? 'none' : '';
+    document.getElementById('dataBanner').style.display = sansKpi ? 'none' : '';
+    // Les boutons d'annee ne pilotent que les donnees du dashboard.
+    const barreAnnees = document.querySelector('.years');
+    if(barreAnnees) barreAnnees.style.display = (tab.dataset.page === 'equipe') ? 'none' : '';
+    // Le rendu se fait a l'ouverture : les largeurs sont fausses dans un
+    // conteneur encore masque.
+    if(tab.dataset.page === 'equipe' && typeof window.equipeRefresh === 'function') window.equipeRefresh();
     // Recharger les KPIs et charts de la page activée
     const activeYear = (document.querySelector('.year-btn.active') || {}).dataset?.year || 'all';
     // Vider tous les sparks avant rebuild
@@ -2761,7 +3103,8 @@ document.getElementById('openRapportBtn').addEventListener('click', async () => 
   // Remettre l'état normal
   allPages.forEach(p => p.classList.remove('active'));
   if(activeTab) document.getElementById('page-'+activeTab.dataset.page).classList.add('active');
-  document.getElementById('globalKpis').style.display = activeTab && activeTab.dataset.page === 'ateliers' ? 'none' : '';
+  document.getElementById('globalKpis').style.display =
+    activeTab && (activeTab.dataset.page === 'ateliers' || activeTab.dataset.page === 'equipe') ? 'none' : '';
 
   await buildRapport();
 
