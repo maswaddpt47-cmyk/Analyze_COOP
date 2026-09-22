@@ -140,11 +140,13 @@ production.
 - **Les barres de l'onglet Équipe sont en HTML, pas en ApexCharts** : le
   conteneur est masqué tant que l'onglet n'est pas ouvert, et un graphe Apex
   rendu à taille zéro reste faux ensuite.
-- **Sur l'onglet Équipe en une colonne, le contenu passe avant la colonne
-  latérale** (`order` sous `@media(max-width:900px)`). Sans cela, on tombait
-  sur la liste des 25 agents puis sur le bloc d'import avant d'avoir vu le
-  moindre chiffre — au point de le prendre pour un import en double au milieu
-  de la page. La colonne reste à gauche sur écran large.
+- **Le filtre par conseiller est une liste déroulante, pas une liste.** Les 25
+  agents en cartes occupaient un écran entier sur mobile : il fallait scroller
+  toute la liste avant d'atteindre le moindre chiffre, et le bloc d'import
+  intercalé passait pour un doublon. La colonne latérale a donc disparu au
+  profit d'une barre compacte (sélecteur + import + vider) — 175px avant les
+  KPI sur mobile, contre un écran entier. Ne pas réintroduire de liste
+  dépliée : elle ne tient pas sur un téléphone.
 - **Les messages d'erreur d'import distinguent les causes.** Le message
   générique « format inattendu » a fait chercher pendant un temps un problème
   de fichier alors que la cause était `getValue is not defined`.

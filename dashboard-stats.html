@@ -184,28 +184,13 @@
      `input, select, label, body, *` : importee telle quelle, elle aurait
      reecrit la mise en page de tout le dashboard (24 collisions mesurees le
      22/09/2026). Ne jamais desescoper ces regles. */
-  #page-equipe .eq-layout{display:grid;grid-template-columns:270px 1fr;gap:16px;}
-  @media(max-width:900px){
-    /* En une colonne, la barre laterale passait AVANT le contenu : on tombait
-       sur la liste des 25 agents puis sur le bloc d'import avant d'avoir vu le
-       moindre chiffre, ce qui donnait l'impression d'un import en double au
-       milieu de la page (signale le 22/09/2026). Le contenu passe donc en
-       premier, la liste et l'import viennent apres. */
-    #page-equipe .eq-layout{grid-template-columns:1fr;}
-    #page-equipe .eq-principal{order:1;}
-    #page-equipe .eq-side{order:2;}
+  #page-equipe .eq-barre{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:12px 14px;margin-bottom:16px;
   }
-  #page-equipe .eq-side{display:flex;flex-direction:column;gap:12px;}
-  #page-equipe .eq-agent{
-    display:flex;align-items:center;gap:10px;padding:10px;
-    border:1px solid var(--border);border-radius:10px;margin-bottom:8px;
-    transition:border-color .15s ease;
-  }
-  #page-equipe .eq-agent:hover{border-color:#3a4a78;}
-  #page-equipe .eq-agent.on{border-color:var(--blue);background:rgba(59,130,246,.08);}
-  #page-equipe .eq-agent.tous{border-color:var(--green);background:rgba(16,185,129,.06);}
-  #page-equipe .eq-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-  #page-equipe .eq-nom{font-size:13px;font-weight:700;flex:1;cursor:pointer;}
+  #page-equipe .eq-barre-info{flex:1;min-width:140px;font-size:12px;color:var(--muted);line-height:1.5;}
+  #page-equipe .eq-barre-actions{display:flex;gap:8px;align-items:center;}
   #page-equipe .eq-mini{font-size:11px;color:var(--muted);}
   #page-equipe .eq-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap;}
   #page-equipe .eq-tab{
@@ -1375,58 +1360,44 @@
 <!-- PAGE: COMPARAISON -->
 <!-- PAGE: EQUIPE (import de l'export « accompagnements », tous mediateurs) -->
 <div class="pages" id="page-equipe">
-  <div class="eq-layout">
 
-    <div class="eq-side">
-      <div class="card">
-        <div class="card-title"><span class="dot"></span>Conseillers numériques</div>
-        <div id="eqListe"><div class="eq-mini">Aucun agent importé.</div></div>
-      </div>
-      <div class="card">
-        <div class="card-title"><span class="dot"></span>Données</div>
-        <label class="eq-import" style="display:block;text-align:center;cursor:pointer;">
-          ⬆ Importer l'export équipe
-          <input type="file" id="eqInput" accept=".xlsx" style="display:none;">
-        </label>
-        <div class="eq-mini" style="margin-top:10px;line-height:1.55;">
-          Fichier <b>« …_accompagnements_… »</b> de La Coop : toute l'équipe,
-          une ligne par participant. Les données restent sur cet appareil.
-        </div>
-        <button class="modal-btn" id="eqReset" style="margin-top:10px;width:100%;">↺ Vider</button>
-      </div>
+  <!-- Barre compacte : la liste des 25 agents occupait un ecran entier sur
+       mobile. En liste deroulante, elle tient sur une ligne, et la colonne
+       laterale qui ne portait plus qu'un select et deux boutons disparait. -->
+  <div class="eq-barre">
+    <select id="eqAgentPick" class="eq-select" aria-label="Filtrer par conseiller"></select>
+    <div class="eq-barre-info" id="eqBarreInfo"></div>
+    <div class="eq-barre-actions">
+      <label class="eq-import" title="Export « …_accompagnements_… » de La Coop">
+        ⬆ Importer
+        <input type="file" id="eqInput" accept=".xlsx" style="display:none;">
+      </label>
+      <button class="modal-btn" id="eqReset" title="Effacer les données équipe de cet appareil">↺</button>
     </div>
-
-    <div class="eq-principal">
-      <div class="eq-tabs">
-        <button class="eq-tab on" data-eq="synthese">Synthèse</button>
-        <button class="eq-tab" data-eq="classement">Classement</button>
-        <button class="eq-tab" data-eq="individuel">Par agent</button>
-      </div>
-
-      <div class="eq-vue on" id="eq-synthese">
-        <div class="eq-kpis" id="eqKpis"></div>
-        <div class="eq-bloc"><div class="eq-bloc-t">Accompagnements par agent</div><div id="eqChartAgents" style="min-height:240px;"></div></div>
-        <div class="eq-bloc"><div class="eq-bloc-t">Top thématiques — cumul équipe</div><div id="eqThemes"></div></div>
-      </div>
-
-      <div class="eq-vue" id="eq-classement">
-        <select id="eqMetrique" class="eq-select" style="margin-bottom:14px;">
-          <option value="accompagnements">Accompagnements</option>
-          <option value="minutes">Heures d'accompagnement</option>
-          <option value="individuelsVal">Accompagnements individuels</option>
-          <option value="ateliersVal">Ateliers collectifs</option>
-          <option value="participants">Participants aux ateliers</option>
-        </select>
-        <div class="eq-lb" id="eqClassement"></div>
-      </div>
-
-      <div class="eq-vue" id="eq-individuel">
-        <select id="eqAgentSel" class="eq-select" style="margin-bottom:14px;"></select>
-        <div id="eqDetail"></div>
-      </div>
-    </div>
-
   </div>
+
+  <div class="eq-tabs">
+    <button class="eq-tab on" data-eq="synthese">Synthèse</button>
+    <button class="eq-tab" data-eq="classement">Classement</button>
+  </div>
+
+  <div class="eq-vue on" id="eq-synthese">
+    <div class="eq-kpis" id="eqKpis"></div>
+    <div class="eq-bloc"><div class="eq-bloc-t" id="eqBlocTitre">Accompagnements par agent</div><div id="eqChartAgents" style="min-height:200px;"></div></div>
+    <div class="eq-bloc"><div class="eq-bloc-t" id="eqThemTitre">Top thématiques</div><div id="eqThemes"></div></div>
+  </div>
+
+  <div class="eq-vue" id="eq-classement">
+    <select id="eqMetrique" class="eq-select" style="margin-bottom:14px;">
+      <option value="accompagnements">Accompagnements</option>
+      <option value="minutes">Heures d'accompagnement</option>
+      <option value="individuelsVal">Accompagnements individuels</option>
+      <option value="ateliersVal">Ateliers collectifs</option>
+      <option value="participants">Participants aux ateliers</option>
+    </select>
+    <div class="eq-lb" id="eqClassement"></div>
+  </div>
+
 </div>
 
 <div class="pages" id="page-compare">
@@ -2425,19 +2396,22 @@ window.addEventListener('afterprint', () => {
 
   function rendre(){
     const vide = !equipe.length;
-    document.getElementById('eqListe').innerHTML = vide
-      ? '<div class="eq-mini">Aucun agent importé.</div>'
-      : `<div class="eq-agent tous${vueAgent==='tous'?' on':''}" data-a="tous">
-           <span class="eq-dot" style="background:var(--green)"></span>
-           <span class="eq-nom">Toute l'équipe<div class="eq-mini">${equipe.length} agents</div></span>
-         </div>` +
-        equipe.map(a => {
-          const t = totaux(a);
-          return `<div class="eq-agent${vueAgent===a.id?' on':''}" data-a="${a.id}">
-            <span class="eq-dot" style="background:${a.color}"></span>
-            <span class="eq-nom">${a.name}<div class="eq-mini">${t.accompagnements.toLocaleString('fr-FR')} accompagnements</div></span>
-          </div>`;
-        }).join('');
+
+    // Liste deroulante : 25 agents en liste occupaient un ecran entier sur
+    // mobile. La selection pilote toute la vue Synthese.
+    const pick = document.getElementById('eqAgentPick');
+    const total = equipe.reduce((x,a) => x + totaux(a).accompagnements, 0);
+    pick.innerHTML = vide
+      ? '<option>Aucune donnée</option>'
+      : `<option value="tous">👥 Toute l'équipe — ${equipe.length} agents</option>` +
+        equipe.map(a => `<option value="${a.id}">${a.name} — ${totaux(a).accompagnements.toLocaleString('fr-FR')}</option>`).join('');
+    pick.disabled = vide;
+    if(!vide && equipe.some(a => a.id === vueAgent)) pick.value = vueAgent;
+    else { vueAgent = 'tous'; pick.value = 'tous'; }
+
+    document.getElementById('eqBarreInfo').textContent = vide
+      ? "Aucune donnée équipe sur cet appareil."
+      : `${total.toLocaleString('fr-FR')} accompagnements · ${equipe.length} conseillers · données locales`;
 
     const sel = selection();
     const agg = sel.reduce((acc,a) => {
@@ -2446,36 +2420,60 @@ window.addEventListener('afterprint', () => {
       return acc;
     }, { accompagnements:0, individuelsVal:0, ateliersVal:0, participants:0, minutes:0 });
 
-    const titre = vueAgent === 'tous' ? "cumul équipe" : (sel[0] ? sel[0].name : '');
+    const tous = vueAgent === 'tous';
+    const titre = tous ? "cumul équipe" : (sel[0] ? sel[0].name : '');
     document.getElementById('eqKpis').innerHTML = vide ? '' : `
       <div class="eq-kpi"><div class="eq-kpi-lab">Accompagnements</div><div class="eq-kpi-val">${agg.accompagnements.toLocaleString('fr-FR')}</div><div class="eq-kpi-sub">${titre}</div></div>
       <div class="eq-kpi k2"><div class="eq-kpi-lab">Heures d'accompagnement</div><div class="eq-kpi-val">${Math.round(agg.minutes/60).toLocaleString('fr-FR')}</div><div class="eq-kpi-sub">${agg.accompagnements ? (agg.minutes/agg.accompagnements).toFixed(0)+' min en moyenne' : ''}</div></div>
       <div class="eq-kpi k3"><div class="eq-kpi-lab">Ateliers collectifs</div><div class="eq-kpi-val">${agg.ateliersVal.toLocaleString('fr-FR')}</div><div class="eq-kpi-sub">${agg.participants.toLocaleString('fr-FR')} participants</div></div>
-      <div class="eq-kpi k4"><div class="eq-kpi-lab">${vueAgent==='tous'?'Agents':'Individuels'}</div><div class="eq-kpi-val">${vueAgent==='tous'?equipe.length:agg.individuelsVal.toLocaleString('fr-FR')}</div><div class="eq-kpi-sub">${vueAgent==='tous'?'conseillers numériques':'accompagnements individuels'}</div></div>`;
+      <div class="eq-kpi k4"><div class="eq-kpi-lab">${tous ? 'Conseillers' : 'Individuels'}</div><div class="eq-kpi-val">${tous ? equipe.length : agg.individuelsVal.toLocaleString('fr-FR')}</div><div class="eq-kpi-sub">${tous ? 'dans cet export' : 'accompagnements individuels'}</div></div>`;
 
-    // Barres par agent — dessinees en HTML plutot qu'en ApexCharts : le
-    // conteneur est masque tant que l'onglet n'est pas ouvert, et un graphe
-    // Apex rendu a taille zero reste faux ensuite.
-    const parAgent = equipe.map(a => ({ nom:a.name, color:a.color, val: totaux(a).accompagnements }))
-                           .sort((x,y) => y.val - x.val);
-    const maxA = Math.max(1, ...parAgent.map(x => x.val));
-    // Quand rien n'est importe, le bouton doit etre atteignable sans scroller :
-    // sur mobile la colonne laterale, qui porte l'import, passe apres.
-    document.getElementById('eqChartAgents').innerHTML = vide
-      ? `<div class="eq-vide">Aucune donnée équipe sur cet appareil.<br>
+    // Barres en HTML plutot qu'en ApexCharts : le conteneur est masque tant
+    // que l'onglet n'est pas ouvert, et un graphe Apex rendu a taille zero
+    // reste faux ensuite.
+    document.getElementById('eqBlocTitre').textContent = tous ? 'Accompagnements par conseiller' : 'Répartition — ' + titre;
+    if(vide){
+      document.getElementById('eqChartAgents').innerHTML =
+        `<div class="eq-vide">Aucune donnée équipe sur cet appareil.<br>
            Charge le fichier « …_accompagnements_… » de La Coop.
            <div style="margin-top:14px;">
              <button class="eq-import" onclick="document.getElementById('eqInput').click()">⬆ Importer l'export équipe</button>
            </div>
-         </div>`
-      : parAgent.map(x => `<div class="eq-bar">
+         </div>`;
+    } else if(tous){
+      const parAgent = equipe.map(a => ({ nom:a.name, color:a.color, val: totaux(a).accompagnements }))
+                             .sort((x,y) => y.val - x.val);
+      const maxA = Math.max(1, ...parAgent.map(x => x.val));
+      document.getElementById('eqChartAgents').innerHTML = parAgent.map(x => `<div class="eq-bar">
           <div class="eq-bar-top"><span>${x.nom}</span><span>${x.val.toLocaleString('fr-FR')}</span></div>
           <div class="eq-bar-tr"><div class="eq-bar-fi" style="width:${(x.val/maxA*100).toFixed(1)}%;background:${x.color}"></div></div>
         </div>`).join('');
+    } else {
+      const a = sel[0], t = totaux(a);
+      const lignes = [
+        ['Accompagnements individuels', t.individuelsVal],
+        ['Participants aux ateliers', t.participants],
+        ['Ateliers animés', t.ateliersVal],
+        ['Heures d\'accompagnement', Math.round(t.minutes/60)]
+      ];
+      const maxL = Math.max(1, ...lignes.map(x => x[1]));
+      document.getElementById('eqChartAgents').innerHTML = lignes.map(([lab,v]) => `<div class="eq-bar">
+          <div class="eq-bar-top"><span>${lab}</span><span>${v.toLocaleString('fr-FR')}</span></div>
+          <div class="eq-bar-tr"><div class="eq-bar-fi" style="width:${(v/maxL*100).toFixed(1)}%;background:${a.color}"></div></div>
+        </div>`).join('');
+    }
 
-    const th = vide ? [] : (vueAgent === 'tous'
-      ? themes({ data: Object.assign({}, ...equipe.map(a => ({ [a.name]: { themMed: themes(a) } }))) })
+    const th = vide ? [] : (tous
+      ? (function(){
+          const m = new Map();
+          equipe.forEach(a => themes(a).forEach(x => m.set(x.label, (m.get(x.label)||0) + x.val)));
+          const arr = [...m.entries()].map(([label,val]) => ({label,val}));
+          const tot = arr.reduce((x,y) => x + y.val, 0) || 1;
+          arr.forEach(x => x.pct = Math.round((x.val/tot)*1000)/10);
+          return arr.sort((x,y) => y.val - x.val);
+        })()
       : themes(sel[0]));
+    document.getElementById('eqThemTitre').textContent = tous ? 'Top thématiques — cumul équipe' : 'Top thématiques — ' + titre;
     const maxT = Math.max(1, ...th.map(x => x.val));
     document.getElementById('eqThemes').innerHTML = th.length
       ? th.slice(0,12).map((x,i) => `<div class="eq-bar">
@@ -2485,7 +2483,6 @@ window.addEventListener('afterprint', () => {
       : '<div class="eq-vide">Aucune thématique.</div>';
 
     rendreClassement();
-    rendreIndividuel(vide);
   }
 
   function rendreClassement(){
@@ -2508,37 +2505,9 @@ window.addEventListener('afterprint', () => {
       : '<div class="eq-vide">Importe l\'export équipe pour afficher le classement.</div>';
   }
 
-  function rendreIndividuel(vide){
-    const sel = document.getElementById('eqAgentSel');
-    const courant = sel.value;
-    sel.innerHTML = equipe.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
-    if(courant && equipe.some(a => a.id === courant)) sel.value = courant;
-    const a = equipe.find(x => x.id === sel.value) || equipe[0];
-    const box = document.getElementById('eqDetail');
-    if(vide || !a){ box.innerHTML = '<div class="eq-vide">Importe l\'export équipe.</div>'; return; }
-    const t = totaux(a);
-    const th = themes(a).slice(0,10);
-    const maxT = Math.max(1, ...th.map(x => x.val));
-    box.innerHTML = `
-      <div class="eq-kpis">
-        <div class="eq-kpi"><div class="eq-kpi-lab">Accompagnements</div><div class="eq-kpi-val">${t.accompagnements.toLocaleString('fr-FR')}</div></div>
-        <div class="eq-kpi k2"><div class="eq-kpi-lab">Heures</div><div class="eq-kpi-val">${Math.round(t.minutes/60).toLocaleString('fr-FR')}</div></div>
-        <div class="eq-kpi k3"><div class="eq-kpi-lab">Ateliers</div><div class="eq-kpi-val">${t.ateliersVal}</div><div class="eq-kpi-sub">${t.participants} participants</div></div>
-        <div class="eq-kpi k4"><div class="eq-kpi-lab">Individuels</div><div class="eq-kpi-val">${t.individuelsVal.toLocaleString('fr-FR')}</div></div>
-      </div>
-      <div class="eq-bloc"><div class="eq-bloc-t">Thématiques — ${a.name}</div>
-        ${th.map((x,i) => `<div class="eq-bar">
-          <div class="eq-bar-top"><span>${x.label}</span><span>${x.val} · ${x.pct}%</span></div>
-          <div class="eq-bar-tr"><div class="eq-bar-fi" style="width:${(x.val/maxT*100).toFixed(1)}%;background:${PALETTE_EQ[i%PALETTE_EQ.length]}"></div></div>
-        </div>`).join('')}
-      </div>`;
-  }
-
   // --- interactions
-  document.getElementById('eqListe').addEventListener('click', e => {
-    const el = e.target.closest('.eq-agent');
-    if(!el) return;
-    vueAgent = el.dataset.a;
+  document.getElementById('eqAgentPick').addEventListener('change', e => {
+    vueAgent = e.target.value;
     rendre();
   });
   document.querySelectorAll('#page-equipe .eq-tab').forEach(b => {
@@ -2550,7 +2519,6 @@ window.addEventListener('afterprint', () => {
     });
   });
   document.getElementById('eqMetrique').addEventListener('change', rendreClassement);
-  document.getElementById('eqAgentSel').addEventListener('change', () => rendreIndividuel(!equipe.length));
   document.getElementById('eqReset').addEventListener('click', () => {
     if(!equipe.length) return;
     if(!confirm('Effacer les ' + equipe.length + ' agents importés ?')) return;
